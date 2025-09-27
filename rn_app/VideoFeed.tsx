@@ -5,41 +5,89 @@ import feedData from './resources/video-feed';
 import VideoCard from './components/VideoCard';
 import FastImage from '@d11/react-native-fast-image';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from './platback_manager/MediaCardVisibility';
+
+interface VideoSource {
+    sourceType: string;
+    url: string;
+    type: string;
+}
+
+interface Thumbnail {
+    width: number;
+    aspectRatio: string;
+    type: string;
+    height: number;
+    dynamicImageUrl: string;
+}
+
+interface VideoData {
+    videoSource: VideoSource;
+    thumbail: Thumbnail;
+}
 
 interface IFeedItem {
     id: string;
-    widgetType: 'short' | 'carousel';
+    widgetType: string; // 'short' | 'carousel'
     color: string;
-    videoSource: {
-        sourceType: string;
-        url: string;
-        type: string;
-    };
-    thumbnail: {
-        width: number,
-        aspectRatio: string,
-        type: string,
-        height: number,
-        dynamicImageUrl: string
-    };
+    data: VideoData | VideoData[];
 }
 
-const DATA: IFeedItem[] = Array.from({ length: feedData.length }, (_, i) => ({
-    id: i.toString(),
-    widgetType: i % 4 != 3 ? 'short' : 'carousel',
-    color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
-    videoSource: feedData[i].video_source,
-    thumbnail: feedData[i].thumbail,
-}));
+/**
+ * 
+ * @param originalArray 
+ * @returns Every 4th element is replaced by a sub-array of next 6 elements
+ */
+function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
+    const newArray: IFeedItem[] = [];
+    let i = 0; // Index for iterating through the originalArray
+
+    while (i < originalArray.length) {
+        // Check if this is the position for the collection (every 4th element)
+        if ((newArray.length + 1) % 4 === 0) {
+            const feedItem = {
+                widgetType: 'carousel',
+                color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+                id: `carousel-${i}`,
+                data: originalArray.slice(i, i + 6).map(item => ({ videoSource: item.video_source, thumbail: item.thumbail })),
+            };
+            newArray.push(feedItem);
+            i += 6; // Move index forward by 6 for the next iteration
+        } else {
+            // Take a single element
+            const feedItem = {
+                widgetType: 'short',
+                color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+                id: `short-${i}`,
+                data: { videoSource: originalArray[i].video_source, thumbail: originalArray[i].thumbail },
+            };
+            newArray.push(feedItem);
+            i += 1;
+        }
+    }
+    return newArray;
+}
+
+// const DATA: IFeedItem[] = Array.from({ length: feedData.length }, (_, i) => {
+//     let widgetType = 'short';
+//     const color = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+//     const id = i.toString();
+//     const data = { videoSource: feedData[i].video_source, thumbail: feedData[i].thumbail };
+//     return { widgetType, color, id, data }
+// });
+
+const DATA = transformArrayToFeed(feedData);
 
 const DEFULT_ASPECT_RATIO = 9 / 16; // Fallback aspect ratio
 const FALLBACK_MEDIA_WIDTH = 1000;
+
 
 // Create DataProvider
 const dataProvider = new DataProvider((r1, r2) => {
     return r1.id !== r2.id;
 }).cloneWithRows(DATA);
 
+const CAROUSEL_HEIGHT = 300;
 // Create LayoutProvider
 const layoutProvider = new LayoutProvider(
     (index) => {
@@ -48,9 +96,14 @@ const layoutProvider = new LayoutProvider(
     },
     (type, dim, index) => {
         const item = DATA[index];
-        const aspectRatioValue = parseAspectRatio(item.thumbnail.aspectRatio) ?? DEFULT_ASPECT_RATIO;
-        dim.width = Dimensions.get('window').width;
-        dim.height = dim.width / aspectRatioValue;
+        if (item.widgetType === 'carousel') {
+            dim.width = Dimensions.get('window').width;
+            dim.height = CAROUSEL_HEIGHT; // Fixed height for carousel
+        } else {
+            const aspectRatioValue = parseAspectRatio((item.data as VideoData).thumbail.aspectRatio) ?? DEFULT_ASPECT_RATIO;
+            dim.width = Dimensions.get('window').width;
+            dim.height = dim.width / aspectRatioValue;
+        }
     }
 );
 
@@ -132,16 +185,46 @@ function VideoFeed(): JSX.Element {
         ],
     };
 
-    const rowRenderer = (type: string | number, item: IFeedItem) => {
-        const { width, height, aspectRatio } = _getMediaDimensions(item.thumbnail.aspectRatio);
-        const thumbnailUrl = _getImageUrl(item, width, height, 75);
-
+    const _renderCarousel = (feedItem: IFeedItem) => {
         return (
-            <VideoCard
-                item={{ id: item.id, videoSource: item.videoSource, thumbnailUrl }}
-                style={[styles.item, { aspectRatio, backgroundColor: item.color }]}
+            <FlatList
+                data={feedItem.data as VideoData[]}
+                keyExtractor={(_, index) => `carousel-item-${index}`}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => {
+                    const { width, height, aspectRatio } = _getMediaDimensions(item.thumbail.aspectRatio, undefined, CAROUSEL_HEIGHT - 20);
+                    const thumbnailUrl = _getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
+                    return (
+                        <View style={{ width: 200, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
+                            <VideoCard
+                                item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType }}
+                                style={{ width, height: height, backgroundColor: '#000' }}
+                                visibilityConfig={CAROUSEL_CARDS_VISIBILITY_CONFIG}
+                            />
+                        </View>
+                    );
+                }}
+                contentContainerStyle={{ paddingHorizontal: 8 }}
             />
         );
+    }
+
+    const rowRenderer = (type: string | number, item: IFeedItem) => {
+        if (item.widgetType === 'carousel') { // Render carousel
+            return _renderCarousel(item);
+        } else {
+            const { width, height, aspectRatio } = _getMediaDimensions((item.data as VideoData).thumbail.aspectRatio);
+            const thumbnailUrl = _getImageUrl((item.data as VideoData).thumbail.dynamicImageUrl, width, height, 75);
+
+            return (
+                <VideoCard
+                    item={{ id: item.id, videoSource: (item.data as VideoData).videoSource, thumbnailUrl, videoCategory: item.widgetType }}
+                    style={[styles.item, { aspectRatio, backgroundColor: item.color }]}
+                    visibilityConfig={SHORTS_VISIBILITY_CONFIG}
+                />
+            );
+        }
     };
 
     const _getMediaDimensions = (ratioString: string, width?: number, height?: number) => {
@@ -157,8 +240,8 @@ function VideoFeed(): JSX.Element {
         }
     }
 
-    const _getImageUrl = (item: IFeedItem, width?: number, height?: number, q?: number) => {
-        return item.thumbnail.dynamicImageUrl.replace('{@width}', `${width ? width : 1000}`)
+    const _getImageUrl = (parameterizedUrl: String, width?: number, height?: number, q?: number) => {
+        return parameterizedUrl.replace('{@width}', `${width ? width : 1000}`)
             .replace('{@height}', `${height ? height : 1000}`)
             .replace('{@quality}', `${q ? q : 75}`);
     }

@@ -3,23 +3,15 @@ import { View, Image, StyleSheet, Dimensions, ViewProps, ActivityIndicator, Text
 import { VisibilityTrackingView, VisibilityStateChangeEvent, RawVisibilityTransitioningConfig } from './native_components/VisibilityTrackingView'; // Import your components
 import Video, { OnLoadData, OnLoadStartData, OnVideoErrorData, ReactVideoProps } from 'react-native-video';
 import FastImage from '@d11/react-native-fast-image';
+import { playbackEvents, handleVisibilityChange } from '../platback_manager/PlaybackManager';
+import { MediaCardVisibility, VisibilityTransitioningConfig } from '../platback_manager/MediaCardVisibility';
 
 // Sample interface for your video item data
 interface VideoItem {
     id: string;
+    videoCategory?: string; // e.g., 'short' or 'carousel'
     videoSource: { url: string };
     thumbnailUrl: string;
-}
-
-export interface VisibilityTransitioningConfig {
-    movingIn: {
-        prepareToBeActive: number; // e.g., 10% visibility
-        isActive: number;          // e.g., 50% visibility
-    };
-    movingOut: {
-        willResignActive: number;  // e.g., 30% visibility
-        notActive: number;         // e.g., 0% visibility
-    };
 }
 
 const toRawVisibilityConfig = (config: VisibilityTransitioningConfig): RawVisibilityTransitioningConfig => {
@@ -42,7 +34,7 @@ interface VideoCardProps extends ViewProps {
 
     // Althuogh for the native component this a generic key mapping to number threshold. 
     // For the rest of the consumers on the RN side, setting a standard contract
-    visibilityThresholds?: VisibilityTransitioningConfig;
+    visibilityConfig?: VisibilityTransitioningConfig;
 }
 
 // Define the visibility thresholds for our custom logic
@@ -55,7 +47,7 @@ const DEFAULT_VISIBILITY_THRESHOLDS: VisibilityTransitioningConfig = {
     },
     movingOut: {
         // 30% or less visible (outgoing) -> Pause video
-        willResignActive: 45,
+        willResignActive: 90,
         // 0% visible (outgoing) -> Remove video component
         notActive: 20,
     }
@@ -64,14 +56,33 @@ const DEFAULT_VISIBILITY_THRESHOLDS: VisibilityTransitioningConfig = {
 type LoaderState = 'loading' | 'none' | 'error';
 
 
-const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityThresholds, ...rest }) => {
+const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfig, ...rest }) => {
     const [isPlayerAttached, setIsPlayerAttached] = useState(false);
     const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
     const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
     const [retryKey, setRetryKey] = useState<number>(0);
     const [loaderState, setLoaderState] = useState<LoaderState>('loading');
 
-    const THRESHOLDS = visibilityThresholds || DEFAULT_VISIBILITY_THRESHOLDS;
+    const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
+
+    useEffect(() => {
+        const playListener = (videoId: string) => {
+            if (videoId === item.id) setIsPlayerPlaying(true);
+        };
+        const pauseListener = (videoId: string) => {
+            if (videoId === item.id) setIsPlayerPlaying(false);
+        };
+
+        playbackEvents.on('play', playListener);
+        playbackEvents.on('pause', pauseListener);
+
+        return () => {
+            //TODO: Report notActive here to remove from the pubsub
+            //TODO: Also send willResignActive on video end
+            playbackEvents.off('play', playListener);
+            playbackEvents.off('pause', pauseListener);
+        };
+    }, [item.id]);
 
     const onVisibilityChange = (event: { nativeEvent: VisibilityStateChangeEvent }) => {
         const { uniqueId, direction, visibilityPercentage } = event.nativeEvent;
@@ -81,21 +92,24 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityThres
         if (incoming) {
             if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
                 setIsPlayerAttached(true);
-                setIsPlayerPlaying(true);
+                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.isActive);
+                // setIsPlayerPlaying(true);
             } else if (visibilityPercentage >= THRESHOLDS.movingIn.prepareToBeActive) {
                 setIsPlayerAttached(true);
-                setIsPlayerPlaying(false);
+                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.prepareToBeActive);
+                // setIsPlayerPlaying(false);
             }
         } else { // Outgoing
             if (visibilityPercentage <= THRESHOLDS.movingOut.notActive) {
                 setIsPlayerAttached(false);
-                setIsPlayerPlaying(false);
+                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.notActive);
+                // setIsPlayerPlaying(false);
             } else if (visibilityPercentage <= THRESHOLDS.movingOut.willResignActive) {
-                setIsPlayerPlaying(false);
+                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.willResignActive);
+                // setIsPlayerPlaying(false);
             }
         }
     };
-
 
     // Video event handlers
     const handleLoadStart = (data: OnLoadStartData) => {

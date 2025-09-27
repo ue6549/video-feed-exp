@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@d11/react-native-fast-image": "^8.12.0",
+    "eventemitter3": "^5.0.1",
     "patch-package": "^8.0.0",
     "react": "18.2.0",
     "react-native": "0.72.3",
