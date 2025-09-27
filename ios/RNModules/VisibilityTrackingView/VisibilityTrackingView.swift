@@ -7,12 +7,31 @@
 
 import UIKit
 
+enum VisibilityChangeDirection: String, Codable {
+  case movingIn
+  case movingOut
+}
+
+struct VisibilityEvent: Codable {
+  let uniqueId: String
+  let direction: VisibilityChangeDirection
+  let visibilityPercentage: CGFloat
+}
+
 class VisibilityTrackingView: RCTView {
   
   // MARK: - JS Props
   @objc var throttleInterval: NSNumber?
   @objc var uniqueId: NSString?
-  @objc var visibilityThresholds: NSDictionary?
+  @objc var visibilityConfig: ViewabilityTransitioningConfig? {
+    didSet {
+      // Now you can safely access the sorted arrays in Swift
+      if let config = visibilityConfig {
+        print("Moving In (Ascending): \(config.movingIn)")
+        print("Moving Out (Descending): \(config.movingOut)")
+      }
+    }
+  }
   
   // MARK: - Events
   @objc var onVisibilityStateChange: RCTDirectEventBlock?
@@ -20,8 +39,12 @@ class VisibilityTrackingView: RCTView {
   // MARK: - Internal State
   private var displayLink: CADisplayLink?
   private var isTracking = false
-  private var lastEmittedState: [String: Bool] = [:]
+  //  private var lastEmittedState: [String: Bool] = [:]
   private var lastEmittedTime: TimeInterval = 0
+  private var lastVisibilityPercentage: CGFloat? = nil
+  private var lastVisibilityChangeDirection: VisibilityChangeDirection? = nil
+  private var lastEmittedVisibilityEvent: VisibilityEvent? = nil
+  
   private var isThrottled = false
   
   // MARK: - Subviews
@@ -70,6 +93,7 @@ class VisibilityTrackingView: RCTView {
   // MARK: - CADisplayLink Management
   private func startVisibilityTracking() {
     guard !isTracking else { return }
+    processVisibilityEvent(percentage: 0.0)
     
     displayLink = CADisplayLink(target: self, selector: #selector(updateVisibility))
     displayLink?.add(to: .main, forMode: .common)
@@ -77,6 +101,9 @@ class VisibilityTrackingView: RCTView {
   }
   
   private func stopVisibilityTracking() {
+    //    if lastEmittedTime > 0 {
+    processVisibilityEvent(percentage: 0.0)
+    //    }
     displayLink?.invalidate()
     displayLink = nil
     isTracking = false
@@ -100,17 +127,19 @@ class VisibilityTrackingView: RCTView {
     }
     
     // Update the label and process the visibility event
-    visibilityLabel.text = String(format: "%.0f%% Visible", visibilityPercentage)
+    visibilityLabel.text = String(format: "\(String(describing: uniqueId)) - %.0f%% Visible", visibilityPercentage)
     processVisibilityEvent(percentage: visibilityPercentage)
   }
   
   // MARK: - Event Processing with Throttling
   private func processVisibilityEvent(percentage: CGFloat) {
-    guard let thresholds = visibilityThresholds as? [String: NSNumber],
+    guard let thresholds = visibilityConfig,
           let onVisibilityStateChange = onVisibilityStateChange,
           let id = uniqueId else {
       return
     }
+    
+    let changeDirection = percentage - (lastVisibilityPercentage ?? 0) > 0 ? VisibilityChangeDirection.movingIn : VisibilityChangeDirection.movingOut
     
     let currentTimestamp = Date().timeIntervalSince1970
     let interval = throttleInterval?.doubleValue ?? 0
@@ -121,24 +150,63 @@ class VisibilityTrackingView: RCTView {
       return
     }
     
-    var newState: [String: Bool] = [:]
-    for (key, threshold) in thresholds {
-      newState[key] = percentage >= threshold.doubleValue
+    var shouldSendEvent = false
+    
+    // Check for a change in direction
+    if changeDirection != lastVisibilityChangeDirection {
+      shouldSendEvent = true
+    } else {
+      // Determine if a new threshold has been crossed
+      if changeDirection == .movingIn {
+        let previousThreshold = thresholds.movingIn.first(where: { $0.doubleValue >= lastVisibilityPercentage ?? 0 })
+        let currentThreshold = thresholds.movingIn.first(where: { $0.doubleValue >= percentage })
+        
+        // Compare the values, not the optional instances
+        if previousThreshold?.doubleValue != currentThreshold?.doubleValue {
+          shouldSendEvent = true
+        }
+      } else if changeDirection == .movingOut {
+        let previousThreshold = thresholds.movingOut.first(where: { $0.doubleValue < lastVisibilityPercentage ?? 0 })
+        let currentThreshold = thresholds.movingOut.first(where: { $0.doubleValue < percentage })
+        
+        // Compare the values, not the optional instances
+        if previousThreshold?.doubleValue != currentThreshold?.doubleValue {
+          shouldSendEvent = true
+        }
+      }
     }
     
-    // Emit only if a state has changed
-    if newState.allSatisfy({ lastEmittedState[$0.key] == $0.value }) {
-      return
+    if shouldSendEvent {
+      lastVisibilityPercentage = percentage
+      lastVisibilityChangeDirection = changeDirection
+      
+      let newVisibilityEvent = VisibilityEvent(
+        uniqueId: uniqueId! as String,
+        direction: changeDirection,
+        visibilityPercentage: percentage
+      )
+      onVisibilityStateChange(newVisibilityEvent.toDictionary())
+      lastEmittedTime = currentTimestamp
     }
-    
-    var body: [String: Any] = [
-        "id": id,
-        "currentVisibilityPercentage": percentage,
-    ]
-    body.merge(newState) { (_, new) in new } // Merge the dynamic states
+  }
+}
 
-    onVisibilityStateChange(body)
-    lastEmittedState = newState
-    lastEmittedTime = currentTimestamp
+extension Encodable {
+  /// Converts a Codable object to a dictionary.
+  ///
+  /// - Returns: A dictionary representation of the object, or nil if conversion fails.
+  func toDictionary() -> [String: Any]? {
+    do {
+      // 1. Encode the object to JSON Data
+      let data = try JSONEncoder().encode(self)
+      
+      // 2. Deserialize the JSON Data into a dictionary
+      let dictionary = try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed) as? [String: Any]
+      
+      return dictionary
+    } catch {
+      print("Error converting object to dictionary: \(error)")
+      return nil
+    }
   }
 }

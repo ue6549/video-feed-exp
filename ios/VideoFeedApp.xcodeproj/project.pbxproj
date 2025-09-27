@@ -13,6 +13,8 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		17BD11E23C657BE928984FC7 /* libPods-VideoFeedApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 519994A7865F870AED053226 /* libPods-VideoFeedApp.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		9DAED76A2E8810E60037E3D8 /* ViewabilityTransitioningConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DAED7692E8810E60037E3D8 /* ViewabilityTransitioningConfig.m */; };
+		9DAED76D2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DAED76C2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m */; };
 		9DB43BC12E871D9900E4B75E /* VisibilityTrackingViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DB43BBF2E871D9900E4B75E /* VisibilityTrackingViewManager.m */; };
 		9DB43BC22E871D9900E4B75E /* VisibilityTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB43BBD2E871D9900E4B75E /* VisibilityTrackingView.swift */; };
 		F3A073A0C1437E91538AFC1E /* libPods-VideoFeedApp-VideoFeedAppTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FF267C97E97E8D84D6F2AA2B /* libPods-VideoFeedApp-VideoFeedAppTests.a */; };
@@ -43,6 +45,10 @@
 		812DE93A8EA82DEEB03AF4A6 /* Pods-VideoFeedApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VideoFeedApp.release.xcconfig"; path = "Target Support Files/Pods-VideoFeedApp/Pods-VideoFeedApp.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = VideoFeedApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8EE21C22418AF64DC64118CB /* Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig"; path = "Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig"; sourceTree = "<group>"; };
+		9DAED7682E8810E60037E3D8 /* ViewabilityTransitioningConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewabilityTransitioningConfig.h; sourceTree = "<group>"; };
+		9DAED7692E8810E60037E3D8 /* ViewabilityTransitioningConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewabilityTransitioningConfig.m; sourceTree = "<group>"; };
+		9DAED76B2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTConvert_ViewabilityTransitioningConfig.h; sourceTree = "<group>"; };
+		9DAED76C2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTConvert_ViewabilityTransitioningConfig.m; sourceTree = "<group>"; };
 		9DB43BBC2E871D9900E4B75E /* VideoFeedApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoFeedApp-Bridging-Header.h"; sourceTree = "<group>"; };
 		9DB43BBD2E871D9900E4B75E /* VisibilityTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisibilityTrackingView.swift; sourceTree = "<group>"; };
 		9DB43BBE2E871D9900E4B75E /* VisibilityTrackingViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VisibilityTrackingViewManager.h; sourceTree = "<group>"; };
@@ -157,6 +163,10 @@
 			isa = PBXGroup;
 			children = (
 				9DB43BBD2E871D9900E4B75E /* VisibilityTrackingView.swift */,
+				9DAED76B2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.h */,
+				9DAED76C2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m */,
+				9DAED7682E8810E60037E3D8 /* ViewabilityTransitioningConfig.h */,
+				9DAED7692E8810E60037E3D8 /* ViewabilityTransitioningConfig.m */,
 				9DB43BBE2E871D9900E4B75E /* VisibilityTrackingViewManager.h */,
 				9DB43BBF2E871D9900E4B75E /* VisibilityTrackingViewManager.m */,
 			);
@@ -322,9 +332,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp/Pods-VideoFeedApp-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp/Pods-VideoFeedApp-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -339,9 +353,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -378,9 +396,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -395,9 +417,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp/Pods-VideoFeedApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-VideoFeedApp/Pods-VideoFeedApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -440,8 +466,10 @@
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				9DAED76A2E8810E60037E3D8 /* ViewabilityTransitioningConfig.m in Sources */,
 				9DB43BC12E871D9900E4B75E /* VisibilityTrackingViewManager.m in Sources */,
 				9DB43BC22E871D9900E4B75E /* VisibilityTrackingView.swift in Sources */,
+				9DAED76D2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

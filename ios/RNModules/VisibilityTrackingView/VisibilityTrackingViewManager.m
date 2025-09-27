@@ -8,6 +8,8 @@
 #import "VisibilityTrackingViewManager.h"
 #import "VideoFeedApp-Swift.h"
 #import <React/RCTUIManager.h>
+#import "ViewabilityTransitioningConfig.h"
+#import "RCTConvert_ViewabilityTransitioningConfig.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,7 +23,7 @@ RCT_EXPORT_MODULE(TrackingView)
 
 RCT_EXPORT_VIEW_PROPERTY(uniqueId, NSString)
 RCT_EXPORT_VIEW_PROPERTY(throttleInterval, NSNumber)
-RCT_EXPORT_VIEW_PROPERTY(visibilityThresholds, NSDictionary)
+RCT_EXPORT_VIEW_PROPERTY(visibilityConfig, ViewabilityTransitioningConfig *)
 RCT_EXPORT_VIEW_PROPERTY(onVisibilityStateChange, RCTDirectEventBlock)
 
 @end

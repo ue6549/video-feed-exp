@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Image, StyleSheet, Dimensions, ViewProps, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
-import { VisibilityTrackingView, VisibilityStateChangeEvent } from './native_components/VisibilityTrackingView'; // Import your components
+import { VisibilityTrackingView, VisibilityStateChangeEvent, RawVisibilityTransitioningConfig } from './native_components/VisibilityTrackingView'; // Import your components
 import Video, { OnLoadData, OnLoadStartData, OnVideoErrorData, ReactVideoProps } from 'react-native-video';
 import FastImage from '@d11/react-native-fast-image';
 
@@ -9,6 +9,24 @@ interface VideoItem {
     id: string;
     videoSource: { url: string };
     thumbnailUrl: string;
+}
+
+export interface VisibilityTransitioningConfig {
+    movingIn: {
+        prepareToBeActive: number; // e.g., 10% visibility
+        isActive: number;          // e.g., 50% visibility
+    };
+    movingOut: {
+        willResignActive: number;  // e.g., 30% visibility
+        notActive: number;         // e.g., 0% visibility
+    };
+}
+
+const toRawVisibilityConfig = (config: VisibilityTransitioningConfig): RawVisibilityTransitioningConfig => {
+    return {
+        movingIn: [config.movingIn.prepareToBeActive, config.movingIn.isActive],
+        movingOut: [config.movingOut.willResignActive, config.movingOut.notActive],
+    };
 }
 
 /**
@@ -21,49 +39,58 @@ interface VideoItem {
 interface VideoCardProps extends ViewProps {
     item: VideoItem;
     videoProps?: ReactVideoProps;
+
+    // Althuogh for the native component this a generic key mapping to number threshold. 
+    // For the rest of the consumers on the RN side, setting a standard contract
+    visibilityThresholds?: VisibilityTransitioningConfig;
 }
 
 // Define the visibility thresholds for our custom logic
-const THRESHOLDS = {
-    // 10% or more visible (incoming) -> Add video component, paused
-    prepareToBeActive: 75,
-    // 50% or more visible (incoming) -> Play video
-    isActive: 90,
-    // 30% or less visible (outgoing) -> Pause video
-    willResignActive: 30,
-    // 0% visible (outgoing) -> Remove video component
-    notActive: 0,
+const DEFAULT_VISIBILITY_THRESHOLDS: VisibilityTransitioningConfig = {
+    movingIn: {
+        // 10% or more visible (incoming) -> Add video component, paused
+        prepareToBeActive: 25,
+        // 50% or more visible (incoming) -> Play video
+        isActive: 50,
+    },
+    movingOut: {
+        // 30% or less visible (outgoing) -> Pause video
+        willResignActive: 45,
+        // 0% visible (outgoing) -> Remove video component
+        notActive: 20,
+    }
 };
 
 type LoaderState = 'loading' | 'none' | 'error';
 
 
-const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, ...rest }) => {
+const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityThresholds, ...rest }) => {
     const [isPlayerAttached, setIsPlayerAttached] = useState(false);
     const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
     const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
     const [retryKey, setRetryKey] = useState<number>(0);
     const [loaderState, setLoaderState] = useState<LoaderState>('loading');
 
-    const onVisibilityChange = (event: { nativeEvent: VisibilityStateChangeEvent }) => {
-        const { currentVisibilityPercentage } = event.nativeEvent;
-        const incoming = currentVisibilityPercentage > lastVisibilityPercentage;
-        setLastVisibilityPercentage(currentVisibilityPercentage);
+    const THRESHOLDS = visibilityThresholds || DEFAULT_VISIBILITY_THRESHOLDS;
 
-        // Logic based on incoming/outgoing direction
+    const onVisibilityChange = (event: { nativeEvent: VisibilityStateChangeEvent }) => {
+        const { uniqueId, direction, visibilityPercentage } = event.nativeEvent;
+        const incoming = direction === 'movingIn';
+        setLastVisibilityPercentage(visibilityPercentage);
+
         if (incoming) {
-            if (currentVisibilityPercentage >= THRESHOLDS.isActive) {
+            if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
                 setIsPlayerAttached(true);
                 setIsPlayerPlaying(true);
-            } else if (currentVisibilityPercentage >= THRESHOLDS.prepareToBeActive) {
+            } else if (visibilityPercentage >= THRESHOLDS.movingIn.prepareToBeActive) {
                 setIsPlayerAttached(true);
                 setIsPlayerPlaying(false);
             }
         } else { // Outgoing
-            if (currentVisibilityPercentage <= THRESHOLDS.notActive) {
+            if (visibilityPercentage <= THRESHOLDS.movingOut.notActive) {
                 setIsPlayerAttached(false);
                 setIsPlayerPlaying(false);
-            } else if (currentVisibilityPercentage <= THRESHOLDS.willResignActive) {
+            } else if (visibilityPercentage <= THRESHOLDS.movingOut.willResignActive) {
                 setIsPlayerPlaying(false);
             }
         }
@@ -98,15 +125,6 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, ...rest }) => {
         if (loaderState === 'error') {
             return (
                 <View style={styles.errorContainer}>
-                    <FastImage
-                        source={{
-                            uri: item.thumbnailUrl,
-                            priority: FastImage.priority.high,
-                            cache: FastImage.cacheControl.immutable,
-                        }}
-                        style={[styles.media, StyleSheet.absoluteFill]}
-                        resizeMode="contain"
-                    />
                     <Text style={styles.errorText}>Video failed to load.</Text>
                     <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
                         <Text style={styles.retryButtonText}>Try again</Text>
@@ -131,18 +149,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, ...rest }) => {
         );
     };
 
-    // const renderAccessoryContentView = () => (
-    //     <View style={{ position: 'absolute', bottom: 10, left: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 5, borderRadius: 5 }}>
-    //         <Image source={{ uri: item.thumbnailUrl }} style={{ width: 50, height: 50 }} />
-    //     </View>
-    // );
-
     return (
         // Spread the rest props (including 'style') to the VisibilityTrackingView
         <VisibilityTrackingView
             {...rest}
             throttleInterval={50}
-            visibilityThresholds={THRESHOLDS}
+            visibilityConfig={toRawVisibilityConfig(THRESHOLDS)}
             uniqueId={item.id}
             onVisibilityStateChange={onVisibilityChange}>
 
@@ -154,7 +166,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, ...rest }) => {
                         priority: FastImage.priority.high,
                         cache: FastImage.cacheControl.immutable
                     }}
-                    style={styles.media}
+                    style={[styles.media, StyleSheet.absoluteFill]}
                     resizeMode="contain"
                 />
             )}
@@ -167,8 +179,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, ...rest }) => {
                     style={styles.media}
                     controls={true}
                     resizeMode="contain"
-                    // poster={{source: { uri: item.thumbnailUrl}, resizeMode: 'contain' }}
-                    renderLoader={loaderState !== 'none' ? renderLoader : undefined}
+                    renderLoader={renderLoader}
                     progressUpdateInterval={250}
                     onError={handleError}
                     onLoadStart={handleLoadStart}

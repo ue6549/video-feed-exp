@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { View, FlatList, StyleSheet, Dimensions, Image, Animated, Alert, StatusBar, TouchableWithoutFeedback, Text } from 'react-native';
-import { VisibilityTrackingView } from './components';
+import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
 import feedData from './resources/video-feed';
 import VideoCard from './components/VideoCard';
 import FastImage from '@d11/react-native-fast-image';
@@ -34,6 +34,36 @@ const DATA: IFeedItem[] = Array.from({ length: feedData.length }, (_, i) => ({
 
 const DEFULT_ASPECT_RATIO = 9 / 16; // Fallback aspect ratio
 const FALLBACK_MEDIA_WIDTH = 1000;
+
+// Create DataProvider
+const dataProvider = new DataProvider((r1, r2) => {
+    return r1.id !== r2.id;
+}).cloneWithRows(DATA);
+
+// Create LayoutProvider
+const layoutProvider = new LayoutProvider(
+    (index) => {
+        // Return a type for each item, allowing for different layouts
+        return DATA[index].widgetType;
+    },
+    (type, dim, index) => {
+        const item = DATA[index];
+        const aspectRatioValue = parseAspectRatio(item.thumbnail.aspectRatio) ?? DEFULT_ASPECT_RATIO;
+        dim.width = Dimensions.get('window').width;
+        dim.height = dim.width / aspectRatioValue;
+    }
+);
+
+const parseAspectRatio = (ratioString: string): number | undefined => {
+    const parts = ratioString.split(':');
+    if (parts.length === 2) {
+        const width = parseFloat(parts[1]);
+        const height = parseFloat(parts[0]);
+        return width / height;
+    }
+    return undefined;
+};
+
 
 function VideoFeed(): JSX.Element {
     const insets = useSafeAreaInsets();
@@ -102,12 +132,9 @@ function VideoFeed(): JSX.Element {
         ],
     };
 
-    const renderRow = ({ item }: { item: IFeedItem }) => {
-        // const isCarousel = item.widgetType === 'carousel';
+    const rowRenderer = (type: string | number, item: IFeedItem) => {
         const { width, height, aspectRatio } = _getMediaDimensions(item.thumbnail.aspectRatio);
         const thumbnailUrl = _getImageUrl(item, width, height, 75);
-
-        console.log(`RGLOG:: renderRow :: thumbnailUrl=${thumbnailUrl}`);
 
         return (
             <VideoCard
@@ -118,21 +145,11 @@ function VideoFeed(): JSX.Element {
     };
 
     const _getMediaDimensions = (ratioString: string, width?: number, height?: number) => {
-        const parseAspectRatio = (ratioString: string): number | undefined => {
-            const parts = ratioString.split(':');
-            if (parts.length === 2) {
-                const width = parseFloat(parts[1]);
-                const height = parseFloat(parts[0]);
-                return width / height;
-            }
-            return undefined;
-        };
-
         const aspectRatioValue = parseAspectRatio(ratioString) ?? DEFULT_ASPECT_RATIO;
         if (width && !height) {
             return { width: Math.ceil(width), height: Math.ceil(width / aspectRatioValue), aspectRatio: aspectRatioValue };
         } else if (!width && height) {
-            return { width: Math.ceil(height * aspectRatioValue), height:Math.ceil(height), aspectRatio: aspectRatioValue };
+            return { width: Math.ceil(height * aspectRatioValue), height: Math.ceil(height), aspectRatio: aspectRatioValue };
         } else if (width && height) {
             return { width: Math.ceil(width), height: Math.ceil(height), aspectRatio: width / height };
         } else {
@@ -146,14 +163,18 @@ function VideoFeed(): JSX.Element {
             .replace('{@quality}', `${q ? q : 75}`);
     }
 
+    const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
     return (
         <SafeAreaProvider>
             <StatusBar hidden />
-            <FlatList
-                data={DATA}
-                keyExtractor={item => item.id}
-                renderItem={renderRow}
+            <RecyclerListView
+                rowRenderer={rowRenderer}
+                dataProvider={dataProvider}
+                layoutProvider={layoutProvider}
+                style={styles.list}
                 contentContainerStyle={styles.container}
+                forceNonDeterministicRendering={true} // Set to true for variable-height items
             />
             {/* FAB and options */}
             <View style={[styles.fabContainer, { padding: insets.bottom }]}>
@@ -189,12 +210,15 @@ const styles = StyleSheet.create({
     container: {
         paddingVertical: 16,
     },
+    list: {
+        flex: 1,
+    },
     item: {
         marginVertical: 8,
-        marginHorizontal: 16,
+        marginHorizontal: 4,
         borderRadius: 12,
         overflow: 'hidden',
-        width: Dimensions.get('window').width - 32,
+        width: Dimensions.get('window').width - 8,
     },
     fabContainer: {
         position: 'absolute',
