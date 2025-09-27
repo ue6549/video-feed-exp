@@ -8,5 +8,5 @@ experimental repo for video feed experience nad performance POCs
 5. [ ] If by design it can be guaranteed that only 2-3 can videos can come on the screen, priority based play manager will not be required.
 6. [ ] Video caching on iOS.
 7. [ ] Video prefetching on iOS.
-8. Transitions.
-9. Android changes.
+8. [ ]Transitions.
+9. [ ] Android changes.
