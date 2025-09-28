@@ -12,6 +12,7 @@ interface VideoItem {
     videoCategory?: string; // e.g., 'short' or 'carousel'
     videoSource: { url: string };
     thumbnailUrl: string;
+    aspectRatio?: string; // e.g., '16:9'
 }
 
 const toRawVisibilityConfig = (config: VisibilityTransitioningConfig): RawVisibilityTransitioningConfig => {
@@ -28,7 +29,7 @@ const toRawVisibilityConfig = (config: VisibilityTransitioningConfig): RawVisibi
  *      Thus saving memory and CPU usage.
  * 2. Is using a FastImage for thumbnail fetching and caching. Leveraging just the Video component props for better UI and loading handling
  */
-interface VideoCardProps extends ViewProps {
+export interface VideoCardProps extends ViewProps {
     item: VideoItem;
     videoProps?: ReactVideoProps;
 
@@ -80,6 +81,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
         return () => {
             //TODO: Report notActive here to remove from the pubsub
             //TODO: Also send willResignActive on video end
+            handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.notActive);
             playbackEvents.off('play', playListener);
             playbackEvents.off('pause', pauseListener);
         };

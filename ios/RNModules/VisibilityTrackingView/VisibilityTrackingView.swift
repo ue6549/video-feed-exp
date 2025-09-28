@@ -122,7 +122,7 @@ class VisibilityTrackingView: RCTView {
     
     let visibilityPercentage: CGFloat
     if viewFrameInWindow.height > 0 {
-      visibilityPercentage = ((intersection.height / viewFrameInWindow.height) * 100.0).rounded(.down)
+      visibilityPercentage = (((intersection.height*intersection.width) / (viewFrameInWindow.height*viewFrameInWindow.width)) * 100.0).rounded(.down)
     } else {
       visibilityPercentage = 0.0
     }
@@ -195,7 +195,6 @@ class VisibilityTrackingView: RCTView {
           shouldSendEvent = true
         }
       }
-      shouldSendEvent = true
     } else if changeDirection == .movingOut, let lastEmittedEvent = lastEmittedVisibilityEvent {
       /**
        * If direction is moving out, that means the card was visible earlier, which implies there must be a last emitted event
@@ -223,11 +222,6 @@ class VisibilityTrackingView: RCTView {
           if previousThreshold.doubleValue != currentThreshold.doubleValue {
             shouldSendEvent = true
           }
-        } else {
-          // Or there was no previous threshold crossed but now is.
-          // Although I do NOT think that this should happen for moving out direction ever.
-          // We shuold try removing this and check again
-          shouldSendEvent = true
         }
       }
     }

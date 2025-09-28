@@ -1,19 +1,21 @@
 import React, { useRef, useState } from 'react';
-import { View, FlatList, StyleSheet, Dimensions, Image, Animated, Alert, StatusBar, TouchableWithoutFeedback, Text } from 'react-native';
+import { View, FlatList, StyleSheet, Dimensions, Image, Animated, Alert, StatusBar, TouchableWithoutFeedback, Text, ScrollView } from 'react-native';
 import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
 import feedData from './resources/video-feed';
 import VideoCard from './components/VideoCard';
 import FastImage from '@d11/react-native-fast-image';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from './platback_manager/MediaCardVisibility';
+import * as Utilities from './utilities/Utilities';
+import ShortVideoWidget from './widgets/ShortVideoWidget';
 
-interface VideoSource {
+export interface VideoSource {
     sourceType: string;
     url: string;
     type: string;
 }
 
-interface Thumbnail {
+export interface Thumbnail {
     width: number;
     aspectRatio: string;
     type: string;
@@ -21,16 +23,16 @@ interface Thumbnail {
     dynamicImageUrl: string;
 }
 
-interface VideoData {
+export interface VideoData {
     videoSource: VideoSource;
     thumbail: Thumbnail;
 }
 
-interface IFeedItem {
+export interface IFeedItem {
     id: string;
-    widgetType: string; // 'short' | 'carousel'
+    widgetType: string; // 'short' | 'carousel' | 'merch'
     color: string;
-    data: VideoData | VideoData[];
+    data: VideoData | VideoData[] | Thumbnail;
 }
 
 /**
@@ -43,8 +45,22 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
     let i = 0; // Index for iterating through the originalArray
 
     while (i < originalArray.length) {
-        // Check if this is the position for the collection (every 4th element)
-        if ((newArray.length + 1) % 4 === 0) {
+        if (Math.random() > 0.75) {
+            const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random()*10)}/{@width}/{@height}`
+            const feedItem = {
+                widgetType: 'merch',
+                color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+                id: `merch-${i}`,
+                data: {
+                    width: 0,
+                    type: "ImageValue",
+                    height: 0,
+                    aspectRatio: '5:4', dynamicImageUrl: imageUrl
+                },
+            };
+            newArray.push(feedItem);
+        }
+        else if ((newArray.length + 1) % 4 === 0) {
             const feedItem = {
                 widgetType: 'carousel',
                 color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
@@ -78,9 +94,12 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
 
 const DATA = transformArrayToFeed(feedData);
 
-const DEFULT_ASPECT_RATIO = 9 / 16; // Fallback aspect ratio
-const FALLBACK_MEDIA_WIDTH = 1000;
-
+const {
+    DEFULT_ASPECT_RATIO,
+    parseAspectRatio,
+    getMediaDimensions,
+    getImageUrl
+} = Utilities;
 
 // Create DataProvider
 const dataProvider = new DataProvider((r1, r2) => {
@@ -99,6 +118,10 @@ const layoutProvider = new LayoutProvider(
         if (item.widgetType === 'carousel') {
             dim.width = Dimensions.get('window').width;
             dim.height = CAROUSEL_HEIGHT; // Fixed height for carousel
+        } else if (item.widgetType === 'merch') {
+            const aspectRatioValue = parseAspectRatio((item.data as Thumbnail).aspectRatio) ?? DEFULT_ASPECT_RATIO;
+            dim.width = Dimensions.get('window').width;
+            dim.height = dim.width / aspectRatioValue;
         } else {
             const aspectRatioValue = parseAspectRatio((item.data as VideoData).thumbail.aspectRatio) ?? DEFULT_ASPECT_RATIO;
             dim.width = Dimensions.get('window').width;
@@ -106,17 +129,6 @@ const layoutProvider = new LayoutProvider(
         }
     }
 );
-
-const parseAspectRatio = (ratioString: string): number | undefined => {
-    const parts = ratioString.split(':');
-    if (parts.length === 2) {
-        const width = parseFloat(parts[1]);
-        const height = parseFloat(parts[0]);
-        return width / height;
-    }
-    return undefined;
-};
-
 
 function VideoFeed(): JSX.Element {
     const insets = useSafeAreaInsets();
@@ -185,6 +197,23 @@ function VideoFeed(): JSX.Element {
         ],
     };
 
+    const _renderMerch = (feedItem: IFeedItem) => {
+        const { width, height, aspectRatio } = getMediaDimensions((feedItem.data as Thumbnail).aspectRatio, Dimensions.get('window').width);
+        const imageUrl = getImageUrl((feedItem.data as Thumbnail).dynamicImageUrl, width, height, 75);
+        return (
+            <View style={{ width: '100%', height: height, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden', marginVertical: 10 }}>
+                <FastImage
+                    style={{ width: '100%', height: '100%' }}
+                    source={{
+                        uri: imageUrl,
+                        priority: FastImage.priority.high,
+                    }}
+                    resizeMode={FastImage.resizeMode.contain}
+                />
+            </View>
+        );
+    }
+
     const _renderCarousel = (feedItem: IFeedItem) => {
         return (
             <FlatList
@@ -193,10 +222,10 @@ function VideoFeed(): JSX.Element {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 renderItem={({ item }) => {
-                    const { width, height, aspectRatio } = _getMediaDimensions(item.thumbail.aspectRatio, undefined, CAROUSEL_HEIGHT - 20);
-                    const thumbnailUrl = _getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
+                    const { width, height, aspectRatio } = getMediaDimensions(item.thumbail.aspectRatio, undefined, CAROUSEL_HEIGHT - 20);
+                    const thumbnailUrl = getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
                     return (
-                        <View style={{ width: 200, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
+                        <View style={{ width, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
                             <VideoCard
                                 item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType }}
                                 style={{ width, height: height, backgroundColor: '#000' }}
@@ -213,40 +242,32 @@ function VideoFeed(): JSX.Element {
     const rowRenderer = (type: string | number, item: IFeedItem) => {
         if (item.widgetType === 'carousel') { // Render carousel
             return _renderCarousel(item);
+        } else if (item.widgetType === 'merch') {
+            return _renderMerch(item);
         } else {
-            const { width, height, aspectRatio } = _getMediaDimensions((item.data as VideoData).thumbail.aspectRatio);
-            const thumbnailUrl = _getImageUrl((item.data as VideoData).thumbail.dynamicImageUrl, width, height, 75);
+            const { width, height, aspectRatio } = getMediaDimensions((item.data as VideoData).thumbail.aspectRatio);
+            const thumbnailUrl = getImageUrl((item.data as VideoData).thumbail.dynamicImageUrl, width, height, 75);
 
             return (
-                <VideoCard
-                    item={{ id: item.id, videoSource: (item.data as VideoData).videoSource, thumbnailUrl, videoCategory: item.widgetType }}
-                    style={[styles.item, { aspectRatio, backgroundColor: item.color }]}
-                    visibilityConfig={SHORTS_VISIBILITY_CONFIG}
+                <ShortVideoWidget videoProps={{
+                    item: {
+                        id: (item.data as VideoData).videoSource.url,
+                        videoSource: (item.data as VideoData).videoSource,
+                        thumbnailUrl,
+                        aspectRatio: (item.data as VideoData).thumbail.aspectRatio,
+                        videoCategory: item.widgetType
+                    },
+                    visibilityConfig: SHORTS_VISIBILITY_CONFIG
+                }}
+                    style={[styles.item, { backgroundColor: item.color }]}
+                    title='Sample Title'
+                    topComment='Top comment goes here. If only someone would comment on my code...'
                 />
             );
         }
     };
 
-    const _getMediaDimensions = (ratioString: string, width?: number, height?: number) => {
-        const aspectRatioValue = parseAspectRatio(ratioString) ?? DEFULT_ASPECT_RATIO;
-        if (width && !height) {
-            return { width: Math.ceil(width), height: Math.ceil(width / aspectRatioValue), aspectRatio: aspectRatioValue };
-        } else if (!width && height) {
-            return { width: Math.ceil(height * aspectRatioValue), height: Math.ceil(height), aspectRatio: aspectRatioValue };
-        } else if (width && height) {
-            return { width: Math.ceil(width), height: Math.ceil(height), aspectRatio: width / height };
-        } else {
-            return { width: FALLBACK_MEDIA_WIDTH, height: Math.ceil(FALLBACK_MEDIA_WIDTH / aspectRatioValue), aspectRatio: aspectRatioValue }; // Default size
-        }
-    }
-
-    const _getImageUrl = (parameterizedUrl: String, width?: number, height?: number, q?: number) => {
-        return parameterizedUrl.replace('{@width}', `${width ? width : 1000}`)
-            .replace('{@height}', `${height ? height : 1000}`)
-            .replace('{@quality}', `${q ? q : 75}`);
-    }
-
-    const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+    // const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
     return (
         <SafeAreaProvider>
@@ -256,9 +277,10 @@ function VideoFeed(): JSX.Element {
                 dataProvider={dataProvider}
                 layoutProvider={layoutProvider}
                 style={styles.list}
-                contentContainerStyle={styles.container}
+                contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
                 forceNonDeterministicRendering={true} // Set to true for variable-height items
             />
+            <View style={{backgroundColor: '#2a272733', height: 66, width: 'auto', margin: 0}}></View>
             {/* FAB and options */}
             <View style={[styles.fabContainer, { padding: insets.bottom }]}>
                 {isOpen && (
