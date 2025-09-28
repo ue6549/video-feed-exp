@@ -198,12 +198,14 @@ function VideoFeed(): JSX.Element {
     };
 
     const _renderMerch = (feedItem: IFeedItem) => {
-        const { width, height, aspectRatio } = getMediaDimensions((feedItem.data as Thumbnail).aspectRatio, Dimensions.get('window').width);
+        const boxSize = Dimensions.get('window');
+        const aspectRatioValue = parseAspectRatio((feedItem.data as Thumbnail).aspectRatio) ?? DEFULT_ASPECT_RATIO;
+        const { width, height, aspectRatio } = getMediaDimensions((feedItem.data as Thumbnail).aspectRatio);
         const imageUrl = getImageUrl((feedItem.data as Thumbnail).dynamicImageUrl, width, height, 75);
         return (
-            <View style={{ width: '100%', height: height, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden', marginVertical: 10 }}>
+            <View style={{ alignContent: 'center', alignItems: 'center', backgroundColor: feedItem.color, width: boxSize.width, height: Math.ceil(boxSize.width / aspectRatioValue), borderRadius: 8, overflow: 'hidden' }}>
                 <FastImage
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ borderRadius: 8, width: boxSize.width - 16, height: '100%' }}
                     source={{
                         uri: imageUrl,
                         priority: FastImage.priority.high,
@@ -280,7 +282,7 @@ function VideoFeed(): JSX.Element {
                 contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
                 forceNonDeterministicRendering={true} // Set to true for variable-height items
             />
-            <View style={{backgroundColor: '#2a272733', height: 66, width: 'auto', margin: 0}}></View>
+            <View style={{backgroundColor: '#1f0505ff', height: 66, width: 'auto', margin: 0}}></View>
             {/* FAB and options */}
             <View style={[styles.fabContainer, { padding: insets.bottom }]}>
                 {isOpen && (

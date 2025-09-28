@@ -149,10 +149,6 @@ class VisibilityTrackingView: RCTView {
       changeDirection = .movingOut
     }
     
-    if changeDirection != .none {
-      print("RGLOG:: VisibilityTrackingView: - \"\(id)\", - direction change (\(changeDirection)) - last (\((lastVisibilityPercentage ?? 0))%), current (\((percentage))%), lastEvent - (\(String(describing: lastEmittedVisibilityEvent?.toDictionary())))")
-    }
-    
     lastVisibilityPercentage = percentage
     lastVisibilityChangeDirection = changeDirection
     
