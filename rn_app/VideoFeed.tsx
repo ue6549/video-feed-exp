@@ -43,9 +43,11 @@ export interface IFeedItem {
 function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
     const newArray: IFeedItem[] = [];
     let i = 0; // Index for iterating through the originalArray
+    let stepSinceLastMerch = 0; // Steps since last merch insertion
 
     while (i < originalArray.length) {
-        if (Math.random() > 0.75) {
+        if (stepSinceLastMerch > 2 && Math.random() > 0.75) {
+            stepSinceLastMerch = 0;
             const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random()*10)}/{@width}/{@height}`
             const feedItem = {
                 widgetType: 'merch',
@@ -69,6 +71,7 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
             };
             newArray.push(feedItem);
             i += 6; // Move index forward by 6 for the next iteration
+            stepSinceLastMerch += 1;
         } else {
             // Take a single element
             const feedItem = {
@@ -79,6 +82,7 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
             };
             newArray.push(feedItem);
             i += 1;
+            stepSinceLastMerch += 1;
         }
     }
     return newArray;
@@ -203,15 +207,29 @@ function VideoFeed(): JSX.Element {
         const { width, height, aspectRatio } = getMediaDimensions((feedItem.data as Thumbnail).aspectRatio);
         const imageUrl = getImageUrl((feedItem.data as Thumbnail).dynamicImageUrl, width, height, 75);
         return (
-            <View style={{ alignContent: 'center', alignItems: 'center', backgroundColor: feedItem.color, width: boxSize.width, height: Math.ceil(boxSize.width / aspectRatioValue), borderRadius: 8, overflow: 'hidden' }}>
+            <View style={{
+                // alignContent: 'flex-start',
+                alignItems: 'center',
+                backgroundColor: feedItem.color,
+                width: boxSize.width,
+                height: Math.ceil(boxSize.width / aspectRatioValue) + 80,
+                borderRadius: 8,
+                overflow: 'hidden' 
+            }}>
+                <View style={{ margin: 0, width: '100%', height: 40, backgroundColor: '#000000aa', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginVertical: 8 }}>Sponsored</Text>
+                    </View>
                 <FastImage
-                    style={{ borderRadius: 8, width: boxSize.width - 16, height: '100%' }}
+                    style={{ marginVertical: 8, borderRadius: 8, width: boxSize.width - 16, flex: 1, aspectRatio: aspectRatioValue, backgroundColor: '#000' }}
                     source={{
                         uri: imageUrl,
                         priority: FastImage.priority.high,
                     }}
                     resizeMode={FastImage.resizeMode.contain}
                 />
+                <View style={{ margin: 0, width: '100%', height: 40, backgroundColor: '#000000aa', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 16, marginVertical: 8 }}>Buy Now!</Text>
+                    </View>
             </View>
         );
     }
@@ -236,7 +254,7 @@ function VideoFeed(): JSX.Element {
                         </View>
                     );
                 }}
-                contentContainerStyle={{ paddingHorizontal: 8 }}
+                contentContainerStyle={{ paddingHorizontal: 8, backgroundColor: feedItem.color, borderRadius: 8 }}
             />
         );
     }

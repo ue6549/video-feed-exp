@@ -332,7 +332,7 @@ PODS:
   - React-jsinspector (0.72.3)
   - React-logger (0.72.3):
     - glog
-  - react-native-safe-area-context (5.6.1):
+  - react-native-safe-area-context (4.8.2):
     - React-Core
   - react-native-video (6.16.1):
     - RCT-Folly (= 2021.07.22.00)
@@ -642,7 +642,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 59d1eb03af7d30b7d66589c410f13151271e8006
   React-jsinspector: b511447170f561157547bc0bef3f169663860be7
   React-logger: c5b527272d5f22eaa09bb3c3a690fee8f237ae95
-  react-native-safe-area-context: b7c394a7e09988d842a9e37dcafba07e809c5e33
+  react-native-safe-area-context: 0ee144a6170530ccc37a0fd9388e28d06f516a89
   react-native-video: 0b824e0f8eec01d05b9771cd31aa8edd41bb40b7
   React-NativeModulesApple: c57f3efe0df288a6532b726ad2d0322a9bf38472
   React-perflogger: 6bd153e776e6beed54c56b0847e1220a3ff92ba5
