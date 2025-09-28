@@ -18,3 +18,5 @@ experimental repo for video feed experience nad performance POCs
 8. [ ] Transitions.
 9. [ ] Android changes.
 10. [ ] Profiling. Do we need video player pooling?
+11. [ ] Audio session management. Only 1 at a time, interaction with system
+inputs and other audio playing apps / processes.
