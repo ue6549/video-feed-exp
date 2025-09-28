@@ -10,6 +10,7 @@ import UIKit
 enum VisibilityChangeDirection: String, Codable {
   case movingIn
   case movingOut
+  case none
 }
 
 struct VisibilityEvent: Codable {
@@ -121,7 +122,7 @@ class VisibilityTrackingView: RCTView {
     
     let visibilityPercentage: CGFloat
     if viewFrameInWindow.height > 0 {
-      visibilityPercentage = (intersection.height / viewFrameInWindow.height) * 100.0
+      visibilityPercentage = ((intersection.height / viewFrameInWindow.height) * 100.0).rounded(.down)
     } else {
       visibilityPercentage = 0.0
     }
@@ -139,8 +140,25 @@ class VisibilityTrackingView: RCTView {
       return
     }
     
-    let changeDirection = percentage - (lastVisibilityPercentage ?? 0) > 0 ? VisibilityChangeDirection.movingIn : VisibilityChangeDirection.movingOut
+    var changeDirection = VisibilityChangeDirection.none
+    let percentageChange = percentage - (lastVisibilityPercentage ?? 0)
+    if percentageChange > 0 {
+      changeDirection = .movingIn
+    }
+    if percentageChange < 0 {
+      changeDirection = .movingOut
+    }
     
+    if changeDirection != .none {
+      print("RGLOG:: VisibilityTrackingView: - \"\(id)\", - direction change (\(changeDirection)) - last (\((lastVisibilityPercentage ?? 0))%), current (\((percentage))%), lastEvent - (\(String(describing: lastEmittedVisibilityEvent?.toDictionary())))")
+    }
+    
+    lastVisibilityPercentage = percentage
+    lastVisibilityChangeDirection = changeDirection
+    
+        if changeDirection == .none {
+          return
+        }
     let currentTimestamp = Date().timeIntervalSince1970
     let interval = throttleInterval?.doubleValue ?? 0
     let elapsedTime = currentTimestamp - lastEmittedTime
@@ -152,41 +170,77 @@ class VisibilityTrackingView: RCTView {
     
     var shouldSendEvent = false
     
-    // Check for a change in direction
-    if changeDirection != lastVisibilityChangeDirection {
-      shouldSendEvent = true
-    } else {
-      // Determine if a new threshold has been crossed
-      if changeDirection == .movingIn {
-        let previousThreshold = thresholds.movingIn.first(where: { $0.doubleValue >= lastVisibilityPercentage ?? 0 })
-        let currentThreshold = thresholds.movingIn.first(where: { $0.doubleValue >= percentage })
-        
-        // Compare the values, not the optional instances
-        if previousThreshold?.doubleValue != currentThreshold?.doubleValue {
+    /**
+     * If current direction is moving in, this might be first appearance of the card, hence no last event, send event now if there is some threshold crossed
+     If there is not new threshold crossed in this condition the observer should be able to utilise a default value
+     * or there might be a last event and last event's direction could also be moving in but then only if a new threshold has been crossed is when the event should be sent
+     * if the last event's direction was moving out, don't rely on threshold difference between then and now, if there is a new threshold crossed, send event.
+     */
+    if changeDirection == .movingIn {
+      let currentCrossedThreshold = thresholds.movingIn.last(where: { percentage > $0.doubleValue })
+      if let currentThreshold = currentCrossedThreshold {
+        if let lastEmittedEvent = lastEmittedVisibilityEvent {
+          let lastEventDirection = lastEmittedEvent.direction
+          if lastEventDirection == .movingOut {
+            // send event
+            shouldSendEvent = true
+          } else if lastEventDirection == .movingIn,
+                    let previousThreshold = thresholds.movingIn.last(where: { (lastEmittedEvent.visibilityPercentage) > $0.doubleValue }),
+                    previousThreshold.doubleValue != currentThreshold.doubleValue {
+            // send event
+            shouldSendEvent = true
+          }
+        } else {
+          // send event
           shouldSendEvent = true
         }
-      } else if changeDirection == .movingOut {
-        let previousThreshold = thresholds.movingOut.first(where: { $0.doubleValue < lastVisibilityPercentage ?? 0 })
-        let currentThreshold = thresholds.movingOut.first(where: { $0.doubleValue < percentage })
+      }
+      shouldSendEvent = true
+    } else if changeDirection == .movingOut, let lastEmittedEvent = lastEmittedVisibilityEvent {
+      /**
+       * If direction is moving out, that means the card was visible earlier, which implies there must be a last emitted event
+       * Previous threshold may not exist cases when none of the moving out was crossed in last iteration or when the direction was not moving out last time.
+       * So if the direction is moving out now but wasn't so in the last event and now a threshold has been crossed, send event.
+       * If direction was moving out in last event as well, then there must have been a difference in the threshold crossed this time and the last one, only then send.
+       Last threshold may not exist also.
+       * There must be some threshold that gets crossed in the moving out direction otherwise whatever visible state was earlier should continue.
+       If everything is alright, last state in this case should be active.
+       * Only if the card is much larger than the total screen size, some of these assumptions might fail, but what kind of UX will that even be?
+       */
+      let curentCrossedThreshold = thresholds.movingOut.last(where: { $0.doubleValue > percentage })
+      let lastEventDirection = lastEmittedEvent.direction
+      let previousThreshold = thresholds.movingOut.last(where: { $0.doubleValue > lastEmittedEvent.visibilityPercentage })
+      
+      // There is new threshold crossed
+      if let currentThreshold = curentCrossedThreshold {
+        // And the direction has changed to moving out now
+        // Actually a better check would be if the last direction was moving in, may change this
         
-        // Compare the values, not the optional instances
-        if previousThreshold?.doubleValue != currentThreshold?.doubleValue {
+        if .movingIn == lastEventDirection {
+          shouldSendEvent = true
+        } else if let previousThreshold = previousThreshold {
+          // Or the direction was moving out but new threshold crossed is not same as previously crossed threshold
+          if previousThreshold.doubleValue != currentThreshold.doubleValue {
+            shouldSendEvent = true
+          }
+        } else {
+          // Or there was no previous threshold crossed but now is.
+          // Although I do NOT think that this should happen for moving out direction ever.
+          // We shuold try removing this and check again
           shouldSendEvent = true
         }
       }
     }
-    
     if shouldSendEvent {
-      lastVisibilityPercentage = percentage
-      lastVisibilityChangeDirection = changeDirection
-      
       let newVisibilityEvent = VisibilityEvent(
-        uniqueId: uniqueId! as String,
+        uniqueId: id as String,
         direction: changeDirection,
         visibilityPercentage: percentage
       )
       onVisibilityStateChange(newVisibilityEvent.toDictionary())
+      
       lastEmittedTime = currentTimestamp
+      lastEmittedVisibilityEvent = newVisibilityEvent
     }
   }
 }

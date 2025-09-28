@@ -28,11 +28,11 @@ export const SHORTS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
         // 10% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
         // 50% or more visible (incoming) -> Play video
-        isActive: 40,
+        isActive: 50,
     },
     movingOut: {
         // 30% or less visible (outgoing) -> Pause video
-        willResignActive: 50,
+        willResignActive: 90,
         // 0% visible (outgoing) -> Remove video component
         notActive: 20,
     }
@@ -47,8 +47,8 @@ export const CAROUSEL_CARDS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
     },
     movingOut: {
         // 30% or less visible (outgoing) -> Pause video
-        willResignActive: 45,
+        willResignActive: 70,
         // 0% visible (outgoing) -> Remove video component
-        notActive: 20,
+        notActive: 10,
     }
 };

@@ -57,6 +57,7 @@ type LoaderState = 'loading' | 'none' | 'error';
 
 
 const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfig, ...rest }) => {
+    const [debugText, setDebugText] = useState(`${MediaCardVisibility.notActive} - 0%`);
     const [isPlayerAttached, setIsPlayerAttached] = useState(false);
     const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
     const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
@@ -93,19 +94,23 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
             if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
                 setIsPlayerAttached(true);
                 handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.isActive);
+                setDebugText(`${MediaCardVisibility.isActive}`);
                 // setIsPlayerPlaying(true);
             } else if (visibilityPercentage >= THRESHOLDS.movingIn.prepareToBeActive) {
                 setIsPlayerAttached(true);
                 handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.prepareToBeActive);
+                setDebugText(`${MediaCardVisibility.prepareToBeActive}`);
                 // setIsPlayerPlaying(false);
             }
         } else { // Outgoing
             if (visibilityPercentage <= THRESHOLDS.movingOut.notActive) {
                 setIsPlayerAttached(false);
                 handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.notActive);
+                setDebugText(`${MediaCardVisibility.notActive}`);
                 // setIsPlayerPlaying(false);
             } else if (visibilityPercentage <= THRESHOLDS.movingOut.willResignActive) {
                 handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.willResignActive);
+                setDebugText(`${MediaCardVisibility.willResignActive}`);
                 // setIsPlayerPlaying(false);
             }
         }
@@ -205,6 +210,13 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
                     volume={0}
                 />
             )}
+            {/* Debug Info */}
+            <View style={{ position: 'absolute', top: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+            </View>
+            <View style={{ position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+            </View>
         </VisibilityTrackingView>
     );
 };

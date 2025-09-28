@@ -20,7 +20,7 @@ const videoMap: Map<string, VideoInfo> = new Map();
 const maxPlaying: Record<PlayItemType, number> = {
   short: 1,
   ad: 1,
-  carousel: 3,
+  carousel: 2,
   merch: 1
 };
 
