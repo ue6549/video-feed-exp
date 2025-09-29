@@ -140,6 +140,9 @@ function VideoFeed(): JSX.Element {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const animation = useRef<Animated.Value>(new Animated.Value(0)).current;
 
+    const [geekOn, setGeekOn] = useState<boolean>(false);
+    const [applyLodConfigOptimisations, setApplyLodConfigOptimisations] = useState<boolean>(true);
+
     const toggleFab = (): void => {
         const toValue = isOpen ? 0 : 1;
         Animated.spring(animation, {
@@ -162,7 +165,31 @@ function VideoFeed(): JSX.Element {
         }
     };
 
+    const toggelGeekMode = (): void => {
+        toggleFab();
+        setGeekOn(!geekOn);
+    }
+
+    const toggelLoadConfigOptimisations = (): void => {
+        toggleFab();
+        setApplyLodConfigOptimisations(!applyLodConfigOptimisations);
+    }
+
     const menuButtonStyles = {
+        transform: [
+            {
+                scale: animation,
+            },
+            {
+                translateY: animation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -120],
+                }),
+            },
+        ],
+    };
+
+    const geekButtonStyles = {
         transform: [
             {
                 scale: animation,
@@ -184,7 +211,7 @@ function VideoFeed(): JSX.Element {
             {
                 translateY: animation.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, -120],
+                    outputRange: [0, -180],
                 }),
             },
         ],
@@ -250,6 +277,8 @@ function VideoFeed(): JSX.Element {
                                 item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType }}
                                 style={{ width, height: height, backgroundColor: '#000' }}
                                 visibilityConfig={CAROUSEL_CARDS_VISIBILITY_CONFIG}
+                                applyLoadConfigOptimisations={applyLodConfigOptimisations}
+                                geekMode={geekOn}
                             />
                         </View>
                     );
@@ -277,7 +306,9 @@ function VideoFeed(): JSX.Element {
                         aspectRatio: (item.data as VideoData).thumbail.aspectRatio,
                         videoCategory: item.widgetType
                     },
-                    visibilityConfig: SHORTS_VISIBILITY_CONFIG
+                    visibilityConfig: SHORTS_VISIBILITY_CONFIG,
+                    geekMode: geekOn,
+                    applyLoadConfigOptimisations: applyLodConfigOptimisations
                 }}
                     style={[styles.item, { backgroundColor: item.color }]}
                     title='Sample Title'
@@ -299,6 +330,7 @@ function VideoFeed(): JSX.Element {
                 style={styles.list}
                 contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
                 forceNonDeterministicRendering={true} // Set to true for variable-height items
+                extendedState={{ geekOn, applyLodConfigOptimisations }}
             />
             <View style={{backgroundColor: '#1f0505ff', height: 66, width: 'auto', margin: 0}}></View>
             {/* FAB and options */}
@@ -315,9 +347,15 @@ function VideoFeed(): JSX.Element {
                     </Animated.View>
                 </TouchableWithoutFeedback>
 
-                <TouchableWithoutFeedback onPress={() => { Alert.alert('Settings', 'Settings action triggered.'); toggleFab(); }}>
+                <TouchableWithoutFeedback onPress={toggelGeekMode}>
+                    <Animated.View style={[styles.fab, styles.secondaryFab, geekButtonStyles]}>
+                        <Text style={styles.fabText}>{geekOn ? 'Hide Stats' : 'Show Stats'}</Text>
+                    </Animated.View>
+                </TouchableWithoutFeedback>
+
+                <TouchableWithoutFeedback onPress={toggelLoadConfigOptimisations}>
                     <Animated.View style={[styles.fab, styles.secondaryFab, menuButtonStyles]}>
-                        <Text style={styles.fabText}>Settings</Text>
+                        <Text style={styles.fabText}>{applyLodConfigOptimisations ? 'Standard Load Params' : 'Optimise Load Params'}</Text>
                     </Animated.View>
                 </TouchableWithoutFeedback>
 
