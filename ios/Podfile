@@ -28,6 +28,10 @@ end
 target 'VideoFeedApp' do
   config = use_native_modules!
 
+  # native dependencies
+  pod 'KTVHTTPCache'
+  pod 'GCDWebServer'
+  
   # Flags change depending on the env values.
   flags = get_default_flags()
 

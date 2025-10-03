@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, FlatList, StyleSheet, Dimensions, Image, Animated, Alert, StatusBar, TouchableWithoutFeedback, Text, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, Dimensions, Image, Animated, Alert, StatusBar, TouchableWithoutFeedback, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
 import feedData from './resources/video-feed';
 import VideoCard from './components/VideoCard';
@@ -8,6 +8,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from './platback_manager/MediaCardVisibility';
 import * as Utilities from './utilities/Utilities';
 import ShortVideoWidget from './widgets/ShortVideoWidget';
+import { MetricsReportModal } from './instrumentation/MetricsReportModal';
 
 export interface VideoSource {
     sourceType: string;
@@ -48,7 +49,7 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
     while (i < originalArray.length) {
         if (stepSinceLastMerch > 2 && Math.random() > 0.75) {
             stepSinceLastMerch = 0;
-            const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random()*10)}/{@width}/{@height}`
+            const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random() * 10)}/{@width}/{@height}`
             const feedItem = {
                 widgetType: 'merch',
                 color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
@@ -142,6 +143,8 @@ function VideoFeed(): JSX.Element {
 
     const [geekOn, setGeekOn] = useState<boolean>(false);
     const [applyLodConfigOptimisations, setApplyLodConfigOptimisations] = useState<boolean>(true);
+
+    const [showReport, setShowReport] = useState(false);
 
     const toggleFab = (): void => {
         const toValue = isOpen ? 0 : 1;
@@ -241,11 +244,11 @@ function VideoFeed(): JSX.Element {
                 width: boxSize.width,
                 height: Math.ceil(boxSize.width / aspectRatioValue) + 80,
                 borderRadius: 8,
-                overflow: 'hidden' 
+                overflow: 'hidden'
             }}>
                 <View style={{ margin: 0, width: '100%', height: 40, backgroundColor: '#000000aa', justifyContent: 'center', alignItems: 'center' }}>
                     <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginVertical: 8 }}>Sponsored</Text>
-                    </View>
+                </View>
                 <FastImage
                     style={{ marginVertical: 8, borderRadius: 8, width: boxSize.width - 16, flex: 1, aspectRatio: aspectRatioValue, backgroundColor: '#000' }}
                     source={{
@@ -255,8 +258,8 @@ function VideoFeed(): JSX.Element {
                     resizeMode={FastImage.resizeMode.contain}
                 />
                 <View style={{ margin: 0, width: '100%', height: 40, backgroundColor: '#000000aa', justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: '#fff', fontSize: 16, marginVertical: 8 }}>Buy Now!</Text>
-                    </View>
+                    <Text style={{ color: '#fff', fontSize: 16, marginVertical: 8 }}>Buy Now!</Text>
+                </View>
             </View>
         );
     }
@@ -332,7 +335,17 @@ function VideoFeed(): JSX.Element {
                 forceNonDeterministicRendering={true} // Set to true for variable-height items
                 extendedState={{ geekOn, applyLodConfigOptimisations }}
             />
-            <View style={{backgroundColor: '#1f0505ff', height: 66, width: 'auto', margin: 0}}></View>
+
+            {/* Footer */}
+            <View style={{ backgroundColor: '#1f0505ff', height: 66, width: 'auto', margin: 0 }}>
+                { /* Button to open metrics report */}
+                <TouchableOpacity onPress={() => setShowReport(true)}>
+                    <Text style={{ color: '#8ab4ff' }}>Open Metrics Report</Text>
+                </TouchableOpacity>
+            </View>
+            { /* Report modal */}
+            <MetricsReportModal visible={showReport} onClose={() => setShowReport(false)} />
+
             {/* FAB and options */}
             <View style={[styles.fabContainer, { padding: insets.bottom }]}>
                 {isOpen && (

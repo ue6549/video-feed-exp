@@ -1,11 +1,18 @@
 #import "AppDelegate.h"
-
 #import <React/RCTBundleURLProvider.h>
+#import <KTVHTTPCache/KTVHTTPCache.h>
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // Start proxy server
+  NSError *error = nil;
+  [KTVHTTPCache proxyStart:&error];
+#ifdef DEBUG
+  [KTVHTTPCache logSetConsoleLogEnable:YES];
+#endif
+  
   self.moduleName = @"VideoFeedApp";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.

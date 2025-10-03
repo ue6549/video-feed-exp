@@ -70,46 +70,73 @@ function serializeErr(e: any) {
 // ---- Derivation helpers (turn raw events into KPIs) ----
 
 export type KPIs = {
-  readyMs?: number;               // loadStart -> onLoad
-  startupMs?: number;             // playCmd -> readyForDisplay (after that play)
-  stalls?: number;                // count of bufferStart/End pairs
-  stallTimeMs?: number;           // sum of stall durations
-  timeToFirstStallMs?: number;    // playCmd -> first stall start
+  // loadStart -> load (your current definition)
+  readyMs?: number;
+
+  // playCmd -> readyForDisplay (only when ready occurs after play)
+  startupMs?: number;
+
+  // user-perceived startup:
+  // - equals startupMs when ready happens after play
+  // - equals 0 when ready happened while paused (predecoded)
+  startupEffectiveMs?: number;
+
+  // true if first "video_ready_for_display" happened before "video_play"
+  readyBeforePlay?: boolean;
+
+  // whether this playId actually received a play command
+  played?: boolean;
+
+  stalls?: number;
+  stallTimeMs?: number;
+  timeToFirstStallMs?: number;
   lastEvent?: string;
 };
 
 export function deriveKPIs(events: Rec[]): KPIs {
-  const byEvent = (name: string) => events.filter(e => e.event === name);
-  const first = (name: string) => byEvent(name)[0];
-  const after = (name: string, t: number) => byEvent(name).find(e => e.ts >= t);
+  const by = (name: string) => events.filter(e => e.event === name);
+  const first = (name: string) => by(name)[0];
+  const firstAfter = (name: string, t: number) => by(name).find(e => e.ts >= t);
 
   const k: KPIs = {};
+
+  // Your existing "ready" (loadStart -> load)
   const ls = first("video_load_started");
   const ld = first("video_loaded");
   if (ls && ld) k.readyMs = ld.ts - ls.ts;
 
+  // Frame readiness
+  const rfdAny = first("video_ready_for_display");
+
+  // Startup calculations
   const play = first("video_play");
   if (play) {
-    const rfd = after("video_ready_for_display", play.ts);
-    if (rfd) k.startupMs = rfd.ts - play.ts;
+    k.played = true;
+    const rfdAfter = firstAfter("video_ready_for_display", play.ts);
+    if (rfdAfter) {
+      k.startupMs = rfdAfter.ts - play.ts;
+      k.startupEffectiveMs = k.startupMs;
+    } else if (rfdAny && rfdAny.ts < play.ts) {
+      // predecoded while paused
+      k.readyBeforePlay = true;
+      k.startupEffectiveMs = 0;
+    }
+  }
 
-    // stalls
-    let stalls = 0, stallMs = 0;
-    let firstStallStart: number | undefined;
+  // Stalls (after play)
+  if (play) {
     const bs = events.filter(e => e.event === "video_buffer_start" && e.ts >= play.ts);
-    const be = events.filter(e => e.event === "video_buffer_end" && e.ts >= play.ts);
+    const be = events.filter(e => e.event === "video_buffer_end" && e.ts >= play.ts).slice();
+    let stalls = 0, stallMs = 0, firstStallStart: number | undefined;
 
-    // pair them in order
-    let i = 0, j = 0;
-    while (i < bs.length) {
-      const s = bs[i++];
-      const e = be.find(x => x.ts >= s.ts && (j = Math.max(j, be.indexOf(x))) >= 0);
-      if (e) {
-        stalls++; stallMs += (e.ts - s.ts);
-        if (firstStallStart == null) firstStallStart = s.ts;
-        be.splice(j, 1);
-      } else {
-        // open stall (no end yet) – ignore or count to last ts
+    for (const s of bs) {
+      const i = be.findIndex(x => x.ts >= s.ts);
+      if (i >= 0) {
+        const e = be[i];
+        stalls++;
+        stallMs += (e.ts - s.ts);
+        if (!firstStallStart) firstStallStart = s.ts;
+        be.splice(i, 1);
       }
     }
     k.stalls = stalls;
