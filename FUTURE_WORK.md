@@ -2,7 +2,98 @@
 
 ## High Priority (Next Session)
 
-### 1. FeedScreen-Level Prefetch Manager
+### 1. Secure KTVHTTPCache Local Proxy Server
+**Priority**: Critical for production security
+
+**Problem**:
+- KTVHTTPCache runs a local HTTP proxy server (localhost:PORT)
+- Currently has no authentication or access control
+- Could be vulnerable to local attacks or malicious apps
+- No request validation or rate limiting
+
+**Solution**:
+Implement security measures for the local proxy:
+
+**Security Measures**:
+1. **Authentication Token**:
+   - Generate random token on proxy startup
+   - Require token in custom HTTP header for all requests
+   - Rotate token periodically or on app restart
+
+2. **Request Validation**:
+   - Whitelist allowed video URL patterns
+   - Validate URL format before proxying
+   - Block suspicious or malformed requests
+   - Rate limiting per URL to prevent abuse
+
+3. **Access Control**:
+   - Verify requests originate from app's process
+   - Consider using Unix domain sockets instead of TCP (if KTVHTTPCache supports)
+   - Bind to 127.0.0.1 only (never 0.0.0.0)
+
+4. **Request Sanitization**:
+   - Validate all URL parameters
+   - Prevent directory traversal attacks
+   - Limit request size and headers
+
+**Implementation Example**:
+```swift
+// In CacheManager.swift or AppDelegate
+func setupSecureCache() {
+    let config = KTVHTTPCacheConfiguration()
+    
+    // Generate auth token
+    let authToken = UUID().uuidString
+    UserDefaults.standard.set(authToken, forKey: "cache_auth_token")
+    
+    // Configure with security middleware
+    config.addRequestInterceptor { request in
+        guard let token = request.value(forHTTPHeaderField: "X-Cache-Auth"),
+              token == authToken else {
+            return nil // Reject unauthorized requests
+        }
+        
+        guard let url = request.url,
+              isValidVideoURL(url) else {
+            return nil // Reject invalid URLs
+        }
+        
+        return request
+    }
+    
+    KTVHTTPCache.setup(with: config)
+}
+
+// In VideoPlayerView.swift
+private func getProxiedURL(_ originalURL: URL) -> URL? {
+    guard var proxiedURL = KTVHTTPCache.proxyURL(withOriginalURL: originalURL) else {
+        return nil
+    }
+    
+    // Add auth token to request
+    if let token = UserDefaults.standard.string(forKey: "cache_auth_token") {
+        // Add as query param or handle via URLRequest with custom header
+    }
+    
+    return proxiedURL
+}
+```
+
+**Testing**:
+- Verify authenticated requests work
+- Verify unauthenticated requests fail
+- Test with malicious URLs
+- Performance impact testing
+
+**Related**:
+- Update CacheManager to handle auth tokens
+- Update VideoPlayerView to include auth in requests
+- Add security documentation
+- Consider security audit before production
+
+---
+
+### 2. FeedScreen-Level Prefetch Manager
 **Priority**: Critical for production performance
 
 **Problem**: 
