@@ -115,6 +115,13 @@ jest.mock('recyclerlistview', () => {
   };
 });
 
+// Mock AppState
+jest.mock('react-native/Libraries/AppState/AppState', () => ({
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  removeEventListener: jest.fn(),
+  currentState: 'active',
+}));
+
 // Silence console warnings during tests
 global.console = {
   ...console,
