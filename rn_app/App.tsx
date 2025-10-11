@@ -1,38 +1,43 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * Video Feed App
+ * Main entry point with navigation setup
  *
  * @format
  */
 
 import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import VideoFeed from './VideoFeed';
-import { metricsFlushToFile, metricsInit, metricsRotateIfBig } from './instrumentation/MetricsDataRouter';
+import { NavigationContainer } from '@react-navigation/native';
 import { AppState } from 'react-native';
 
+import RootNavigator from './navigation/RootNavigator';
+import { metricsFlushToFile, metricsInit, metricsRotateIfBig } from './instrumentation/MetricsDataRouter';
+
 const App = () => {
-  // useEffect(() => {
-  //   metricsInit();
+  useEffect(() => {
+    // Initialize metrics system
+    metricsInit();
 
-  //   const iv = setInterval(() => {
-  //     metricsFlushToFile();
-  //     metricsRotateIfBig();
-  //   }, 5000);
+    const iv = setInterval(() => {
+      metricsFlushToFile();
+      metricsRotateIfBig();
+    }, 5000);
 
-  //   const sub = AppState.addEventListener('change', s => {
-  //     if (s !== 'active') metricsFlushToFile();
-  //   });
+    const sub = AppState.addEventListener('change', s => {
+      if (s !== 'active') metricsFlushToFile();
+    });
 
-  //   return () => {
-  //     clearInterval(iv);
-  //     sub.remove();
-  //   };
-  // }, []);
+    return () => {
+      clearInterval(iv);
+      sub.remove();
+    };
+  }, []);
 
   return (
     <SafeAreaProvider>
-      <VideoFeed />
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 };

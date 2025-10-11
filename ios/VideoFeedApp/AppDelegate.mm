@@ -6,12 +6,20 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  // Start proxy server
-  NSError *error = nil;
-  [KTVHTTPCache proxyStart:&error];
-#ifdef DEBUG
+  // Enable KTVHTTPCache logging in debug mode
+  #ifdef DEBUG
   [KTVHTTPCache logSetConsoleLogEnable:YES];
-#endif
+  #endif
+  
+  // Start KTVHTTPCache proxy server
+  NSError *error = nil;
+  BOOL started = [KTVHTTPCache proxyStart:&error];
+  if (started) {
+    NSLog(@"[AppDelegate] ✅ KTVHTTPCache proxy started successfully");
+    NSLog(@"[AppDelegate] Proxy is running: %@", [KTVHTTPCache proxyIsRunning] ? @"YES" : @"NO");
+  } else {
+    NSLog(@"[AppDelegate] ❌ Failed to start KTVHTTPCache proxy: %@", error.localizedDescription);
+  }
   
   self.moduleName = @"VideoFeedApp";
   // You can add your custom initial props in the dictionary below.
