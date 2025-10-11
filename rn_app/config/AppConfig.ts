@@ -41,6 +41,10 @@ export interface AppConfigType {
     segmentCount: number;
     maxConcurrent: number;
     priorities: string[];
+    carousel: {
+      initialVideos: number;     // Number of videos to prefetch when carousel appears
+      horizontalLookahead: number; // Future: videos to prefetch ahead during horizontal scroll
+    };
   };
   cache: {
     maxSizeMB: number;
@@ -108,6 +112,10 @@ export class AppConfig {
       segmentCount: 2,
       maxConcurrent: 3,
       priorities: ['short', 'carousel', 'merch'],
+      carousel: {
+        initialVideos: 2,        // Prefetch first 2 videos when carousel appears
+        horizontalLookahead: 2,  // Future: prefetch 2 ahead during horizontal scroll
+      },
     },
     cache: {
       maxSizeMB: 500,
@@ -246,6 +254,10 @@ export class AppConfig {
         segmentCount: 2,
         maxConcurrent: 3,
         priorities: ['short', 'carousel', 'merch'],
+        carousel: {
+          initialVideos: 2,
+          horizontalLookahead: 2,
+        },
       },
       cache: {
         maxSizeMB: 500,

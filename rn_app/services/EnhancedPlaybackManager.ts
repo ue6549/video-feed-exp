@@ -207,8 +207,9 @@ class EnhancedPlaybackManager {
       // Determine priority based on category
       const priority = this.getCategoryPriority(videoState.category);
       
-      // Start prefetching
-      await PrefetchManager.prefetchVideo(videoUrl, videoState.type, priority);
+      // Start prefetching (updated API with videoId)
+      // TODO: Update to use clean video ID when EnhancedPlaybackManager is reactivated
+      await PrefetchManager.prefetchVideo(videoId, videoUrl, videoState.type, priority);
       videoState.isPrefetched = true;
       
       playbackEvents.emit('prefetch', videoId);

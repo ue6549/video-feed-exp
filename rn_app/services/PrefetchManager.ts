@@ -28,16 +28,21 @@ class PrefetchManager {
 
   /**
    * Prefetch video segments (VOD only)
+   * @param videoId - Clean video ID for logging (e.g., vid-3-2)
+   * @param videoUrl - Actual video URL to prefetch
+   * @param videoType - VOD or LIVE
+   * @param priority - Higher number = higher priority
    */
   async prefetchVideo(
+    videoId: string,
     videoUrl: string,
     videoType: 'VOD' | 'LIVE',
     priority: number = 0
   ): Promise<void> {
-    logger.info('prefetch', `📥 PrefetchManager.prefetchVideo() called`);
-    logger.info('prefetch', `  URL: ${videoUrl}`);
-    logger.info('prefetch', `  Type: ${videoType}`);
-    logger.info('prefetch', `  Priority: ${priority}`);
+    logger.info('prefetch', `🎯 PREFETCH START: ${videoId}`);
+    logger.debug('prefetch', `  URL: ${videoUrl}`);
+    logger.debug('prefetch', `  Type: ${videoType}`);
+    logger.debug('prefetch', `  Priority: ${priority}`);
     
     // Skip if prefetching is disabled
     if (!this.isEnabled) {
@@ -55,8 +60,6 @@ class PrefetchManager {
       logger.info('prefetch', `🎬 Prefetching VOD only`);
     }
 
-    const videoId = this.getVideoId(videoUrl);
-    
     // Check if already prefetching or completed
     const existingStatus = this.statusMap.get(videoId);
     if (existingStatus && ['downloading', 'completed'].includes(existingStatus.state)) {
@@ -66,7 +69,8 @@ class PrefetchManager {
 
     // Add to queue
     const request: PrefetchRequest = {
-      videoUrl,
+      videoId,      // Clean ID for tracking/logging
+      videoUrl,     // Actual URL to prefetch
       videoType,
       priority,
       segmentCount: AppConfig.config.prefetch.segmentCount,
@@ -84,8 +88,9 @@ class PrefetchManager {
       totalSegments: 0,
     });
 
-    logger.info('prefetch', `✅ Prefetch queued for: ${videoId}`);
-    logger.info('prefetch', `📊 Queue size: ${this.queue.length}, Active downloads: ${this.activeDownloads.size}`);
+    logger.info('prefetch', `✅ Queued: ${videoId} (priority: ${priority})`);
+    const stats = this.getQueueStats();
+    logger.debug('prefetch', `📊 Queue: ${stats.queueLength}, Active: ${stats.activeDownloads}`);
 
     // Process queue
     this.processQueue();
@@ -190,9 +195,7 @@ class PrefetchManager {
       return;
     }
 
-    const videoId = this.getVideoId(request.videoUrl);
-    
-    // Start download
+    // Start download (videoId now in request)
     this.startDownload(request);
   }
 
@@ -200,7 +203,7 @@ class PrefetchManager {
    * Start downloading segments for a video
    */
   private async startDownload(request: PrefetchRequest): Promise<void> {
-    const videoId = this.getVideoId(request.videoUrl);
+    const { videoId } = request; // Use videoId from request
     const controller = new AbortController();
     
     this.activeDownloads.set(videoId, controller);

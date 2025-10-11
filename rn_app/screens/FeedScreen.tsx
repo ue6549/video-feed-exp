@@ -23,6 +23,7 @@ import { generateVideoId } from '../utilities/videoIdGenerator';
 import ShortVideoWidget from '../widgets/ShortVideoWidget';
 import { MetricsReportModal } from '../instrumentation/MetricsReportModal';
 import DataProviderService from '../services/DataProvider';
+import { FeedPrefetchController } from '../services/FeedPrefetchController';
 import feedDataRaw from '../resources/video-feed';
 import CacheDebugOverlay from '../components/CacheDebugOverlay';
 
@@ -90,6 +91,9 @@ const FeedScreen: React.FC = () => {
   const dataProviderRef = useRef(createDataProvider([]));
   const layoutProviderRef = useRef(createLayoutProvider([]));
 
+  // Prefetch controller
+  const prefetchControllerRef = useRef(new FeedPrefetchController());
+
   // Load initial data
   useEffect(() => {
     loadInitialData();
@@ -106,6 +110,9 @@ const FeedScreen: React.FC = () => {
       // Update RecyclerListView providers
       dataProviderRef.current = createDataProvider(firstPageData);
       layoutProviderRef.current = createLayoutProvider(firstPageData);
+
+      // Trigger initial prefetch
+      prefetchControllerRef.current.onInitialLoad(firstPageData);
     } catch (error) {
       console.error('Failed to load initial data:', error);
       Alert.alert('Error', 'Failed to load video feed');
@@ -123,6 +130,8 @@ const FeedScreen: React.FC = () => {
       const newPageData = await dataProviderService.getPage(nextPage);
       
       const updatedData = [...feedData, ...newPageData];
+      const newPageStartIndex = feedData.length; // Where new page starts
+      
       setFeedData(updatedData);
       setCurrentPage(nextPage);
       setHasMorePages(dataProviderService.hasMorePages());
@@ -130,6 +139,9 @@ const FeedScreen: React.FC = () => {
       // Update RecyclerListView providers
       dataProviderRef.current = createDataProvider(updatedData);
       layoutProviderRef.current = createLayoutProvider(updatedData);
+
+      // Trigger prefetch for new page
+      prefetchControllerRef.current.onPageLoad(updatedData, newPageStartIndex);
     } catch (error) {
       console.error('Failed to load more data:', error);
     } finally {
@@ -375,12 +387,14 @@ const FeedScreen: React.FC = () => {
           rowRenderer={rowRenderer}
           dataProvider={dataProviderRef.current}
           layoutProvider={layoutProviderRef.current}
-          style={styles.list}
-          contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top }]}
+          style={[styles.list, styles.contentContainer, { paddingTop: insets.top }]}
           forceNonDeterministicRendering={true}
           extendedState={{ geekOn, applyLodConfigOptimisations }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.1}
+          onVisibleIndicesChanged={(all, now, notNow) => {
+            prefetchControllerRef.current.handleVisibleIndicesChanged(now, feedData);
+          }}
         />
       </View>
 

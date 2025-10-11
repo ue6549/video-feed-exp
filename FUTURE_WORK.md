@@ -93,52 +93,100 @@ private func getProxiedURL(_ originalURL: URL) -> URL? {
 
 ---
 
-### 2. FeedScreen-Level Prefetch Manager
-**Priority**: Critical for production performance
+### 2. CarouselPrefetchController - Horizontal Scroll Detection
+**Priority**: High - better carousel UX
+**Status**: ✅ Feed-level prefetch implemented, carousel horizontal scroll is future work
 
-**Problem**: 
-- RecyclerListView only renders ~3-5 items ahead
-- Current prefetch range is 5 videos
-- VideoCards beyond render window don't exist yet
-- Can't prefetch videos that aren't mounted
+**Implemented:**
+- ✅ FeedPrefetchController for vertical scroll
+- ✅ Base PrefetchController reusable architecture
+- ✅ Carousel initial videos prefetch (first 2 at high priority, rest at low priority)
 
-**Solution**:
-- Implement prefetch at FeedScreen level
-- Track visible indices via RecyclerListView's `onVisibleIndicesChanged`
-- Prefetch next 5 videos from feed data (URLs available in DataProvider)
-- Independent of VideoCard mounting/unmounting lifecycle
-- Coordinates with pagination to ensure data available
+**Remaining Work:**
+- Detect horizontal scroll in carousel FlatList
+- Create CarouselPrefetchController extending base
+- Prefetch next N videos as user swipes carousel
+- Nested controller with parent priority context
 
 **Implementation**:
 ```typescript
-// In FeedScreen.tsx
-const handleVisibleIndicesChanged = (all: number[], now: number[], notNow: number[]) => {
-  if (now.length === 0) return;
-  
-  const firstVisibleIndex = Math.min(...now);
-  const prefetchRange = AppConfig.config.visibility.prefetchRange;
-  
-  // Prefetch next N videos
-  for (let i = 1; i <= prefetchRange; i++) {
-    const prefetchIndex = firstVisibleIndex + i;
-    if (prefetchIndex < feedData.length) {
-      const item = feedData[prefetchIndex];
-      if (item.videoSource?.url) {
-        PrefetchManager.prefetchVideo(
-          item.videoSource.url, 
-          item.videoSource.videoType,
-          getPriority(item.widgetType)
-        );
-      }
+// Future: rn_app/services/CarouselPrefetchController.ts
+class CarouselPrefetchController extends PrefetchController {
+  handleHorizontalScroll(
+    visibleIndices: number[],
+    allVideos: VideoData[],
+    widgetIndex: number
+  ): void {
+    const lastVisible = Math.max(...visibleIndices);
+    const lookahead = AppConfig.config.prefetch.carousel.horizontalLookahead;
+    
+    for (let i = 1; i <= lookahead; i++) {
+      const idx = lastVisible + i;
+      if (idx >= allVideos.length) break;
+      
+      const video = allVideos[idx];
+      this.prefetchVideos([{
+        id: generateVideoId(widgetIndex, idx),
+        url: video.videoSource.url,
+        type: video.videoSource.videoType,
+      }], 50); // Medium priority (inherits parent context)
     }
   }
-};
+}
+
+// In ShortVideoWidget carousel rendering:
+<FlatList
+  onViewableItemsChanged={(info) => {
+    const visibleIndices = info.viewableItems.map(item => item.index);
+    carouselPrefetchController.handleHorizontalScroll(visibleIndices, videos, widgetIndex);
+  }}
+/>
 ```
 
-**Related Tasks**:
-- Remove isPrefetched from VideoState (no longer relevant)
-- Update MediaCardVisibility to remove prefetch state or make it passive
-- Add config flag for feed-level prefetch
+---
+
+### 3. Logger Module Enhancements
+**Priority**: Medium - better debugging experience
+
+**Current State:**
+- Logging by category (video, playback, prefetch, etc.)
+- Logging by level (debug, info, warn, error)
+- Config-based module enable/disable (static, requires app restart)
+
+**Needed:**
+- **Runtime toggle per module** - Enable/disable specific log categories without restart
+- **Console filtering** - Filter logs by level in Metro console
+- **UI controls** - Settings modal with checkboxes for each log category
+- **Persistent preferences** - Save log settings to AsyncStorage
+- **Log export** - Download logs for debugging
+
+**Implementation**:
+```typescript
+// Enhanced Logger
+class Logger {
+  private static moduleToggles = new Map<string, boolean>();
+  
+  static setModuleEnabled(module: string, enabled: boolean): void {
+    this.moduleToggles.set(module, enabled);
+    AsyncStorage.setItem(`log_module_${module}`, JSON.stringify(enabled));
+  }
+  
+  static isModuleEnabled(module: string): boolean {
+    return this.moduleToggles.get(module) ?? true;
+  }
+  
+  info(category: string, message: string): void {
+    if (!this.isModuleEnabled(category)) return;
+    // ... existing logging
+  }
+}
+
+// In SettingsModal:
+<Switch
+  value={Logger.isModuleEnabled('prefetch')}
+  onValueChange={(val) => Logger.setModuleEnabled('prefetch', val)}
+/>
+```
 
 ---
 
@@ -271,7 +319,44 @@ prefetch: {
 
 ---
 
-### 8. Advanced Prefetch Strategies
+### 8. Prefetch Quality/Bitrate Selection
+**Priority**: Medium - bandwidth optimization
+
+**Goal:** Allow configurable prefetch quality to balance bandwidth vs startup time
+
+**Configuration:**
+```typescript
+prefetch: {
+  quality: 'lowest' | 'optimum' | 'maximum',
+  adaptiveBitrate: boolean,  // Auto-select based on network speed
+}
+```
+
+**Quality Levels:**
+- **Lowest**: Prefetch lowest bitrate variant (saves bandwidth, slower quality ramp-up)
+- **Optimum** (default): Prefetch mid-tier bitrate (balanced)
+- **Maximum**: Prefetch highest bitrate (best quality, higher bandwidth)
+
+**Adaptive Bitrate:**
+- Detect network speed (slow/fast)
+- Automatically select appropriate quality
+- Switch quality based on network changes
+
+**Use Cases:**
+- Mobile data: Use lowest to save bandwidth
+- WiFi: Use optimum or maximum
+- Limited data plan: Force lowest
+- Premium experience: Force maximum
+
+**Implementation:**
+- Parse HLS manifest to identify bitrate variants
+- Select appropriate variant URL for prefetch
+- Pass quality parameter to PrefetchManager
+- Integrate with network detection
+
+---
+
+### 9. Advanced Prefetch Strategies
 **Experimental**: ML-based prefetch
 
 **Ideas**:

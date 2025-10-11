@@ -250,6 +250,91 @@ class VideoPlayerView: UIView {
 
 ## Caching & Prefetching
 
+### PrefetchController.ts (Base Class)
+Abstract base class for reusable, nestable prefetch coordination.
+
+**Location:** `rn_app/services/PrefetchController.ts`
+
+**Purpose:** Provides reusable architecture for prefetching in any scrollable video collection
+
+**API:**
+```typescript
+export interface PrefetchVideo {
+  id: string;           // Clean video ID (vid-X-Y)
+  url: string;          // Actual video URL for KTVHTTPCache
+  type: 'VOD' | 'LIVE'; // Video type
+}
+
+export abstract class PrefetchController {
+  constructor(name: string, parentPriority: number = 0);
+  
+  protected prefetchVideos(videos: PrefetchVideo[], basePriority: number): void;
+  protected logPrefetch(message: string): void;
+}
+```
+
+**Features:**
+- Priority context propagation (parent → child)
+- Extensible for different scroll contexts
+- Logging with controller name prefix
+
+### FeedPrefetchController.ts
+Handles vertical scroll prefetching in the main feed.
+
+**Location:** `rn_app/services/FeedPrefetchController.ts`
+
+**Extends:** `PrefetchController`
+
+**API:**
+```typescript
+class FeedPrefetchController extends PrefetchController {
+  handleVisibleIndicesChanged(visibleIndices: number[], feedData: IFeedItem[]): void;
+  onInitialLoad(feedData: IFeedItem[]): void;
+  onPageLoad(allFeedData: IFeedItem[], newPageStartIndex: number): void;
+  getStats(): { lastPrefetchedIndex: number };
+  reset(): void;
+}
+```
+
+**Behavior:**
+- Prefetches next N widgets (configurable via `visibility.prefetchRange`)
+- Priority based on distance (closer = higher)
+- Carousel widgets: First 2 videos at high priority, rest at low priority
+- Short videos: Single video at distance-based priority
+- Merch widgets: Skipped (no video)
+
+**Usage:**
+```typescript
+// In FeedScreen.tsx
+const prefetchController = useRef(new FeedPrefetchController());
+
+// On initial load
+prefetchController.current.onInitialLoad(feedData);
+
+// On scroll
+<RecyclerListView
+  onVisibleIndicesChanged={(all, now, notNow) => {
+    prefetchController.current.handleVisibleIndicesChanged(now, feedData);
+  }}
+/>
+
+// On pagination
+prefetchController.current.onPageLoad(updatedData, newPageStartIndex);
+```
+
+**Prefetch Strategy:**
+```
+Widget distance from visible:
+  1 widget away → priority 90
+  2 widgets away → priority 80
+  3 widgets away → priority 70
+  ...
+
+Carousel handling:
+  First 2 videos → High priority (distance-based)
+  Remaining videos → Low priority (10)
+```
+
 ### CacheManager.ts
 React Native service for video caching operations.
 
