@@ -9,14 +9,27 @@
 4. **Test your changes** - Run manual tests from TESTING_GUIDE.md
 
 ### After Every Change
-1. **Fix linting errors** - Run `npm run lint` and fix all errors
-2. **Type check** - Ensure TypeScript compiles without errors (`npx tsc --noEmit`)
-3. **Build verification** - Compile each platform separately:
+1. **Type check** - Ensure TypeScript compiles without errors (`npx tsc --noEmit`)
+2. **Run integration tests** - Run `npm test` to verify no regressions (< 1 second)
+3. **Fix linting errors** - Run `npm run lint` and fix all errors
+4. **Build verification** - Compile each platform separately:
    - **RN/TypeScript**: `npx tsc --noEmit` (always run first)
    - **iOS**: `cd ios && xcodebuild -workspace VideoFeedApp.xcworkspace -scheme VideoFeedApp -configuration Debug -sdk iphonesimulator build` (or build in Xcode)
    - **Never run `npx react-native run-ios/android` just to verify builds** - too slow, use platform-specific commands
-4. **Test critical paths** - Run relevant manual tests from TESTING_GUIDE.md
-5. **Update documentation** - If behavior changes, update docs
+5. **Test critical paths** - Run relevant manual tests from TESTING_GUIDE.md
+6. **Update documentation** - If behavior changes, update docs
+
+### Before Committing
+1. **Run all tests** - `npm test` (must pass)
+2. **Type check** - `npx tsc --noEmit` (must pass)
+3. **Lint check** - `npm run lint` (must pass)
+
+### Before Merging to Trunk (cursor-main)
+1. **All tests pass** - `npm test`
+2. **TypeScript compiles** - `npx tsc --noEmit`
+3. **iOS builds** - Verify platform build succeeds
+4. **Manual tests** - Critical paths from TESTING_GUIDE.md
+5. **Documentation updated** - If APIs or behavior changed
 
 ## React Native Guidelines
 
