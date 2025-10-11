@@ -1,11 +1,10 @@
-export default [
+[
   {
     "video_source": {
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED76SATT0FPOG4UPV-CONN11BSTH7AOQRKFT/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED76SATT0FPOG4UPV-CONN11BSTH7AOQRKFT/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -20,8 +19,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDM2ENRKAHJDS1NQR-CONIGHUBBDTOQUZDWR/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDM2ENRKAHJDS1NQR-CONIGHUBBDTOQUZDWR/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -36,8 +34,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMO3DCK3LZYYTSGV-CONG65CRZYOMDSPVZL/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMO3DCK3LZYYTSGV-CONG65CRZYOMDSPVZL/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -52,8 +49,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXRDIV3IXANKUCEF-CON0JZOPDNLCP8XVN1/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXRDIV3IXANKUCEF-CON0JZOPDNLCP8XVN1/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -68,8 +64,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAULGQ8NE61UOFPO-CONKFBVK9GTPAHZSXS/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAULGQ8NE61UOFPO-CONKFBVK9GTPAHZSXS/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -84,8 +79,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVHB4GPCKV7PHRCM-CON0PJN52ZVNFKNZOJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVHB4GPCKV7PHRCM-CON0PJN52ZVNFKNZOJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -100,8 +94,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLJHKJIXTZBER0JC-CONDEHKL4PFWM9FBRU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLJHKJIXTZBER0JC-CONDEHKL4PFWM9FBRU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -116,8 +109,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNJIFJZEZJ3HKQNL-CONTENAUAWKUN362JI/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNJIFJZEZJ3HKQNL-CONTENAUAWKUN362JI/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -132,8 +124,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWQBKK0MGOJODPXO-CONDKWTYIZXLNNGAS5/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWQBKK0MGOJODPXO-CONDKWTYIZXLNNGAS5/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -148,8 +139,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDFVVREJGLWEGJY9X-CONHBKMYORSILAYDMZ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDFVVREJGLWEGJY9X-CONHBKMYORSILAYDMZ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -164,8 +154,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDFDCPWLWUMOYCSXZ-CON6SBPORECRLPHWDU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDFDCPWLWUMOYCSXZ-CON6SBPORECRLPHWDU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -180,8 +169,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLEIM4QJ6WJMOGJO-CONE2HDDJJDYLYUW14/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLEIM4QJ6WJMOGJO-CONE2HDDJJDYLYUW14/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -196,8 +184,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKBCSNYBETGZ23PJ-CONAB1LDGTBFLPOMXA/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKBCSNYBETGZ23PJ-CONAB1LDGTBFLPOMXA/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -212,8 +199,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDDZGKFUXT8ZJHBLF-CONAUWRQASU7QGFJ88/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDDZGKFUXT8ZJHBLF-CONAUWRQASU7QGFJ88/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -228,8 +214,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOJJ6Z6IPNS4BSTM-CONGMQE6XXTCQSDQQY/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOJJ6Z6IPNS4BSTM-CONGMQE6XXTCQSDQQY/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -244,8 +229,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4O6WFMANPFEKXVC-CONZYCQPETHGTSI2XP/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4O6WFMANPFEKXVC-CONZYCQPETHGTSI2XP/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -260,8 +244,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDX4PP1UP6IGLIBWJ-CONMUWYVTZPARATMVK/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDX4PP1UP6IGLIBWJ-CONMUWYVTZPARATMVK/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -276,8 +259,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAQTJMBUXYOJQFL5-CONSASEEH9NT0TEPHE/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAQTJMBUXYOJQFL5-CONSASEEH9NT0TEPHE/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -292,8 +274,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDG40UPJULTXWZZDI-CONDQHAJLINKGPSBYM/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDG40UPJULTXWZZDI-CONDQHAJLINKGPSBYM/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -308,8 +289,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAYZLKCQRMKY6I9G-CONMJUNXZBV87HAWN6/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAYZLKCQRMKY6I9G-CONMJUNXZBV87HAWN6/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -324,8 +304,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDX0BEJVXHHT1IAYV-CONXF6TWCSF0WXRYDX/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDX0BEJVXHHT1IAYV-CONXF6TWCSF0WXRYDX/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -340,8 +319,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDDJ2Z2TDMNYPN1P7-CON4IRE1ICQBSMXLET/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDDJ2Z2TDMNYPN1P7-CON4IRE1ICQBSMXLET/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -356,8 +334,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6QHRSYCXPSROZ1H-CONE5OJUQXKFERLZ9S/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6QHRSYCXPSROZ1H-CONE5OJUQXKFERLZ9S/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -372,8 +349,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJ1SZSPXGUSNADLT-CONUIPBTITNR5IVZHJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJ1SZSPXGUSNADLT-CONUIPBTITNR5IVZHJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -388,8 +364,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTEVRABE5BCW8M8A-CONOCW1L6CZXFEPTU8/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTEVRABE5BCW8M8A-CONOCW1L6CZXFEPTU8/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -404,8 +379,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLXXVBYLD14O1MIL-CONZOBD3KZBCODP8LS/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLXXVBYLD14O1MIL-CONZOBD3KZBCODP8LS/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -420,8 +394,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDO3BPUCZUKZKKBTE-CONO0IBNWCLMHLXUEZ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDO3BPUCZUKZKKBTE-CONO0IBNWCLMHLXUEZ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -436,8 +409,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXHELB6QZM5KCQYG-CON1HA7YGZW4S8ROOM/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXHELB6QZM5KCQYG-CON1HA7YGZW4S8ROOM/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -452,8 +424,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDHMSLPAZBY3OPEBS-CONG3GZMUXMCHXEUDT/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDHMSLPAZBY3OPEBS-CONG3GZMUXMCHXEUDT/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -468,8 +439,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMEQJYBN3QJ7HRLN-CONI3KENW16OEJAUQF/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMEQJYBN3QJ7HRLN-CONI3KENW16OEJAUQF/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -484,8 +454,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAGMKN3MUBNGJZOK-CONISOELST03CTAM9L/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAGMKN3MUBNGJZOK-CONISOELST03CTAM9L/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -500,8 +469,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED43HRITVTAX6MTYD-CONBSZ3IFVLVASFPZG/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED43HRITVTAX6MTYD-CONBSZ3IFVLVASFPZG/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -516,8 +484,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGORUAKBPICPZJOB-CONRM42UYPDXUXUULB/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGORUAKBPICPZJOB-CONRM42UYPDXUXUULB/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -532,8 +499,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDF5GGNNAUI2K4TGQ-CONITPUFVTYPJEZ8TN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDF5GGNNAUI2K4TGQ-CONITPUFVTYPJEZ8TN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -548,8 +514,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLR7YUKAMINKN6JI-CON6PSNXE3NPQFKPKD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLR7YUKAMINKN6JI-CON6PSNXE3NPQFKPKD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -564,8 +529,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTJDMEDELUCC6D1K-CON0YSDU9KKOP2NIOU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTJDMEDELUCC6D1K-CON0YSDU9KKOP2NIOU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -580,8 +544,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZM9B63U8HRXXN3Q-CONPKGW9LOGWQPKAA7/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZM9B63U8HRXXN3Q-CONPKGW9LOGWQPKAA7/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -596,8 +559,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3KSELJZCILSFS3F-CON4S5GRYNY51HHHCU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3KSELJZCILSFS3F-CON4S5GRYNY51HHHCU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -612,8 +574,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZ7B1ORSVUTYXDBX-CONVKAX7V4USRPURPJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZ7B1ORSVUTYXDBX-CONVKAX7V4USRPURPJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -628,8 +589,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBIIDHLXSAGRI51V-CON1YWLAT9JLVCN0XE/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBIIDHLXSAGRI51V-CON1YWLAT9JLVCN0XE/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -644,8 +604,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOZKMNBEKVZAQHX6-CONDILKAQW4CIPAKJA/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOZKMNBEKVZAQHX6-CONDILKAQW4CIPAKJA/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -660,8 +619,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDEZZKYRLRY0SG3DY-CONKZISQCQYQBYUKDN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDEZZKYRLRY0SG3DY-CONKZISQCQYQBYUKDN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -676,8 +634,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED45UN4PAA6QCIPCP-CON4P2GZKRFFUMQBSW/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED45UN4PAA6QCIPCP-CON4P2GZKRFFUMQBSW/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -692,8 +649,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDU0P7IELW1BSD2KL-CON9KTUGOOP6PRUIFX/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDU0P7IELW1BSD2KL-CON9KTUGOOP6PRUIFX/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -708,8 +664,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZQKWKLOLUFDUYOZ-CONLJLLPIAVIZ4XD8I/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZQKWKLOLUFDUYOZ-CONLJLLPIAVIZ4XD8I/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -724,8 +679,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1SROMQ5HAIEUZCG-CONBNF7NCPCTU4XEAU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1SROMQ5HAIEUZCG-CONBNF7NCPCTU4XEAU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -740,8 +694,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDRJJONGT5CW6T1GV-CONZC5GU4HJITSZ3TN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDRJJONGT5CW6T1GV-CONZC5GU4HJITSZ3TN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -756,8 +709,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXZMXUUZRHSX8GKV-CONCIZRR2NBVPFLDTT/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXZMXUUZRHSX8GKV-CONCIZRR2NBVPFLDTT/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -772,8 +724,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPLRBNA5F4JXUPRE-CONJKZ7YY6S77WJBAQ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPLRBNA5F4JXUPRE-CONJKZ7YY6S77WJBAQ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -788,8 +739,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVU8WDUS2LXQPHXA-CONAJKNLNGCYLYEELM/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVU8WDUS2LXQPHXA-CONAJKNLNGCYLYEELM/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -804,8 +754,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAJ2UGFA15CGNCJ9-CON8LZNP8BH3N7SLFZ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDAJ2UGFA15CGNCJ9-CON8LZNP8BH3N7SLFZ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -820,8 +769,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDSVILENYVPTOI6ZO-CONTHRAPU0F47XAMTG/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDSVILENYVPTOI6ZO-CONTHRAPU0F47XAMTG/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -836,8 +784,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWFZGF9QFAQUWYVC-CONLUSZLCOIF0LLFBN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWFZGF9QFAQUWYVC-CONLUSZLCOIF0LLFBN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -852,8 +799,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBZCBUPLGJ44MH2T-CONBLBWO0J6LR2I8GC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBZCBUPLGJ44MH2T-CONBLBWO0J6LR2I8GC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -868,8 +814,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4CXZD6Q47TCZW8G-CONRB0DXQ1YK7I8HKL/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4CXZD6Q47TCZW8G-CONRB0DXQ1YK7I8HKL/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -884,8 +829,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3ED7J4VHLMPZADE-CONYP0SCV5P6UI5GX4/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3ED7J4VHLMPZADE-CONYP0SCV5P6UI5GX4/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -900,8 +844,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLY3N3HHR235NKTQ-CONJMDBIRIIJVJP1MO/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLY3N3HHR235NKTQ-CONJMDBIRIIJVJP1MO/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -916,8 +859,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYVCCDWQMWTNDIIQ-CONTTUD0QMQRRUVEPV/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYVCCDWQMWTNDIIQ-CONTTUD0QMQRRUVEPV/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -932,8 +874,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDROHPLNAOKDCEQ0V-CONMTJNVKLH3A2UT88/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDROHPLNAOKDCEQ0V-CONMTJNVKLH3A2UT88/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -948,8 +889,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVMO8ESVYLNACREW-CONADLHMDSQ2XLBDT4/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVMO8ESVYLNACREW-CONADLHMDSQ2XLBDT4/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -964,8 +904,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDL04RCWGBWBHAHFR-CONGLCUKVS0XF6ZLAF/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDL04RCWGBWBHAHFR-CONGLCUKVS0XF6ZLAF/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -980,8 +919,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2FSQANJFOGZPCUU-CONKWWP2EIUM6CVRXJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2FSQANJFOGZPCUU-CONKWWP2EIUM6CVRXJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -996,8 +934,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPHGN16YXBGFLKSE-CON3TYNDOGINKK5O1I/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPHGN16YXBGFLKSE-CON3TYNDOGINKK5O1I/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1012,8 +949,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9VJGEYT8NTAWISN-CONJL09HYMVEGGEZC9/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9VJGEYT8NTAWISN-CONJL09HYMVEGGEZC9/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1028,8 +964,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2HYYNFNEINE3UME-CONQ2WYR7HG9OUT4ZP/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2HYYNFNEINE3UME-CONQ2WYR7HG9OUT4ZP/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1044,8 +979,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWHBOZ1C5SIQVIYE-CONPVMEDMPZOPLKGOQ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWHBOZ1C5SIQVIYE-CONPVMEDMPZOPLKGOQ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1060,8 +994,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWQFEQCT5Q6PCKVN-CONDPN8UNBMWYNY9GY/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDWQFEQCT5Q6PCKVN-CONDPN8UNBMWYNY9GY/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1076,8 +1009,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED63JDXEMGOR4FSED-CONJXMCVEZFCT1TIZ8/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED63JDXEMGOR4FSED-CONJXMCVEZFCT1TIZ8/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1092,8 +1024,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOOJCNQ9MBJ0ECUX-CONYM1B2U8WFTNXFCF/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOOJCNQ9MBJ0ECUX-CONYM1B2U8WFTNXFCF/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1108,8 +1039,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1VC1HX4GPSRSK6M-CONFYR0HM2PVIVKIL4/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1VC1HX4GPSRSK6M-CONFYR0HM2PVIVKIL4/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1124,8 +1054,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYKMYRZV8HPF8IYM-CONSY34NWYJUMHHL8N/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYKMYRZV8HPF8IYM-CONSY34NWYJUMHHL8N/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1140,8 +1069,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6FE6SGTEGUTL2BJ-CONXAP8961XQH3SONN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6FE6SGTEGUTL2BJ-CONXAP8961XQH3SONN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1156,8 +1084,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2CXZZGNZGS3BUPQ-CONNXXEDMI7MOSXKH9/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED2CXZZGNZGS3BUPQ-CONNXXEDMI7MOSXKH9/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1172,8 +1099,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDY2D6IA5SPYL8BHL-CONGEHP71KJLZDIAZP/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDY2D6IA5SPYL8BHL-CONGEHP71KJLZDIAZP/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1188,8 +1114,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDU8LM7DRXDZZUMGW-CONE9G459IUG0BNYOC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDU8LM7DRXDZZUMGW-CONE9G459IUG0BNYOC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1204,8 +1129,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGYMI4Y21JEMLGZC-CONFHTYW8ZU6DSLEUD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGYMI4Y21JEMLGZC-CONFHTYW8ZU6DSLEUD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1220,8 +1144,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCSJWZVGZDZ04ZQG-CON642YGD6SY3ISWWP/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCSJWZVGZDZ04ZQG-CON642YGD6SY3ISWWP/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1236,8 +1159,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9MTWZKKBCRSRLHJ-CONPFVLN9EKWVLZXCY/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9MTWZKKBCRSRLHJ-CONPFVLN9EKWVLZXCY/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1252,8 +1174,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXNIU9GA3N5YI9TT-CONCARAN38AA0WQQDU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXNIU9GA3N5YI9TT-CONCARAN38AA0WQQDU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1268,8 +1189,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIOI2Z19U7PFYWG4-CONQLG3ZIQCSGTSN2H/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIOI2Z19U7PFYWG4-CONQLG3ZIQCSGTSN2H/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1284,8 +1204,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTQADT02Q8VPA5BM-CONUACXIV7AKDHX4NS/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTQADT02Q8VPA5BM-CONUACXIV7AKDHX4NS/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1300,8 +1219,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCWACKZRK323JYHZ-CONIL4N2HVA00POIFC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCWACKZRK323JYHZ-CONIL4N2HVA00POIFC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1316,8 +1234,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJS2S9QGPYWGQ41R-CONEWIP6T5AVSFDKDW/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJS2S9QGPYWGQ41R-CONEWIP6T5AVSFDKDW/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1332,8 +1249,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED7HBANQVPGN8RKOW-CONOVCM87YEO1VRGCV/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED7HBANQVPGN8RKOW-CONOVCM87YEO1VRGCV/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1348,8 +1264,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJ42XC0KPQLKS4EP-CONYEPDVOJBOKEZUCD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJ42XC0KPQLKS4EP-CONYEPDVOJBOKEZUCD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1364,8 +1279,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCXLEB0EEEDKEL72-CONIDTP2STOMSQKYFM/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCXLEB0EEEDKEL72-CONIDTP2STOMSQKYFM/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1380,8 +1294,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4PWNMPXAXTKTMLO-CONQCL1I3NAFMKKQ70/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4PWNMPXAXTKTMLO-CONQCL1I3NAFMKKQ70/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1396,8 +1309,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNABYNJYO6NQWGCI-CONCRSL26CJSADZDQQ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNABYNJYO6NQWGCI-CONCRSL26CJSADZDQQ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1412,8 +1324,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNOVGC7SBOUUGYP6-CONXNJZUE6TKHZLPZ6/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNOVGC7SBOUUGYP6-CONXNJZUE6TKHZLPZ6/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1428,8 +1339,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDK6JMWPMOPPWLZ5L-CON1ACGPLAGOXLWJDG/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDK6JMWPMOPPWLZ5L-CON1ACGPLAGOXLWJDG/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1444,8 +1354,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIBK64OCB87YRJWV-CONL1AE8BBGO4JFPGB/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIBK64OCB87YRJWV-CONL1AE8BBGO4JFPGB/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1460,8 +1369,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3NNKZMFIVBAR8YR-CON37HYYOTDXEVJLCW/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED3NNKZMFIVBAR8YR-CON37HYYOTDXEVJLCW/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1476,8 +1384,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCOTQLOST2CMQM1Q-CONLNDYYN6JRCULBHH/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDCOTQLOST2CMQM1Q-CONLNDYYN6JRCULBHH/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1492,8 +1399,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1ZPFNPPKTZQEYRT-CONRENSMA7WXIEWHV1/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED1ZPFNPPKTZQEYRT-CONRENSMA7WXIEWHV1/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1508,8 +1414,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDSFMQI4JIXSHR03V-CONKFZLXCXEFK7QN28/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDSFMQI4JIXSHR03V-CONKFZLXCXEFK7QN28/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1524,8 +1429,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKIKTQW6SUAWBTOR-PROC-20240130-MEDKIKTQW6SUAWBTOR-CGTdraoj-CON9QTHCPAUYPI1LMC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKIKTQW6SUAWBTOR-PROC-20240130-MEDKIKTQW6SUAWBTOR-CGTdraoj-CON9QTHCPAUYPI1LMC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1540,8 +1444,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMGZD14APCLDEJVS-CONYT3JPDFMI1PPRQY/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMGZD14APCLDEJVS-CONYT3JPDFMI1PPRQY/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1556,8 +1459,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNWS9YHGS670T8SZ-PROC-20240328-MEDNWS9YHGS670T8SZ-CGTZpPML-CONB3LR0PSAM17WZLC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNWS9YHGS670T8SZ-PROC-20240328-MEDNWS9YHGS670T8SZ-CGTZpPML-CONB3LR0PSAM17WZLC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1572,8 +1474,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED43MP30S1I0YBSUO-CONLLNHZTWL8FOJFAZ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED43MP30S1I0YBSUO-CONLLNHZTWL8FOJFAZ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1588,8 +1489,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDUSY1OS97QVSX7FM-CONJK6RV4AXAFJDRFD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDUSY1OS97QVSX7FM-CONJK6RV4AXAFJDRFD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1604,8 +1504,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNB6PTYNK7BLONKC-CONVQAJEI25U1UMIPW/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNB6PTYNK7BLONKC-CONVQAJEI25U1UMIPW/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1620,8 +1519,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED0ABT1XQ8CM9XJJI-CONEORUHP5QEP5MT40/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED0ABT1XQ8CM9XJJI-CONEORUHP5QEP5MT40/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1636,8 +1534,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNQODSCQYIZ87I4H-CONKPPBTVU3E3VIJ2O/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNQODSCQYIZ87I4H-CONKPPBTVU3E3VIJ2O/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1652,8 +1549,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLV9WIQYDFOJEMH1-CONZG4IHGAUQCCHEEW/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLV9WIQYDFOJEMH1-CONZG4IHGAUQCCHEEW/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1668,8 +1564,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDRCLS5HYYSQAW0GL-CONQG0HMKBJMUHXZYX/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDRCLS5HYYSQAW0GL-CONQG0HMKBJMUHXZYX/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1684,8 +1579,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYYIN7I3E0A50HI0-CONPMLDFRABXSR8CKG/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDYYIN7I3E0A50HI0-CONPMLDFRABXSR8CKG/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1700,8 +1594,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDV4NDVLU43JHP2EK-CONO4OONQUW8VTGFLI/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDV4NDVLU43JHP2EK-CONO4OONQUW8VTGFLI/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1716,8 +1609,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDR8FJ87LVIKXUSXZ-CON1SSSPZMCEGEHXVP/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDR8FJ87LVIKXUSXZ-CON1SSSPZMCEGEHXVP/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1732,8 +1624,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED27CDDLJX2RL3LQI-CONGV4DDPJVWCEL8D0/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED27CDDLJX2RL3LQI-CONGV4DDPJVWCEL8D0/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1748,8 +1639,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOW4YUSSGKYFVHDG-CONDGDFB43PNA6NFRD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDOW4YUSSGKYFVHDG-CONDGDFB43PNA6NFRD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1764,8 +1654,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKJ1NHC2BME1VX6W-CONTMKESMY6BKAJMAJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKJ1NHC2BME1VX6W-CONTMKESMY6BKAJMAJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1780,8 +1669,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDQRJSCEZN0GDS309-CONB3MG7B6WEVX0NG7/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDQRJSCEZN0GDS309-CONB3MG7B6WEVX0NG7/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1796,8 +1684,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTEUOMFEYM4HYSVC-CONKGGRBDGO32RGN3X/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDTEUOMFEYM4HYSVC-CONKGGRBDGO32RGN3X/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1812,8 +1699,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIBSQO1CWL2AFGDY-CONI3NYGBK8X4AV4RI/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDIBSQO1CWL2AFGDY-CONI3NYGBK8X4AV4RI/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1828,8 +1714,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXODHOWBIT543FN8-CONLZKBK0KW4RCJYIU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDXODHOWBIT543FN8-CONLZKBK0KW4RCJYIU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1844,8 +1729,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPZITH60JGC25IX3-CONEPW6X2MIP0LXVF9/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDPZITH60JGC25IX3-CONEPW6X2MIP0LXVF9/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1860,8 +1744,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBZLRSQMIU3ZGKBU-CONXZUXKJ5K4IUJ8ET/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDBZLRSQMIU3ZGKBU-CONXZUXKJ5K4IUJ8ET/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1876,8 +1759,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6YAPNBVXPINI0MP-CON5C5JSXUMFWI0HXB/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED6YAPNBVXPINI0MP-CON5C5JSXUMFWI0HXB/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1892,8 +1774,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDE62FKZFRBJC0W80-CON0H2EZEKX1JNTQTQ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDE62FKZFRBJC0W80-CON0H2EZEKX1JNTQTQ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1908,8 +1789,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNQEF4WN1XDLTM2T-CONCTD6YHBP6ZQP4GB/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNQEF4WN1XDLTM2T-CONCTD6YHBP6ZQP4GB/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1924,8 +1804,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDED7DEJKLVHUV41J-CONNADUYFKOONRIUF9/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDED7DEJKLVHUV41J-CONNADUYFKOONRIUF9/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1940,8 +1819,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZDLQHQJ3KM4SJLB-CON5OJICV1XWFAAHRO/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZDLQHQJ3KM4SJLB-CON5OJICV1XWFAAHRO/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1956,8 +1834,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED0QRONSEE3PIIKXH-CONBWKWKYYY3XGYED7/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED0QRONSEE3PIIKXH-CONBWKWKYYY3XGYED7/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1972,8 +1849,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKZBCNCTXPNOBQUH-CON7C0WL2QYEPNGLWO/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKZBCNCTXPNOBQUH-CON7C0WL2QYEPNGLWO/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -1988,8 +1864,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDC41GSIHKPRFS4IR-CONZKBLXGUV1LXTLM1/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDC41GSIHKPRFS4IR-CONZKBLXGUV1LXTLM1/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2004,8 +1879,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMQHGK9ROKMCEJMO-CONEVFNONEB2P2NGE9/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDMQHGK9ROKMCEJMO-CONEVFNONEB2P2NGE9/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2020,8 +1894,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKWHDJ3PTVKQGL33-CONKYJT6N3JBOBYUGU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKWHDJ3PTVKQGL33-CONKYJT6N3JBOBYUGU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2036,8 +1909,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDHDVJY6F7ZJAJHES-CON3V7F06ZMY8ONBWA/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDHDVJY6F7ZJAJHES-CON3V7F06ZMY8ONBWA/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2052,8 +1924,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNTTKM8IPZSPHF7J-CONQYJTLMGQCYWAJFX/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNTTKM8IPZSPHF7J-CONQYJTLMGQCYWAJFX/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2068,8 +1939,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9ZQDGNOMRUWWNNP-CONUOEHOS5PZWL3O7L/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9ZQDGNOMRUWWNNP-CONUOEHOS5PZWL3O7L/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2084,8 +1954,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLUCF3J6JUDTFUFQ-CONNSD5ZBRJNZYITYN/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLUCF3J6JUDTFUFQ-CONNSD5ZBRJNZYITYN/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2100,8 +1969,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED8QJMOF0TS8V85KV-CONPDBZOMHZ71SDHM1/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED8QJMOF0TS8V85KV-CONPDBZOMHZ71SDHM1/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2116,8 +1984,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9Z4GGQGDMRBQLQS-CONX5OK7SBSZ1JBSPU/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED9Z4GGQGDMRBQLQS-CONX5OK7SBSZ1JBSPU/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2132,8 +1999,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4ES7FCF60VJLTUE-CON0WXSXJQC9KGEGPC/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED4ES7FCF60VJLTUE-CON0WXSXJQC9KGEGPC/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2148,8 +2014,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDF5RXAQWYLMC1CXB-CONC26E0RHN6RJQ8UL/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDF5RXAQWYLMC1CXB-CONC26E0RHN6RJQ8UL/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2164,8 +2029,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED88BOJSAQXOJGUQT-CONIM65K0DRWG2O6PM/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MED88BOJSAQXOJGUQT-CONIM65K0DRWG2O6PM/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2180,8 +2044,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNVNMV8RUX8RLQLG-CONR7SJK3DMPH0DRMX/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDNVNMV8RUX8RLQLG-CONR7SJK3DMPH0DRMX/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2196,8 +2059,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJAQSJCSHOZCVOTV-CONU4JE1NJT0DZSMI6/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDJAQSJCSHOZCVOTV-CONU4JE1NJT0DZSMI6/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2212,8 +2074,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLSRHUPPFUPMOFDP-CONCQFW71NMGG065UD/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDLSRHUPPFUPMOFDP-CONCQFW71NMGG065UD/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2228,8 +2089,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDY3E4CY0EZX0FXOS-CON9M98UMVI50YWYOJ/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDY3E4CY0EZX0FXOS-CON9M98UMVI50YWYOJ/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2244,8 +2104,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVP6UFXPXNKXF4YL-CONCWIJBEZIJLQCZ79/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDVP6UFXPXNKXF4YL-CONCWIJBEZIJLQCZ79/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2260,8 +2119,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKONRU4JPWHXAADG-CONKWH9SZRYXL2GL0N/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDKONRU4JPWHXAADG-CONKWH9SZRYXL2GL0N/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2276,8 +2134,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZZCHII32QCOZTV1-CONKVYLCS42LUAFJ3M/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDZZCHII32QCOZTV1-CONKVYLCS42LUAFJ3M/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,
@@ -2292,8 +2149,7 @@ export default [
       "sourceType": "HLS",
       "type": "FeedsVideoSource",
       "resolution": 0,
-      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGQJJJGHYUPDRZYF-CONQPZVLZY0ICJFGFK/manifest.m3u8",
-      "videoType": "VOD"
+      "url": "https://2gud-live-cdn.akamaized.net/media/fk-p-user-2gudsocial072022/video/MEDGQJJJGHYUPDRZYF-CONQPZVLZY0ICJFGFK/manifest.m3u8"
     },
     "thumbail": {
       "width": 0,

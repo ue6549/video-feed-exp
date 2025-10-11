@@ -1,110 +1,109 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, Dimensions, ViewProps, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
-import { VisibilityTrackingView, VisibilityStateChangeEvent, RawVisibilityTransitioningConfig } from './native_components/VisibilityTrackingView'; // Import your components
-import Video, { OnBufferData, OnLoadData, OnLoadStartData, OnPlaybackRateChangeData, OnProgressData, OnVideoErrorData, ReactVideoProps, SelectedTrackType } from 'react-native-video';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { View, Image, StyleSheet, Dimensions, ViewProps, ActivityIndicator, Text, TouchableOpacity, Animated } from 'react-native';
+import { VisibilityTrackingView, VisibilityStateChangeEvent, RawVisibilityTransitioningConfig } from './native_components/VisibilityTrackingView';
 import FastImage from '@d11/react-native-fast-image';
 import { playbackEvents, handleVisibilityChange } from '../platback_manager/PlaybackManager';
 import { MediaCardVisibility, VisibilityTransitioningConfig } from '../platback_manager/MediaCardVisibility';
 import { metrics } from '../instrumentation/VideoMetrics';
 import { DebugHUD } from '../instrumentation/DebugHUD';
+import VideoPlayerView from './VideoPlayerView';
+import PlayButton from './PlayButton';
+import { AppConfig } from '../config/AppConfig';
+import { WidgetType } from '../types';
+import { logger } from '../utilities/Logger';
 
 // Sample interface for your video item data
 interface VideoItem {
     id: string;
-    videoCategory?: string; // e.g., 'short' or 'carousel'
-    videoSource: { url: string };
+    videoCategory?: WidgetType; // e.g., 'short' or 'carousel'
+    videoSource: { 
+        url: string;
+        videoType?: 'VOD' | 'LIVE';
+    };
     thumbnailUrl: string;
     aspectRatio?: string; // e.g., '16:9'
 }
 
 const toRawVisibilityConfig = (config: VisibilityTransitioningConfig): RawVisibilityTransitioningConfig => {
     return {
-        movingIn: [config.movingIn.prepareToBeActive, config.movingIn.isActive],
-        movingOut: [config.movingOut.willResignActive, config.movingOut.notActive],
+        movingIn: [config.movingIn.prefetch, config.movingIn.prepareToBeActive, config.movingIn.isActive],
+        movingOut: [config.movingOut.willResignActive, config.movingOut.notActive, config.movingOut.released],
     };
 }
 
 /**
- * ReactVideoProps are a way to customise the behaviour of this video card.
- * Only things additional it is doing right now 
- * 1. Not loading the video player but just making do with and image view if the video is not in view port or area of interest.
- *      Thus saving memory and CPU usage.
- * 2. Is using a FastImage for thumbnail fetching and caching. Leveraging just the Video component props for better UI and loading handling
+ * VideoCardProps for customizing video card behavior
+ * Uses custom VideoPlayerView native module for playback
  */
 export interface VideoCardProps extends ViewProps {
     item: VideoItem;
-    videoProps?: ReactVideoProps;
 
     geekMode?: boolean; // Show the debug HUD with metrics
-    applyLoadConfigOptimisations?: boolean; // Apply the video load config optimisations
 
-    // Althuogh for the native component this a generic key mapping to number threshold. 
-    // For the rest of the consumers on the RN side, setting a standard contract
+    // Visibility configuration for playback control
     visibilityConfig?: VisibilityTransitioningConfig;
 }
 
 // Define the visibility thresholds for our custom logic
 const DEFAULT_VISIBILITY_THRESHOLDS: VisibilityTransitioningConfig = {
     movingIn: {
-        // 10% or more visible (incoming) -> Add video component, paused
+        // 5% or more visible (incoming) -> Start prefetch
+        prefetch: 5,
+        // 25% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
         // 50% or more visible (incoming) -> Play video
         isActive: 50,
     },
     movingOut: {
-        // 30% or less visible (outgoing) -> Pause video
+        // 90% or less visible (outgoing) -> Pause video
         willResignActive: 90,
-        // 0% visible (outgoing) -> Remove video component
+        // 20% or less visible (outgoing) -> Remove video component
         notActive: 20,
+        // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
+        released: 5,
     }
 };
 
-type LoaderState = 'loading' | 'none' | 'error' | 'stopped';
+type LoaderState = 'loading' | 'none' | 'error' | 'stopped' | 'loaded';
 
-type VideoLoadOptimsationConfig = {
-    mute: boolean;
-    selectedAudioTrack: SelectedTrackType;
-    autoWaits: boolean; // automaticallyWaitsToMinimizeStalling
-    pfb: number; // preferredForwardBufferDuration
-    maxBR: number; // maxBitRate
+// Video event data types (for VideoPlayerView callbacks)
+interface OnLoadStartData {
+    isNetwork: boolean;
+    type: string;
+    uri: string;
 }
 
-enum VideoLoadOptiPhase {
-    PREFLIGHT,
-    JOIN,
-    STABILISE,
-    STEADY,
-    POOR,
+interface OnLoadData {
+    duration: number;
+    naturalSize: { width: number; height: number; orientation: string };
 }
 
-const VideoLoadOptiPhaseConfig: Record<VideoLoadOptiPhase, VideoLoadOptimsationConfig> = {
-    [VideoLoadOptiPhase.PREFLIGHT]: { mute: true, selectedAudioTrack: SelectedTrackType.DISABLED, autoWaits: false, pfb: 0, maxBR: 0 },
-    [VideoLoadOptiPhase.JOIN]: { mute: true, selectedAudioTrack: SelectedTrackType.DISABLED, autoWaits: true, pfb: 0, maxBR: 1000000 },
-    [VideoLoadOptiPhase.STABILISE]: { mute: false, selectedAudioTrack: SelectedTrackType.SYSTEM, autoWaits: true, pfb: 2, maxBR: 2500000 },
-    [VideoLoadOptiPhase.STEADY]: { mute: false, selectedAudioTrack: SelectedTrackType.SYSTEM, autoWaits: true, pfb: 4, maxBR: 5000000 },
-    [VideoLoadOptiPhase.POOR]: { mute: true, selectedAudioTrack: SelectedTrackType.DISABLED, autoWaits: true, pfb: 6, maxBR: 1000000 },
-};
+interface OnVideoErrorData {
+    error: {
+        code?: number;
+        localizedDescription?: string;
+        localizedFailureReason?: string;
+        localizedRecoverySuggestion?: string;
+        domain?: string;
+    };
+}
 
-const EARLY_WINDOW_MS = 7_000;     // if first stall happens within this after play -> aggressive fallback
-const MAX_STALLS_IN_10S = 2;       // threshold to fallback
-const MAX_STALL_MS_IN_10S = 1200;  // total stall ms threshold to fallback
-const RECOVER_AFTER_STABLE_MS = 6000; // time without stall before step-up
-const SWITCH_COOLDOWN_MS = 2500;      // avoid toggling too frequently
+interface OnBufferData {
+    isBuffering: boolean;
+}
 
-const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfig, geekMode, applyLoadConfigOptimisations, ...rest }) => {
-    const phaseRef = useRef<VideoLoadOptiPhase>(applyLoadConfigOptimisations ? VideoLoadOptiPhase.PREFLIGHT : VideoLoadOptiPhase.STEADY);
+interface OnProgressData {
+    currentTime: number;
+    playableDuration: number;
+    seekableDuration: number;
+}
+
+interface OnPlaybackRateChangeData {
+    playbackRate: number;
+}
+
+const VideoCard: React.FC<VideoCardProps> = ({ item, visibilityConfig, geekMode, ...rest }) => {
     const playStartTs = useRef<number | null>(null);
-
-    // Stall tracking (rolling window)
-    const stallCount = useRef(0);
-    const stallMs = useRef(0);
-    let openStallStart: number | null = null;
-    const windowEvents: Array<{t:number, dur:number}> = []; // last N stalls
-    let lastStallClearedAt = useRef<number>(Date.now());
-
-    // Hysteresis / cooldowns
-    const inCooldown = useRef(false);
-    const lastPhaseSwitchTs = useRef(0);
 
     const [debugText, setDebugText] = useState(`${MediaCardVisibility.notActive} - 0%`);
     const [isPlayerAttached, setIsPlayerAttached] = useState(false);
@@ -112,6 +111,18 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
     const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
     const [retryKey, setRetryKey] = useState<number>(0);
     const [loaderState, setLoaderState] = useState<LoaderState>('loading');
+    const [showPlayButton, setShowPlayButton] = useState(false);
+    const [isVideoReadyForDisplay, setIsVideoReadyForDisplay] = useState(false);
+    const [isBuffering, setIsBuffering] = useState(false);
+    
+    // Load time tracking for cache verification
+    const loadStartTimeRef = useRef<number | null>(null);
+    
+    // Pending visibility state for proper React synchronization
+    const [pendingVisibilityState, setPendingVisibilityState] = useState<MediaCardVisibility | null>(null);
+    
+    // Animated opacity for smooth crossfade
+    const thumbnailOpacity = useRef(new Animated.Value(1)).current;
 
     const playIdRef = React.useRef<string>('');
     const genPlayId = React.useCallback(() =>
@@ -119,33 +130,34 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
     );
     const beginAttempt = React.useCallback(() => {
         playIdRef.current = genPlayId();
-        // optional: record an explicit start
         metrics.mark('attemptStart', item.id, playIdRef.current);
     }, [genPlayId, item.id]);
 
-    const [mute, setMute] = useState(VideoLoadOptiPhaseConfig[phaseRef.current].mute);
-    const [selectedAudioTrack, setSelectedAudioTrack] = useState<SelectedTrackType>(VideoLoadOptiPhaseConfig[phaseRef.current].selectedAudioTrack);
-    const [autoWaits, setAutoWaits] = useState(VideoLoadOptiPhaseConfig[phaseRef.current].autoWaits); // automaticallyWaitsToMinimizeStalling
-    const [pfb, setPfb] = useState(VideoLoadOptiPhaseConfig[phaseRef.current].pfb); // preferredForwardBufferDuration
-    const [maxBR, setMaxBR] = useState(VideoLoadOptiPhaseConfig[phaseRef.current].maxBR); // maxBitRate
-
-    {/** state for capture metrics, display HUD */}
-
     const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
     
+    const now = () => Date.now();
+
     useEffect(() => {
         const playListener = (videoId: string) => {
             if (videoId === item.id) {
+                logger.info('video', `[${item.id}] ⏯️ PLAY event received`);
                 playStartTs.current = now();
-                switchPhase(applyLoadConfigOptimisations ? VideoLoadOptiPhase.PREFLIGHT : VideoLoadOptiPhase.STEADY);
                 metrics.mark('video_play', item.id, playIdRef.current);
                 setIsPlayerPlaying(true);
+                setShowPlayButton(false);
+                logger.info('video', `[${item.id}] ✅ Set isPlayerPlaying=true, paused prop will be: ${false}`);
             }
         };
         const pauseListener = (videoId: string) => {
             if (videoId === item.id) {
+                logger.info('video', `[${item.id}] ⏸️ PAUSE event received`);
                 metrics.mark('video_pause', item.id, playIdRef.current);
                 setIsPlayerPlaying(false);
+                logger.info('video', `[${item.id}] ✅ Set isPlayerPlaying=false, paused prop will be: ${true}`);
+                // Show play button for low-end devices or manual play
+                if (AppConfig.config.performance.isLowEndDevice || !AppConfig.config.performance.autoplayOnLowEnd) {
+                    setShowPlayButton(true);
+                }
             }
         };
 
@@ -161,54 +173,86 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
         };
     }, [item.id]);
 
+    const lastVisibilityStateRef = useRef<MediaCardVisibility>(MediaCardVisibility.notActive);
+
+    // useLayoutEffect to handle pending visibility state after player attachment
+    useLayoutEffect(() => {
+        if (pendingVisibilityState && isPlayerAttached) {
+            // Player is NOW attached, emit the state
+            handleVisibilityChange(item.id, item.videoCategory ?? 'default', pendingVisibilityState, item.videoSource.videoType);
+            setDebugText(`${pendingVisibilityState}`);
+            lastVisibilityStateRef.current = pendingVisibilityState;
+            setPendingVisibilityState(null);
+        }
+    }, [isPlayerAttached, pendingVisibilityState]);
+
     const onVisibilityChange = (event: { nativeEvent: VisibilityStateChangeEvent }) => {
         const { uniqueId, direction, visibilityPercentage } = event.nativeEvent;
         const incoming = direction === 'movingIn';
         setLastVisibilityPercentage(visibilityPercentage);
 
+        logger.debug('visibility', `[${item.id}] ${direction} ${visibilityPercentage}%`);
+
+        let newState: MediaCardVisibility | null = null;
+
         if (incoming) {
+            // Determine current state based on visibility percentage
             if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
-                if (!isPlayerAttached) beginAttempt();
-                setIsPlayerAttached(true);
-                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.isActive);
-                setDebugText(`${MediaCardVisibility.isActive}`);
-                // setIsPlayerPlaying(true);
+                newState = MediaCardVisibility.isActive;
             } else if (visibilityPercentage >= THRESHOLDS.movingIn.prepareToBeActive) {
-                if (!isPlayerAttached) beginAttempt();
-                setIsPlayerAttached(true);
-                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.prepareToBeActive);
-                setDebugText(`${MediaCardVisibility.prepareToBeActive}`);
-                // setIsPlayerPlaying(false);
+                newState = MediaCardVisibility.prepareToBeActive;
+            } else if (visibilityPercentage >= THRESHOLDS.movingIn.prefetch) {
+                newState = MediaCardVisibility.prefetch;
             }
         } else { // Outgoing
-            if (visibilityPercentage <= THRESHOLDS.movingOut.notActive) {
-                setIsPlayerAttached(false);
-                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.notActive);
-                setDebugText(`${MediaCardVisibility.notActive}`);
-                // setIsPlayerPlaying(false);
+            if (visibilityPercentage <= THRESHOLDS.movingOut.released) {
+                newState = MediaCardVisibility.released;
+            } else if (visibilityPercentage <= THRESHOLDS.movingOut.notActive) {
+                newState = MediaCardVisibility.notActive;
             } else if (visibilityPercentage <= THRESHOLDS.movingOut.willResignActive) {
-                handleVisibilityChange(item.id, item.videoCategory ?? 'default', MediaCardVisibility.willResignActive);
-                setDebugText(`${MediaCardVisibility.willResignActive}`);
-                // setIsPlayerPlaying(false);
+                newState = MediaCardVisibility.willResignActive;
             }
+        }
+
+        // Only emit state change if state actually changed
+        if (newState && newState !== lastVisibilityStateRef.current) {
+            logger.info('visibility', `[${item.id}] ${lastVisibilityStateRef.current} → ${newState}`);
+            
+            // ⚠️ CRITICAL: Apply player attachment SYNCHRONOUSLY before emitting state change
+            const shouldHavePlayer = (
+                newState === MediaCardVisibility.prepareToBeActive || 
+                newState === MediaCardVisibility.isActive
+            );
+            
+            const shouldNotHavePlayer = (
+                newState === MediaCardVisibility.notActive || 
+                newState === MediaCardVisibility.released
+            );
+            
+            if (shouldHavePlayer && !isPlayerAttached) {
+                logger.info('video', `[${item.id}] 🔌 Attaching player BEFORE state emission`);
+                beginAttempt();
+                setIsPlayerAttached(true);
+                setPendingVisibilityState(newState); // Queue the state change for useLayoutEffect
+                return; // Exit early
+            } else if (shouldNotHavePlayer && isPlayerAttached) {
+                logger.info('video', `[${item.id}] 🔌 Detaching player BEFORE state emission`);
+                setIsPlayerAttached(false);
+                setIsVideoReadyForDisplay(false);
+                thumbnailOpacity.setValue(1);
+                loadStartTimeRef.current = null; // Reset for next play attempt
+            }
+
+            // Emit state change to PlaybackManager (player state is now correct)
+            handleVisibilityChange(item.id, item.videoCategory ?? 'default', newState, item.videoSource.videoType);
+            setDebugText(`${newState}`);
+            lastVisibilityStateRef.current = newState;
         }
     };
 
     // Video event handlers
-    const handleLoadStart = (data: OnLoadStartData) => {
-        metrics.mark('video_load_started', item.id, playIdRef.current, { videoSource: item.videoSource.url });
-        // Only show the loading state if a player is attached
-        if (isPlayerAttached) {
-            setLoaderState('loading');
-        }
-    };
-
-    const handleLoad = (data: OnLoadData) => {
-        metrics.mark('video_loaded', item.id, playIdRef.current, { duration: data.duration, naturalSize: data.naturalSize });
-        setLoaderState('none');
-    };
-
     const handleError = (error: OnVideoErrorData) => {
+        logger.error('video', `[${item.id}] Playback error: ${error.error || 'Unknown error'}`);
         metrics.error('video_error', item.id, playIdRef.current, error);
         console.error('Video playback error', error);
         setLoaderState('error');
@@ -221,124 +265,55 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
         setLoaderState('loading');
     };
 
-    const onReadyForDisplay = () => {
-        metrics.mark('video_ready_for_display', item.id, playIdRef.current);
+    const handleManualPlay = () => {
+        if (!isPlayerAttached) {
+            beginAttempt();
+            setIsPlayerAttached(true);
+        }
+        playbackEvents.emit('play', item.id);
+        setShowPlayButton(false);
     };
 
     const onBuffer = (e: OnBufferData) => {
+        // Track buffer events for metrics - no optimization logic
+        setIsBuffering(e.isBuffering);
         if (e.isBuffering) {
             metrics.mark('video_buffer_start', item.id, playIdRef.current);
-            if (applyLoadConfigOptimisations) {
-                openStallStart = now();
-                // Early aggressive fallback: first stall right after join
-                if (playStartTs.current && (now() - playStartTs.current) <= EARLY_WINDOW_MS) {
-                    switchPhase(VideoLoadOptiPhase.POOR);
-                }
-            }
         } else {
-            if (applyLoadConfigOptimisations && openStallStart != null) {
-                const dur = now() - openStallStart;
-                addStall(dur);
-                metrics.mark('video_buffer_end', item.id, playIdRef.current, { dur });
-                openStallStart = null;
-
-                // Threshold-based fallback (rolling 10s window)
-                if (stallCount.current >= MAX_STALLS_IN_10S || stallMs.current >= MAX_STALL_MS_IN_10S) {
-                    switchPhase(VideoLoadOptiPhase.POOR);
-                }
-            } else {
-                metrics.mark('video_buffer_end', item.id, playIdRef.current);
-            }
+            metrics.mark('video_buffer_end', item.id, playIdRef.current);
         }
     };
     
+    const onReadyForDisplay = () => {
+        const loadTime = loadStartTimeRef.current ? Date.now() - loadStartTimeRef.current : null;
+        logger.info('video', `[${item.id}] ✅ Video ready for display (load time: ${loadTime}ms)`);
+        metrics.mark('video_ready_for_display', item.id, playIdRef.current);
+        setIsVideoReadyForDisplay(true);
+        setIsBuffering(false);
+        
+        // Smooth crossfade from thumbnail to video
+        Animated.timing(thumbnailOpacity, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    };
+    
     const onProgress = (e: OnProgressData) => {
+        // Progress tracking - uncomment if you need detailed progress metrics
         // metrics.mark('video_progress', item.id, playIdRef.current, { currentTime: e.currentTime, playableDuration: e.playableDuration });
-
-        // track when the last stall ended
-        if (openStallStart == null) {
-            lastStallClearedAt.current = now();
-        }
-
-        // Your existing phase timing by currentTime:
-        if (applyLoadConfigOptimisations) {
-            if (e.currentTime < 3) switchPhase(VideoLoadOptiPhase.JOIN);
-            else if (e.currentTime < 10) switchPhase(VideoLoadOptiPhase.STABILISE);
-            else switchPhase(VideoLoadOptiPhase.STEADY);
-        }
-
-        // If we're in FALLBACK and things have been smooth, step up
-        if (applyLoadConfigOptimisations && phaseRef.current === VideoLoadOptiPhase.POOR &&
-            (now() - lastStallClearedAt.current) > RECOVER_AFTER_STABLE_MS) {
-            // Step up gradually: FALLBACK -> STABILISE -> STEADY (don’t jump straight to STEADY)
-            switchPhase(VideoLoadOptiPhase.STABILISE);
-            resetStallWindow();
-        }
     };
     
     const onEnd = () => {
         metrics.mark('video_ended', item.id, playIdRef.current);
         setIsPlayerPlaying(false);
-        // Optionally reset the video to start
-        // setRetryKey(prevKey => prevKey + 1); // This will reload the video
-        setIsPlayerAttached(false); // This will unload the video component
-        setLoaderState('stopped')
+        setIsPlayerAttached(false);
+        setLoaderState('stopped');
     };
     
     const onPlaybackRateChange = (e: OnPlaybackRateChangeData) => {
         metrics.mark('video_playback_rate_change', item.id, playIdRef.current, { playbackRate: e.playbackRate });
-        if (!applyLoadConfigOptimisations) return;
-        // You can use playbackRate to infer play/pause state if needed
-        if (e.playbackRate === 0 && !openStallStart) {
-            openStallStart = now();
-        }
-        if (e.playbackRate > 0 && openStallStart) {
-            const dur = now() - openStallStart;
-            addStall(dur);
-            openStallStart = null;
-            if (stallCount.current >= MAX_STALLS_IN_10S || stallMs.current >= MAX_STALL_MS_IN_10S) {
-                switchPhase(VideoLoadOptiPhase.POOR);
-            }
-        }
     };
-
-    const now = () => Date.now();
-
-    const applyVideoLoadConfigProfile = (p: VideoLoadOptiPhase) => {
-        const cfg = VideoLoadOptiPhaseConfig[p];
-        setMute(cfg.mute);
-        setSelectedAudioTrack(cfg.selectedAudioTrack);
-        setAutoWaits(cfg.autoWaits);
-        setPfb(cfg.pfb);
-        setMaxBR(cfg.maxBR);
-        setDebugText(`${p} - ${lastVisibilityPercentage}%`);
-    }
-
-    function switchPhase(target: VideoLoadOptiPhase) {
-        const t = now();
-        if (inCooldown.current || t - lastPhaseSwitchTs.current < SWITCH_COOLDOWN_MS) return;
-        if (phaseRef.current === target) return;
-        phaseRef.current = target;
-        lastPhaseSwitchTs.current = t;
-        inCooldown.current = true;
-        applyVideoLoadConfigProfile(target);
-        setTimeout(() => { inCooldown.current = false; }, SWITCH_COOLDOWN_MS);
-    }
-
-    function resetStallWindow() {
-        stallCount.current = 0;
-        stallMs.current = 0;
-        windowEvents.length = 0;
-    }
-
-    function addStall(durMs: number) {
-        const t = now();
-        windowEvents.push({ t, dur: durMs });
-        // drop anything older than 10s
-        while (windowEvents.length && (t - windowEvents[0].t) > 10_000) windowEvents.shift();
-        stallCount.current = windowEvents.length;
-        stallMs.current = windowEvents.reduce((a, b) => a + b.dur, 0);
-    }
     const renderLoader = () => {
         // Use the same renderLoader function, but change the content based on state
         if (loaderState === 'error') {
@@ -383,13 +358,13 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
         // Spread the rest props (including 'style') to the VisibilityTrackingView
         <VisibilityTrackingView
             {...rest}
-            throttleInterval={50}
+            throttleInterval={AppConfig.config.visibility.nativeThrottleMs}
             visibilityConfig={toRawVisibilityConfig(THRESHOLDS)}
             uniqueId={item.id}
             onVisibilityStateChange={onVisibilityChange}>
 
-            {/* Thumbnail Image - show a image view when player is not attached, card is outside the view port */}
-            {!isPlayerAttached && (
+            {/* Thumbnail ALWAYS visible as background - smooth crossfade using Animated */}
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity: thumbnailOpacity }]}>
                 <FastImage
                     source={{
                         uri: item.thumbnailUrl,
@@ -399,45 +374,80 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, videoProps, visibilityConfi
                     style={[styles.media, StyleSheet.absoluteFill]}
                     resizeMode="contain"
                 />
-            )}
+            </Animated.View>
+
+            {/* Video player overlays thumbnail when mounted */}
             {isPlayerAttached && (
-                <Video
-                    {...videoProps}
-                    key={item.id + retryKey}
-                    source={{ uri: item.videoSource.url }}
-                    style={styles.media}
-                    controls={false}
-                    muted={mute}
-                    volume={0}
-                    selectedAudioTrack={{ type: SelectedTrackType.SYSTEM }}
-                    automaticallyWaitsToMinimizeStalling={true}
-                    preferredForwardBufferDuration={0}
-                    maxBitRate={1000000}
-                    onError={handleError}
-                    onLoadStart={handleLoadStart}
-                    onLoad={handleLoad}
-                    onReadyForDisplay={onReadyForDisplay}
-                    onBuffer={onBuffer}
-                    onProgress={onProgress}
-                    onEnd={onEnd}
-                    onPlaybackRateChange={onPlaybackRateChange}
-                    // onPlaybackStateChanged={() => {}}
+                <VideoPlayerView
+                    source={item.videoSource.url}
+                    videoId={item.id}
                     paused={!isPlayerPlaying}
-                    repeat={false}   // Take this from props if needed, repeat in full page feed but not in main feed
-                    resizeMode="contain"
-                    renderLoader={renderLoader}
-                    progressUpdateInterval={250}
-                    playInBackground={false}
+                    muted={true}
+                    style={[styles.media, StyleSheet.absoluteFill]}
+                    onLoad={(event) => {
+                        // Track load start time on first onLoad (emitted when player setup starts)
+                        if (!loadStartTimeRef.current) {
+                            loadStartTimeRef.current = Date.now();
+                            logger.info('video', `[${item.id}] 📥 Load started: ${item.videoSource.url}`);
+                            metrics.mark('video_load_started', item.id, playIdRef.current, { videoSource: item.videoSource.url });
+                            setLoaderState('loading');
+                        }
+                        // Also track when fully loaded (duration available)
+                        if (event.nativeEvent.duration) {
+                            logger.info('video', `[${item.id}] Loaded successfully (duration: ${event.nativeEvent.duration}s)`);
+                            metrics.mark('video_loaded', item.id, playIdRef.current, event.nativeEvent);
+                            setLoaderState('loaded');
+                        }
+                    }}
+                    onProgress={(event) => {
+                        metrics.mark('video_progress', item.id, playIdRef.current, event.nativeEvent);
+                    }}
+                    onEnd={(event) => {
+                        metrics.mark('video_end', item.id, playIdRef.current, event.nativeEvent);
+                        setLoaderState('stopped');
+                    }}
+                    onError={(event) => {
+                        metrics.error('video_error', item.id, playIdRef.current, event.nativeEvent.error);
+                        setLoaderState('error');
+                    }}
+                    onBuffer={(event) => {
+                        if (event.nativeEvent.isBuffering) {
+                            metrics.mark('buffer_start', item.id, playIdRef.current);
+                        } else {
+                            metrics.mark('buffer_end', item.id, playIdRef.current);
+                        }
+                    }}
+                    onReadyForDisplay={onReadyForDisplay}
                 />
             )}
+
+            {/* Loading indicator when player attached but not ready, or when buffering */}
+            {isPlayerAttached && (!isVideoReadyForDisplay || isBuffering) && (
+                <View style={styles.loaderContainer}>
+                    <ActivityIndicator animating={true} size={'large'} color="#fff" />
+                </View>
+            )}
+
+            {/* Play button for manual play (low-end devices or when paused) */}
+            {showPlayButton && (
+                <PlayButton 
+                    onPress={handleManualPlay}
+                    visible={showPlayButton}
+                />
+            )}
+
             {/* Debug Info */}
-            <View style={{ position: 'absolute', top: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-            </View>
-            <View style={{ position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-            </View>
-            { geekMode && playIdRef.current && (<DebugHUD playId={playIdRef.current} key={playIdRef.current} visible />)}
+            {geekMode && (
+                <>
+                    <View style={{ position: 'absolute', top: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+                    </View>
+                    <View style={{ position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+                    </View>
+                    {playIdRef.current && (<DebugHUD playId={playIdRef.current} key={playIdRef.current} visible />)}
+                </>
+            )}
         </VisibilityTrackingView>
     );
 };

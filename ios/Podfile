@@ -30,7 +30,6 @@ target 'VideoFeedApp' do
 
   # native dependencies
   pod 'KTVHTTPCache'
-  pod 'GCDWebServer'
   
   # Flags change depending on the env values.
   flags = get_default_flags()
@@ -62,5 +61,12 @@ target 'VideoFeedApp' do
       :mac_catalyst_enabled => false
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    
+    # Fix deployment target warnings - set to iOS 13.0
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+    end
   end
 end

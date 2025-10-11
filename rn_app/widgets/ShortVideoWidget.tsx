@@ -27,7 +27,7 @@ const ShortVideoWidget: React.FC<ShortVideoWidgetProps> = ({
     return (
         <View {...rest}>
             <VideoCard
-                {...videoProps}                                  // <-- includes geekMode, applyLoadConfigOptimisations, videoProps.videoProps, etc.
+                {...videoProps}                                  // <-- includes geekMode, etc.
                 style={[styles.item, { aspectRatio }]}
                 visibilityConfig={SHORTS_VISIBILITY_CONFIG}
             />

@@ -9,6 +9,7 @@ import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from './pl
 import * as Utilities from './utilities/Utilities';
 import ShortVideoWidget from './widgets/ShortVideoWidget';
 import { MetricsReportModal } from './instrumentation/MetricsReportModal';
+import { WidgetType } from './types';
 
 export interface VideoSource {
     sourceType: string;
@@ -277,10 +278,9 @@ function VideoFeed(): JSX.Element {
                     return (
                         <View style={{ width, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
                             <VideoCard
-                                item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType }}
+                                item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType as WidgetType }}
                                 style={{ width, height: height, backgroundColor: '#000' }}
                                 visibilityConfig={CAROUSEL_CARDS_VISIBILITY_CONFIG}
-                                applyLoadConfigOptimisations={applyLodConfigOptimisations}
                                 geekMode={geekOn}
                             />
                         </View>
@@ -307,11 +307,10 @@ function VideoFeed(): JSX.Element {
                         videoSource: (item.data as VideoData).videoSource,
                         thumbnailUrl,
                         aspectRatio: (item.data as VideoData).thumbail.aspectRatio,
-                        videoCategory: item.widgetType
+                        videoCategory: item.widgetType as WidgetType
                     },
                     visibilityConfig: SHORTS_VISIBILITY_CONFIG,
                     geekMode: geekOn,
-                    applyLoadConfigOptimisations: applyLodConfigOptimisations
                 }}
                     style={[styles.item, { backgroundColor: item.color }]}
                     title='Sample Title'

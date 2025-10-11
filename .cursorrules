@@ -1,0 +1,248 @@
+# VideoFeedApp Development Guidelines
+
+## Code Quality Standards
+
+### Before Every Change
+1. **Read existing code** - Understand patterns before modifying
+2. **Check documentation** - Review COMPONENT_DOCUMENTATION.md and ARCHITECTURE.md
+3. **Maintain consistency** - Follow existing naming conventions and patterns
+4. **Test your changes** - Run manual tests from TESTING_GUIDE.md
+
+### After Every Change
+1. **Fix linting errors** - Run `npm run lint` and fix all errors
+2. **Type check** - Ensure TypeScript compiles without errors (`npx tsc --noEmit`)
+3. **Build verification** - Compile each platform separately:
+   - **RN/TypeScript**: `npx tsc --noEmit` (always run first)
+   - **iOS**: `cd ios && xcodebuild -workspace VideoFeedApp.xcworkspace -scheme VideoFeedApp -configuration Debug -sdk iphonesimulator build` (or build in Xcode)
+   - **Never run `npx react-native run-ios/android` just to verify builds** - too slow, use platform-specific commands
+4. **Test critical paths** - Run relevant manual tests from TESTING_GUIDE.md
+5. **Update documentation** - If behavior changes, update docs
+
+## React Native Guidelines
+
+### Component Design
+- **Keep components pure** - Avoid side effects in render
+- **Use TypeScript** - All files must have proper types
+- **Props interfaces** - Define explicit interfaces, no `any` types
+- **Event handlers** - Use useCallback for event handlers passed as props
+- **Memo wisely** - Only memo expensive components, not everything
+
+### Performance
+- **Avoid inline functions** - In render or props (breaks PureComponent)
+- **Use keys properly** - Stable, unique keys for lists
+- **Minimize bridge calls** - Batch updates, use native modules for heavy work
+- **Profile before optimizing** - Don't guess, measure first
+
+### State Management
+- **Local state first** - Use useState for component-local data
+- **Lift state sparingly** - Only when actually shared
+- **EventEmitter for cross-cutting** - playback events, not general state
+- **No global state library** - Keep it simple
+
+## Native Module Guidelines
+
+### Swift/Objective-C
+- **Objective-C for bridge modules** - Easier React Native integration
+- **Swift for UI components** - Modern, safer for complex logic
+- **Proper memory management** - Release resources in deinit/dealloc
+- **Thread safety** - Main queue for UI, background for heavy work
+
+### Bridging
+- **Minimize bridge traffic** - Native throttling, batching
+- **Use events for streams** - RCTDirectEventBlock for continuous data
+- **Synchronous for getters** - RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD for simple reads
+- **Promises for async** - Operations that take time
+
+### VideoPlayerView Conventions
+- **Pool-aware** - Always acquire/release from VideoPlayerPool
+- **Clean observers** - Remove ALL KVO observers in deinit
+- **Null checks** - Guard against nil players/items
+- **Event context** - Always include videoId in events
+
+## Metrics and Monitoring
+
+### Always Track
+- Video load start/complete
+- Play command issued
+- Buffer events (start/end)
+- Errors (with context)
+- Video end
+
+### Optional Tracking
+- Progress events (can be high frequency, enable only if needed)
+- Playback rate changes
+
+### Metrics Best Practices
+- **Use playId** - Every play attempt gets unique ID
+- **Include videoId** - For aggregation
+- **Add context data** - Duration, error codes, etc.
+- **Don't skip events** - Even on error paths
+
+## Testing Requirements
+
+### Before Committing
+- [ ] TypeScript compiles (`npx tsc --noEmit`)
+- [ ] Linter passes (`npm run lint`)
+- [ ] iOS build succeeds (Xcode or `xcodebuild`)
+- [ ] App launches without crashes
+- [ ] No red error screens in simulator
+
+### Before Pushing to Main
+- [ ] All critical manual tests pass (see TESTING_GUIDE.md)
+- [ ] Metrics HUD works correctly
+- [ ] Metrics Modal shows data
+- [ ] Settings can be changed without crashes
+- [ ] Memory usage acceptable (< 200MB typical)
+- [ ] Documentation updated for any API changes
+
+## File Naming Conventions
+
+### React Native
+- Components: PascalCase (VideoCard.tsx)
+- Utilities: camelCase (videoUtils.ts)
+- Constants: SCREAMING_SNAKE_CASE
+- Types: PascalCase interfaces/types
+
+### Native (iOS)
+- Swift classes: PascalCase (VideoPlayerView.swift)
+- Objective-C: PascalCase for classes, camelCase for methods
+- Bridging headers: ModuleName-Bridging-Header.h
+- Bridge files: ModuleNameBridge.h/m
+
+## Common Pitfalls to Avoid
+
+### React Native
+- ❌ Using FlatList for large lists (use RecyclerListView)
+- ❌ Importing react-native-video (we have custom VideoPlayerView)
+- ❌ Inline function props on frequently re-rendered components
+- ❌ Forgetting to remove event listeners in useEffect cleanup
+
+### Native Modules
+- ❌ Forgetting to add files to Xcode project
+- ❌ Not removing KVO observers (causes crashes)
+- ❌ Holding strong references in closures (memory leaks)
+- ❌ Calling UI code from background thread
+
+### VideoCard Specific
+- ❌ Mounting video when not visible (waste resources)
+- ❌ Not calling handleVisibilityChange (breaks PlaybackManager)
+- ❌ Forgetting metrics tracking in new event handlers
+- ❌ Direct AVPlayer API calls (use VideoPlayerView instead)
+
+## Code Review Checklist
+
+### For Reviewers
+- [ ] TypeScript types are correct and complete
+- [ ] No `any` types unless absolutely necessary
+- [ ] Event handlers use useCallback
+- [ ] useEffect dependencies are complete
+- [ ] Native code releases all resources
+- [ ] Metrics tracked for playback changes
+- [ ] Documentation updated if API changed
+- [ ] No obvious performance issues
+
+### For Authors
+- [ ] Self-review before requesting review
+- [ ] All tests pass locally
+- [ ] No console.log() left in code (use proper logging)
+- [ ] Comments explain WHY, not WHAT
+- [ ] TODOs include ticket/issue numbers if applicable
+
+## Documentation Standards
+
+### Code Comments
+- **Why over What** - Explain reasoning, not obvious syntax
+- **Edge cases** - Document special handling
+- **TODOs** - Include context and priority
+- **Examples** - For complex APIs
+
+### Documentation Files
+- **TESTING_GUIDE.md** - Update when adding features that need testing
+- **ARCHITECTURE.md** - Update for major structural changes
+- **COMPONENT_DOCUMENTATION.md** - Update when changing component APIs
+- **REQUIREMENTS.md** - Update when scope changes
+
+## Git Workflow
+
+### Commit Messages
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:** feat, fix, docs, style, refactor, perf, test, chore
+
+**Examples:**
+```
+feat(VideoCard): remove multi-phase optimization
+
+Simplified VideoCard by removing complex load optimization phases.
+Keeps all metrics tracking intact. Advanced AVPlayer controls to be
+added later if needed.
+
+Resolves runtime errors from missing react-native-video types.
+```
+
+### Branches
+- `main` - Production-ready code
+- `cursor-<feature_name>` - **AI-assisted feature branches** (use this naming convention when creating branches with Cursor)
+- `feature/*` - New features (manual development)
+- `fix/*` - Bug fixes (manual development)
+- `docs/*` - Documentation only
+
+**Branch Naming Convention:**
+When asked to create a new branch for changes, use the template: `cursor-<feature_name>`
+Example: `cursor-ios-caching`, `cursor-autoplay-fix`, `cursor-prefetch-manager`
+
+## Performance Guidelines
+
+### Target Metrics
+- **App Launch:** < 2 seconds
+- **Scroll FPS:** Consistent 60 FPS
+- **Video Startup:** < 1 second (cached), < 3 seconds (network)
+- **Memory Usage:** < 200MB during normal use
+- **Cache Hit Rate:** > 80% for repeat views
+
+### When Performance Degrades
+1. **Profile first** - Use Xcode Instruments, React DevTools Profiler
+2. **Identify bottleneck** - Don't optimize blindly
+3. **Measure impact** - Before/after metrics
+4. **Document findings** - Share learnings in docs
+
+## Security Considerations
+
+### Video URLs
+- Validate URLs before passing to AVPlayer
+- Handle authentication if needed
+- Don't expose sensitive tokens in logs
+
+### Cache
+- Clear cache on logout (if user-specific content)
+- Respect cache size limits
+- Handle cache poisoning scenarios
+
+## Accessibility
+
+### Requirements
+- Video player controls accessible via VoiceOver
+- Settings labels properly tagged
+- Dynamic type support for text
+- High contrast support
+
+---
+
+**Remember:** 
+- Consistency over cleverness
+- Working code over perfect code
+- Documentation is code
+- Test before you commit
+
+**When in doubt, refer to:**
+1. TESTING_GUIDE.md for test procedures
+2. ARCHITECTURE.md for design patterns
+3. COMPONENT_DOCUMENTATION.md for API details
+4. REQUIREMENTS.md for feature scope
+

@@ -1,8 +1,10 @@
 export enum MediaCardVisibility {
+    prefetch = 'prefetch',
     prepareToBeActive = 'prepareToBeActive',
     isActive = 'isActive',
     willResignActive = 'willResignActive',
     notActive = 'notActive',
+    released = 'released',
 }
 
 export enum MediaCardType {
@@ -12,12 +14,14 @@ export enum MediaCardType {
 
 export interface VisibilityTransitioningConfig {
     movingIn: {
-        prepareToBeActive: number; // e.g., 10% visibility
-        isActive: number;          // e.g., 50% visibility
+        prefetch: number;          // e.g., 5% visibility - start prefetch
+        prepareToBeActive: number; // e.g., 25% visibility - mount player paused
+        isActive: number;          // e.g., 50% visibility - play video
     };
     movingOut: {
-        willResignActive: number;  // e.g., 30% visibility
-        notActive: number;         // e.g., 0% visibility
+        willResignActive: number;  // e.g., 90% visibility - pause video
+        notActive: number;         // e.g., 20% visibility - unmount player
+        released: number;          // e.g., 5% visibility - cancel prefetch, cleanup
     };
 }
 
@@ -25,30 +29,38 @@ export interface VisibilityTransitioningConfig {
 // Define the visibility thresholds for our custom logic
 export const SHORTS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
     movingIn: {
-        // 10% or more visible (incoming) -> Add video component, paused
+        // 5% or more visible (incoming) -> Start prefetch
+        prefetch: 5,
+        // 25% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
         // 50% or more visible (incoming) -> Play video
         isActive: 50,
     },
     movingOut: {
-        // 30% or less visible (outgoing) -> Pause video
+        // 90% or less visible (outgoing) -> Pause video
         willResignActive: 90,
-        // 0% visible (outgoing) -> Remove video component
+        // 20% or less visible (outgoing) -> Remove video component
         notActive: 20,
+        // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
+        released: 5,
     }
 };
 
 export const CAROUSEL_CARDS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
     movingIn: {
-        // 10% or more visible (incoming) -> Add video component, paused
+        // 5% or more visible (incoming) -> Start prefetch
+        prefetch: 5,
+        // 25% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
-        // 50% or more visible (incoming) -> Play video
+        // 90% or more visible (incoming) -> Play video (carousel needs high visibility)
         isActive: 90,
     },
     movingOut: {
-        // 30% or less visible (outgoing) -> Pause video
+        // 70% or less visible (outgoing) -> Pause video
         willResignActive: 70,
-        // 0% visible (outgoing) -> Remove video component
+        // 10% or less visible (outgoing) -> Remove video component
         notActive: 10,
+        // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
+        released: 5,
     }
 };
