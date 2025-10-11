@@ -23,6 +23,7 @@ export interface VideoData {
 export interface IFeedItem {
   id: string;
   widgetType: string; // 'short' | 'carousel' | 'merch'
+  widgetIndex?: number; // Position in the feed (for video ID generation)
   color: string;
   data: VideoData | VideoData[] | Thumbnail;
 }
