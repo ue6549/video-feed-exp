@@ -187,15 +187,41 @@ Resolves runtime errors from missing react-native-video types.
 ```
 
 ### Branches
-- `main` - Production-ready code
+- `main` - Production-ready code (manual releases only)
+- **`cursor-main`** - **AI-assisted development trunk** ⭐ (primary branch for AI development)
 - `cursor-<feature_name>` - **AI-assisted feature branches** (use this naming convention when creating branches with Cursor)
 - `feature/*` - New features (manual development)
 - `fix/*` - Bug fixes (manual development)
 - `docs/*` - Documentation only
 
-**Branch Naming Convention:**
-When asked to create a new branch for changes, use the template: `cursor-<feature_name>`
-Example: `cursor-ios-caching`, `cursor-autoplay-fix`, `cursor-prefetch-manager`
+**Branch Workflow for AI-Assisted Development:**
+1. **Start from `cursor-main`** (our trunk branch)
+   ```bash
+   git checkout cursor-main
+   git pull origin cursor-main
+   ```
+
+2. **Create feature branch** using the template: `cursor-<feature_name>`
+   ```bash
+   git checkout -b cursor-<feature-name>
+   ```
+   Example: `cursor-ios-caching`, `cursor-autoplay-fix`, `cursor-prefetch-manager`
+
+3. **Work on feature** - Make changes, commit frequently
+
+4. **Merge back to `cursor-main`** (our trunk)
+   ```bash
+   git checkout cursor-main
+   git merge cursor-<feature-name> --no-ff -m "Merge cursor-<feature-name> into cursor-main"
+   git push origin cursor-main
+   ```
+
+5. **Never merge directly to `main`** - That's for production releases only
+
+**Important:** 
+- All AI-assisted work branches from and merges to `cursor-main`
+- `main` is only for production-ready releases
+- See `GIT_WORKFLOW.md` for detailed workflow documentation
 
 ## Performance Guidelines
 
