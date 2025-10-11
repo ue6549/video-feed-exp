@@ -33,22 +33,24 @@ class DataProvider {
     let stepSinceLastMerch = 0;
 
     while (i < this.rawVideos.length) {
+      const widgetIndex = widgets.length; // Current position in feed
+      
       // Random merch insertion (25% chance after 2+ steps)
       if (stepSinceLastMerch > 2 && Math.random() > 0.75) {
         stepSinceLastMerch = 0;
-        const merchWidget = this.createMerchWidget(i);
+        const merchWidget = this.createMerchWidget(i, widgetIndex);
         widgets.push(merchWidget);
       }
       // Every 4th widget is a carousel
       else if ((widgets.length + 1) % 4 === 0) {
-        const carouselWidget = this.createCarouselWidget(i);
+        const carouselWidget = this.createCarouselWidget(i, widgetIndex);
         widgets.push(carouselWidget);
         i += 6; // Move index forward by 6 for carousel
         stepSinceLastMerch += 1;
       } 
       // Regular short video widget
       else {
-        const shortWidget = this.createShortWidget(i);
+        const shortWidget = this.createShortWidget(i, widgetIndex);
         widgets.push(shortWidget);
         i += 1;
         stepSinceLastMerch += 1;
@@ -59,11 +61,12 @@ class DataProvider {
     this.isInitialized = true;
   }
 
-  private createShortWidget(index: number): IFeedItem {
+  private createShortWidget(index: number, widgetIndex?: number): IFeedItem {
     const video = this.rawVideos[index];
     return {
       id: `short-${index}`,
       widgetType: 'short',
+      widgetIndex, // Track position in feed
       color: this.generateRandomColor(),
       data: {
         videoSource: {
@@ -77,11 +80,12 @@ class DataProvider {
     };
   }
 
-  private createCarouselWidget(startIndex: number): IFeedItem {
+  private createCarouselWidget(startIndex: number, widgetIndex?: number): IFeedItem {
     const carouselVideos = this.rawVideos.slice(startIndex, startIndex + 6);
     return {
       id: `carousel-${startIndex}`,
       widgetType: 'carousel',
+      widgetIndex, // Track position in feed
       color: this.generateRandomColor(),
       data: carouselVideos.map(video => ({
         videoSource: {
@@ -95,11 +99,12 @@ class DataProvider {
     };
   }
 
-  private createMerchWidget(index: number): IFeedItem {
+  private createMerchWidget(index: number, widgetIndex?: number): IFeedItem {
     const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random() * 10)}/{@width}/{@height}`;
     return {
       id: `merch-${index}`,
       widgetType: 'merch',
+      widgetIndex, // Track position in feed
       color: this.generateRandomColor(),
       data: {
         width: 0,

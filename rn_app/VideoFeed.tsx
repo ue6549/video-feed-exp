@@ -7,6 +7,7 @@ import FastImage from '@d11/react-native-fast-image';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from './platback_manager/MediaCardVisibility';
 import * as Utilities from './utilities/Utilities';
+import { generateVideoId } from './utilities/videoIdGenerator';
 import ShortVideoWidget from './widgets/ShortVideoWidget';
 import { MetricsReportModal } from './instrumentation/MetricsReportModal';
 import { WidgetType } from './types';
@@ -33,6 +34,7 @@ export interface VideoData {
 export interface IFeedItem {
     id: string;
     widgetType: string; // 'short' | 'carousel' | 'merch'
+    widgetIndex?: number; // Position in the feed (for video ID generation)
     color: string;
     data: VideoData | VideoData[] | Thumbnail;
 }
@@ -48,11 +50,14 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
     let stepSinceLastMerch = 0; // Steps since last merch insertion
 
     while (i < originalArray.length) {
+        const widgetIndex = newArray.length; // Track position in feed
+        
         if (stepSinceLastMerch > 2 && Math.random() > 0.75) {
             stepSinceLastMerch = 0;
             const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random() * 10)}/{@width}/{@height}`
             const feedItem = {
                 widgetType: 'merch',
+                widgetIndex,
                 color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
                 id: `merch-${i}`,
                 data: {
@@ -67,6 +72,7 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
         else if ((newArray.length + 1) % 4 === 0) {
             const feedItem = {
                 widgetType: 'carousel',
+                widgetIndex,
                 color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
                 id: `carousel-${i}`,
                 data: originalArray.slice(i, i + 6).map(item => ({ videoSource: item.video_source, thumbail: item.thumbail })),
@@ -78,6 +84,7 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
             // Take a single element
             const feedItem = {
                 widgetType: 'short',
+                widgetIndex,
                 color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
                 id: `short-${i}`,
                 data: { videoSource: originalArray[i].video_source, thumbail: originalArray[i].thumbail },
@@ -272,13 +279,16 @@ function VideoFeed(): JSX.Element {
                 keyExtractor={(_, index) => `carousel-item-${index}`}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                renderItem={({ item }) => {
+                renderItem={({ item, index: videoIndex }) => {
                     const { width, height, aspectRatio } = getMediaDimensions(item.thumbail.aspectRatio, undefined, CAROUSEL_HEIGHT - 20);
                     const thumbnailUrl = getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
+                    const widgetIndex = feedItem.widgetIndex ?? 0;
+                    const videoId = generateVideoId(widgetIndex, videoIndex);
+                    
                     return (
                         <View style={{ width, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
                             <VideoCard
-                                item={{ id: item.videoSource.url, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType as WidgetType }}
+                                item={{ id: videoId, videoSource: item.videoSource, thumbnailUrl, videoCategory: feedItem.widgetType as WidgetType }}
                                 style={{ width, height: height, backgroundColor: '#000' }}
                                 visibilityConfig={CAROUSEL_CARDS_VISIBILITY_CONFIG}
                                 geekMode={geekOn}
@@ -299,11 +309,13 @@ function VideoFeed(): JSX.Element {
         } else {
             const { width, height, aspectRatio } = getMediaDimensions((item.data as VideoData).thumbail.aspectRatio);
             const thumbnailUrl = getImageUrl((item.data as VideoData).thumbail.dynamicImageUrl, width, height, 75);
+            const widgetIndex = item.widgetIndex ?? 0;
+            const videoId = generateVideoId(widgetIndex, 0);
 
             return (
                 <ShortVideoWidget videoProps={{
                     item: {
-                        id: (item.data as VideoData).videoSource.url,
+                        id: videoId,
                         videoSource: (item.data as VideoData).videoSource,
                         thumbnailUrl,
                         aspectRatio: (item.data as VideoData).thumbail.aspectRatio,

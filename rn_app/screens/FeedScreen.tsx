@@ -19,6 +19,7 @@ import { AppConfig } from '../config/AppConfig';
 import { IFeedItem, WidgetType } from '../types';
 import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from '../platback_manager/MediaCardVisibility';
 import * as Utilities from '../utilities/Utilities';
+import { generateVideoId } from '../utilities/videoIdGenerator';
 import ShortVideoWidget from '../widgets/ShortVideoWidget';
 import { MetricsReportModal } from '../instrumentation/MetricsReportModal';
 import DataProviderService from '../services/DataProvider';
@@ -265,6 +266,7 @@ const FeedScreen: React.FC = () => {
   const _renderCarousel = (feedItem: IFeedItem) => {
     const contentWidth = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
     const visibleCards = getVisibleCards(screenWidth);
+    const widgetIndex = feedItem.widgetIndex ?? 0;
     
     return (
       <View style={[styles.carouselContainer, { width: contentWidth }]}>
@@ -273,20 +275,21 @@ const FeedScreen: React.FC = () => {
           keyExtractor={(_, index) => `carousel-item-${index}`}
           horizontal
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => {
+          renderItem={({ item, index: videoIndex }) => {
             const { width, height, aspectRatio } = Utilities.getMediaDimensions(
               item.thumbail.aspectRatio, 
               undefined, 
               CAROUSEL_HEIGHT - 20
             );
             const thumbnailUrl = Utilities.getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
+            const videoId = generateVideoId(widgetIndex, videoIndex);
             
             return (
               <View style={[styles.carouselItem, { width, height: CAROUSEL_HEIGHT - 20 }]}>
                 <ShortVideoWidget
                   videoProps={{
                     item: {
-                      id: item.videoSource.url,
+                      id: videoId, // Clean ID: vid-3-2
                       videoSource: item.videoSource,
                       thumbnailUrl,
                       aspectRatio: item.thumbail.aspectRatio,
@@ -322,13 +325,15 @@ const FeedScreen: React.FC = () => {
     } else {
       const { width, height, aspectRatio } = Utilities.getMediaDimensions((item.data as any).thumbail.aspectRatio);
       const thumbnailUrl = Utilities.getImageUrl((item.data as any).thumbail.dynamicImageUrl, width, height, 75);
+      const widgetIndex = item.widgetIndex ?? 0;
+      const videoId = generateVideoId(widgetIndex, 0); // Short videos have only one video (index 0)
 
       return (
         <View style={[styles.shortVideoContainer, { width: Math.min(screenWidth, AppConfig.config.feed.maxContentWidth) }]}>
           <ShortVideoWidget
             videoProps={{
               item: {
-                id: (item.data as any).videoSource.url,
+                id: videoId, // Clean ID: vid-0-0, vid-1-0, etc.
                 videoSource: (item.data as any).videoSource,
                 thumbnailUrl,
                 aspectRatio: (item.data as any).thumbail.aspectRatio,
