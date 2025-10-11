@@ -123,12 +123,14 @@ Run `npm run test:coverage` to see detailed coverage report.
 
 ## What We Don't Test (Yet)
 
-- Native iOS module unit tests (XCTest)
-- E2E visual testing (Detox)
-- Performance regression tests
-- Network layer integration
+- **Full App rendering** - Removed legacy `App.test.tsx` (complex to mock, low value)
+  - E2E tests (Detox) will cover full app flows in the future
+- **Native iOS module unit tests** (XCTest)
+- **E2E visual testing** (Detox)
+- **Performance regression tests**
+- **Network layer integration**
 
-These will be added in future iterations as needed.
+These will be added in future iterations as needed. See `FUTURE_WORK.md` for E2E testing roadmap.
 
 ## Troubleshooting
 
