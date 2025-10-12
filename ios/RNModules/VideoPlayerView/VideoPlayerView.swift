@@ -91,6 +91,13 @@ class VideoPlayerView: UIView {
       if let proxiedURL = KTVHTTPCache.proxyURL(withOriginalURL: originalURL) {
         finalURL = proxiedURL
         NSLog("[VideoPlayerView] ✅ Proxied URL: %@", proxiedURL.absoluteString)
+        
+        // Check cache status
+        if let cachedURL = KTVHTTPCache.cacheCompleteFileURL(with: originalURL) {
+          NSLog("[CACHE_DEBUG] 💾 Cache HIT: %@", cachedURL.absoluteString)
+        } else {
+          NSLog("[CACHE_DEBUG] 📡 Cache MISS: Will stream from network")
+        }
       } else {
         NSLog("[VideoPlayerView] ❌ Failed to create proxy URL for video: %@", displayId)
         // CRITICAL: For testing phase, fail if proxy can't rewrite

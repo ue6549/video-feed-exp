@@ -2,6 +2,230 @@
 
 ## High Priority (Next Session)
 
+### 1. AppConfig Testing & Verification
+**Priority**: High (ensure settings work correctly)
+**Status**: Not implemented
+
+**Problem**:
+- AppConfig has many configurable parameters
+- Settings modal allows runtime changes
+- No systematic testing to verify:
+  - Config changes actually apply to native modules
+  - Settings persist correctly
+  - Changes take effect (some require reload, some don't)
+  - No invalid config values break the app
+
+**What Needs Testing**:
+
+**Player Pool Configuration:**
+```typescript
+playerPool: {
+    maxPlayers: 3,  // Change to 2, 4, 5 - verify pool respects limit
+    avplayerPrefetchBufferSeconds: 2,  // Change to 1, 3, 5 - verify buffer stops at target
+    avplayerPrefetchTimeoutSeconds: 10,  // Change to 5, 15 - verify timeout triggers
+}
+```
+
+**Prefetch Configuration:**
+```typescript
+prefetch: {
+    enabled: true,  // Toggle - verify prefetch stops/starts
+    segmentCount: 2,  // Change to 1, 3, 5 - verify correct number downloaded
+    maxConcurrent: 3,  // Change to 1, 5, 10 - verify concurrency limit
+    strategy: 'auto',  // Change to 'avplayer', 'manifest' - verify strategy used
+}
+```
+
+**Visibility Configuration:**
+```typescript
+visibility: {
+    prefetchRange: 5,  // Change - verify lookahead distance
+    nativeThrottleMs: 50,  // Change - verify throttling behavior
+}
+```
+
+**Testing Approach**:
+
+**1. Unit Tests for Config System:**
+```typescript
+describe('AppConfig', () => {
+    test('update() applies changes', () => {
+        AppConfig.update({ playerPool: { maxPlayers: 5 } });
+        expect(AppConfig.config.playerPool.maxPlayers).toBe(5);
+    });
+    
+    test('native modules receive config on init', async () => {
+        // Mock native modules
+        // Verify setPrefetchConfig called with correct values
+    });
+    
+    test('requiresReload() detects breaking changes', () => {
+        const requires = AppConfig.update({ cache: { strategy: 'FIFO' } });
+        expect(requires).toBe(true);
+    });
+});
+```
+
+**2. Integration Tests:**
+```typescript
+describe('Settings Modal Integration', () => {
+    test('changing maxPlayers updates native pool', async () => {
+        render(<SettingsModal />);
+        
+        // Change maxPlayers from 3 to 2
+        fireEvent.changeText(maxPlayersInput, '2');
+        fireEvent.press(saveButton);
+        
+        // Verify native call
+        expect(VideoPlayerPool.setMaxPlayers).toHaveBeenCalledWith(2);
+    });
+});
+```
+
+**3. Manual Testing Checklist:**
+
+Settings to Test:
+- [ ] playerPool.maxPlayers (2, 3, 5) - Check pool logs
+- [ ] playerPool.avplayerPrefetchBufferSeconds (1, 3, 5) - Check buffer logs
+- [ ] playerPool.avplayerPrefetchTimeoutSeconds (5, 15, 30) - Check timeout logs
+- [ ] prefetch.enabled (true/false) - Verify prefetch starts/stops
+- [ ] prefetch.strategy ('auto', 'avplayer', 'manifest') - Verify correct path taken
+- [ ] prefetch.maxConcurrent (1, 5, 10) - Check queue logs
+- [ ] prefetch.segmentCount (1, 3, 5) - Verify download count
+- [ ] cache.maxSizeMB (100, 500, 1000) - Check cache size limits
+
+**4. Settings Persistence Testing:**
+- [ ] Change settings
+- [ ] Kill app
+- [ ] Relaunch
+- [ ] Verify settings persisted
+
+**5. Config Validation Testing:**
+- [ ] Set maxPlayers to -1 (should reject)
+- [ ] Set bufferSeconds to 0 (should reject or use default)
+- [ ] Set invalid strategy string (should reject)
+
+**Implementation:**
+
+```typescript
+// AppConfig.ts - Add validation
+static update(newConfig: Partial<AppConfigType>): boolean {
+    // Validate before applying
+    if (!this.validateConfig(newConfig)) {
+        console.error('[AppConfig] Invalid config values');
+        return false;
+    }
+    
+    const oldConfig = { ...this.config };
+    this.config = this.deepMerge(this.config, newConfig);
+    
+    // Apply to native modules
+    this.syncToNative();
+    
+    // Notify listeners
+    this.listeners.forEach(listener => listener(this.config));
+    
+    return this.requiresReload(oldConfig, this.config);
+}
+
+static validateConfig(config: Partial<AppConfigType>): boolean {
+    if (config.playerPool?.maxPlayers !== undefined) {
+        if (config.playerPool.maxPlayers < 1 || config.playerPool.maxPlayers > 10) {
+            return false;
+        }
+    }
+    
+    if (config.playerPool?.avplayerPrefetchBufferSeconds !== undefined) {
+        if (config.playerPool.avplayerPrefetchBufferSeconds < 0.5 || 
+            config.playerPool.avplayerPrefetchBufferSeconds > 30) {
+            return false;
+        }
+    }
+    
+    // ... more validation
+    return true;
+}
+
+static async syncToNative(): Promise<void> {
+    try {
+        await VideoPlayerPool.setMaxPlayers(this.config.playerPool.maxPlayers);
+        await CacheManager.setPrefetchConfig(
+            this.config.playerPool.avplayerPrefetchBufferSeconds,
+            this.config.playerPool.avplayerPrefetchTimeoutSeconds
+        );
+    } catch (error) {
+        console.error('[AppConfig] Failed to sync to native:', error);
+    }
+}
+```
+
+**Priority**: High - Critical for settings modal to work correctly
+
+---
+
+### 2. Player Pool Exhaustion Strategy
+**Priority**: High (affects UX in edge cases)
+
+**Problem**:
+When screen layout shows more videos than available players:
+- Example: 1 short (willResignActive) + 3.5 carousel cards (isActive) = 4-5 players needed
+- Pool hard limit: 3 players
+- Result: Visible videos fail to acquire player → stuck thumbnail or black screen
+
+**Current Behavior (V1)**:
+- Hard limit of 3 players
+- Failed acquisition → Show play button (manual override)
+- Graceful degradation but poor UX
+
+**Future Solutions to Explore**:
+
+**Option A: Priority-Based Eviction**
+```
+Priority: isActive > willResignActive > prefetch
+When pool exhausted: Evict lower priority player
+Pro: Visible videos always play
+Con: Abrupt stops (e.g., short video pauses mid-play)
+```
+
+**Option B: Flexible Pool with Burst Capacity**
+```
+Normal: 3 players (targetSize)
+Emergency: 5 players (maxSize)
+Auto-shrink back to 3 when players released
+Pro: Smooth UX, all videos play
+Con: Temporary memory spike, complexity
+```
+
+**Option C: Visibility Rules Tuning**
+```
+Adjust thresholds to ensure ≤3 videos can be "isActive" simultaneously
+isActive: 70% (stricter, was 60%)
+notActive: 30% (release earlier, was 20%)
+Pro: Problem never occurs
+Con: May not work for all screen sizes/layouts
+```
+
+**Recommended Approach**:
+1. **Primary**: Tune visibility rules (Option C)
+2. **Fallback**: Flexible pool 3→5 (Option B) for edge cases
+3. **Last Resort**: Priority eviction (Option A)
+
+**Metrics to Track**:
+- Pool expansion events (target → max)
+- Play button shows (failed acquisition)
+- Player evictions
+- User manual play button taps
+
+### 3. Thumbnail prefetch
+Is this required if I am doing video prefetch?
+Is there a way to use first frame of video for thumbnail?
+
+### 4. Prefetching through offline HLS APIs
+
+---
+
+## High Priority (Next Session)
+
 ### 1. Secure KTVHTTPCache Local Proxy Server
 **Priority**: Critical for production security
 
@@ -93,7 +317,356 @@ private func getProxiedURL(_ originalURL: URL) -> URL? {
 
 ---
 
-### 2. CarouselPrefetchController - Horizontal Scroll Detection
+### 2. Preview Duration & Sequencing Implementation
+**Priority**: High - playback feature completeness
+**Status**: Currently disabled (set to 0/false in AppConfig)
+
+**Problem**:
+- `previewDuration`, `sequencingEnabled`, `rotateToSoftPlay` are not properly implemented
+- Preview timer lifecycle not managed correctly (can trigger after video released)
+- Sequencing logic needs proper state management
+- Features disabled for stability
+
+**Preview Duration Needs**:
+- Start timer when video becomes active
+- Cancel timer on visibility state changes
+- Clean up timer on unmount
+- Handle edge cases (pausing, backgrounding)
+
+**Sequencing Needs**:
+- Detect video end event
+- Check if another video in "waiting" state
+- Smoothly transition to next video
+- Respect user scroll interruptions
+
+**Implementation**:
+```typescript
+// In VideoCard.tsx
+useEffect(() => {
+  if (!isActive || previewDuration === 0) return;
+  
+  const timer = setTimeout(() => {
+    // Only trigger if still active
+    if (currentVisibilityState === 'isActive') {
+      handleVisibilityChange('willResignActive');
+    }
+  }, previewDuration * 1000);
+  
+  return () => clearTimeout(timer); // Cleanup on unmount or state change
+}, [isActive, previewDuration]);
+
+// In PlaybackManager.ts
+function handleVideoEnd(videoId: string): void {
+  if (!AppConfig.config.playback.sequencingEnabled) return;
+  
+  const waitingVideos = getVideosInState('prepareToBeActive');
+  if (waitingVideos.length > 0) {
+    const nextVideo = waitingVideos[0]; // Highest priority
+    handleVisibilityChange(nextVideo.id, 'isActive');
+  }
+}
+```
+
+**Testing**:
+- Verify timer cancellation on state changes
+- Test sequencing with multiple videos
+- Test interaction with user scroll
+- Memory leak detection
+
+---
+
+### 3. Network-Aware Bitrate Selection for Prefetch
+**Priority**: High (improves cache hit rate)
+**Status**: Not implemented
+
+**Problem**:
+- Current prefetch doesn't consider network speed or quality tiers
+- AVPlayer picks quality adaptively during playback
+- Prefetched quality may not match playback quality → cache miss
+- Cache hit rate: ~40-50%
+
+**Solution**: Network-aware prefetch with playback constraints
+
+**Phase 1: Network Speed Measurement**
+```objc
+// NetworkSpeedMonitor.m
+- Periodic bandwidth measurement (every 30s)
+- Use AVPlayer accessLog when available
+- Fall back to interface type (WiFi/Cellular)
+- Estimate: 1-20 Mbps range
+```
+
+**Phase 2: Bitrate Tier Selection**
+```
+Network Speed → Bitrate Tier Mapping:
+< 1 Mbps:   Low (360p, ~600 Kbps)
+1-3 Mbps:   Medium (540p, ~1.3 Mbps)
+3-8 Mbps:   High (720p, ~4 Mbps)
+> 8 Mbps:   Very High (1080p, ~6 Mbps)
+```
+
+**Phase 3: Apply to Prefetch**
+```objc
+// CacheManager.m - prefetchWithManifest
+1. Measure network speed
+2. Parse master playlist → get bitrate ladder
+3. Select variant matching network tier
+4. Fetch that variant's media playlist
+5. Prefetch segments from selected quality
+6. Store metadata: {prefetchedBitrate, quality, ladder}
+```
+
+**Phase 4: Playback Constraint**
+```typescript
+// VideoCard.tsx
+const metadata = await CacheManager.getPrefetchMetadata(videoId);
+if (metadata.prefetchedBitrate) {
+    // Strategy options:
+    // A) match_prefetch: Force exact match
+    // B) prefetch_plus_one: Allow 1 tier higher
+    // C) adaptive: Let AVPlayer decide (may miss cache)
+    
+    const preferredBitrate = calculatePreferredBitrate(
+        metadata.prefetchedBitrate,
+        metadata.bitrateLadder,
+        AppConfig.playback.bitrateStrategy
+    );
+    
+    // Set on AVPlayerItem
+    item.preferredPeakBitRate = preferredBitrate;
+}
+```
+
+**Expected Results**:
+- Cache hit rate: 80-90% (up from 40-50%)
+- Better bandwidth utilization
+- Adaptive to network conditions
+
+**Limitations**:
+- `preferredPeakBitRate` is a hint, not guarantee
+- Network may change between prefetch and playback
+- Still better than random/no consideration
+
+**Future Enhancement: Force Cached Mode**
+```typescript
+// Rewrite master playlist to ONLY include prefetched variant
+// AVPlayer has no choice but to use cached quality
+// Result: 100% cache hit, even offline!
+```
+
+**Config**:
+```typescript
+prefetch: {
+    networkAware: true,
+    measureInterval: 30, // seconds
+    conservativeBitrate: false, // Pick 1 tier lower if true
+},
+playback: {
+    bitrateStrategy: 'prefetch_plus_one', // match_prefetch | prefetch_plus_one | adaptive
+}
+```
+
+---
+
+### 4. AVAssetDownloadTask Exploration
+**Priority**: Medium (long-term improvement)
+**Status**: Research/exploration phase
+
+**Current Approach: KTVHTTPCache**
+- Third-party library for HTTP caching
+- Local proxy server architecture
+- Works but has limitations and security concerns
+
+**Alternative: AVAssetDownloadTask**
+- Apple's native HLS download API
+- Designed for offline playback
+- App Store compliant
+- Better integration with iOS
+
+**Benefits**:
+✅ Native iOS support (no third-party dependency)
+✅ Proper offline playback (system-managed)
+✅ Quality/bitrate selection control
+✅ Background downloads (continues when app suspended)
+✅ Storage management (system can purge if needed)
+✅ Progress tracking built-in
+✅ DRM support (FairPlay)
+
+**Challenges**:
+❌ Different API paradigm (downloads vs streaming proxy)
+❌ Requires significant refactor
+❌ More complex integration
+❌ Less flexible than KTV proxy approach
+❌ Download management complexity
+
+**Use Cases**:
+- True offline mode (download full videos for offline viewing)
+- Prefetch could use AVAssetDownloadTask
+- Playback could use standard AVPlayer with downloaded assets
+
+**Implementation Sketch**:
+```swift
+// Future: DownloadManager.swift
+func downloadVideo(url: URL, quality: String) {
+    let asset = AVURLAsset(url: url)
+    
+    // Create download task with quality selection
+    guard let task = downloadSession.makeAssetDownloadTask(
+        asset: asset,
+        assetTitle: "Video",
+        assetArtworkData: nil,
+        options: [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: bitrateForQuality(quality)]
+    ) else { return }
+    
+    task.resume()
+}
+
+// Delegate callbacks
+func urlSession(_ session: URLSession, 
+                assetDownloadTask: AVAssetDownloadTask, 
+                didFinishDownloadingTo location: URL) {
+    // Asset downloaded, ready for offline playback
+}
+```
+
+**Migration Path**:
+1. Keep KTV for streaming/caching (V1)
+2. Add AVAssetDownloadTask for true offline downloads (V2)
+3. Eventually migrate fully to AVAssetDownloadTask (V3)
+
+**Decision Point**: Only pursue if:
+- Offline mode is critical product requirement
+- App Store has issues with KTV proxy approach
+- Users demand explicit download functionality
+
+---
+
+### 5. Device & Network Tier-Based Configuration
+**Priority**: Medium (broad device support)
+**Status**: Not implemented
+
+**Problem**:
+- Current config is static (same for all devices/networks)
+- Low-end devices struggle with 3 AVPlayers
+- Cellular networks waste bandwidth on high-quality prefetch
+- One-size-fits-all approach is suboptimal
+
+**Solution**: Adaptive configuration based on device capabilities and network type
+
+**Device Tiers**:
+```typescript
+enum DeviceTier {
+    Low,    // iPhone 8, SE 2016, < 2GB RAM
+    Medium, // iPhone X-12, 2-4GB RAM  
+    High    // iPhone 13+, > 4GB RAM
+}
+
+function detectDeviceTier(): DeviceTier {
+    const ram = DeviceInfo.getTotalMemory();
+    const cpu = DeviceInfo.get CPUArchitecture();
+    const model = DeviceInfo.getModel();
+    
+    // Detection logic...
+    return tier;
+}
+```
+
+**Network Tiers**:
+```typescript
+enum NetworkTier {
+    Offline,
+    Slow,    // 3G, < 1 Mbps
+    Medium,  // 4G, 1-10 Mbps
+    Fast     // WiFi, 5G, > 10 Mbps
+}
+```
+
+**Adaptive Config**:
+```typescript
+const CONFIG_MATRIX = {
+    [DeviceTier.Low]: {
+        [NetworkTier.Slow]: {
+            playerPoolSize: 1,
+            prefetchStrategy: 'manifest',
+            bufferSeconds: 1,
+        },
+        [NetworkTier.Medium]: {
+            playerPoolSize: 2,
+            prefetchStrategy: 'manifest',
+            bufferSeconds: 2,
+        },
+        [NetworkTier.Fast]: {
+            playerPoolSize: 2,
+            prefetchStrategy: 'auto',
+            bufferSeconds: 2,
+        },
+    },
+    [DeviceTier.Medium]: {
+        [NetworkTier.Slow]: {
+            playerPoolSize: 2,
+            prefetchStrategy: 'manifest',
+            bufferSeconds: 2,
+        },
+        [NetworkTier.Medium]: {
+            playerPoolSize: 3,
+            prefetchStrategy: 'auto',
+            bufferSeconds: 2,
+        },
+        [NetworkTier.Fast]: {
+            playerPoolSize: 3,
+            prefetchStrategy: 'avplayer',
+            bufferSeconds: 3,
+        },
+    },
+    [DeviceTier.High]: {
+        [NetworkTier.Slow]: {
+            playerPoolSize: 3,
+            prefetchStrategy: 'manifest',
+            bufferSeconds: 2,
+        },
+        [NetworkTier.Medium]: {
+            playerPoolSize: 3,
+            prefetchStrategy: 'auto',
+            bufferSeconds: 3,
+        },
+        [NetworkTier.Fast]: {
+            playerPoolSize: 3,
+            prefetchStrategy: 'avplayer',
+            bufferSeconds: 5,
+        },
+    },
+};
+
+// Usage
+const deviceTier = detectDeviceTier();
+const networkTier = monitorNetworkTier();
+const config = CONFIG_MATRIX[deviceTier][networkTier];
+
+VideoPlayerPool.setMaxPlayers(config.playerPoolSize);
+CacheManager.setPrefetchStrategy(config.prefetchStrategy);
+```
+
+**Dynamic Adaptation**:
+- Monitor network changes (WiFi → Cellular)
+- Monitor memory warnings
+- Adjust pool size and strategy in real-time
+- Graceful degradation under pressure
+
+**Benefits**:
+✅ Better UX on low-end devices
+✅ Bandwidth savings on cellular
+✅ Optimal performance on high-end + WiFi
+✅ Adaptive to changing conditions
+
+**Implementation**:
+1. Device detection on app launch
+2. Network monitoring (continuous)
+3. Config selection and application
+4. Runtime adaptation on changes
+
+---
+
+### 6. CarouselPrefetchController - Horizontal Scroll Detection
 **Priority**: High - better carousel UX
 **Status**: ✅ Feed-level prefetch implemented, carousel horizontal scroll is future work
 
@@ -190,33 +763,176 @@ class Logger {
 
 ---
 
-### 2. Proper Video IDs (Not URLs)
-**Priority**: High - cleaner architecture
+### 4. Prefetch Support for Non-HLS Formats
+**Priority**: Medium - format flexibility
+**Status**: Currently only HLS (m3u8) supported
 
-**Current Issue**:
-- `item.id` is set to full video URL
-- Makes logs verbose and unclear
-- Mixing concerns (identity vs location)
+**Current Limitation**:
+- KTVHTTPCache and prefetch logic assume HLS manifests
+- DASH (.mpd), MP4 (.mp4), other formats not supported
+- No fallback for unknown formats
 
-**Solution**:
-- Generate unique IDs: hash of URL, or sequential, or from backend
-- Store ID→URL mapping if needed
-- Update VideoCard to use clean IDs
+**Needed**:
+- Detect video format from URL/content-type
+- Route HLS → KTVHTTPCache
+- Route DASH → Alternative caching (if needed)
+- Route MP4 → Direct AVAsset caching
+- Graceful fallback for unsupported formats
 
-**Example**:
+**Implementation**:
 ```typescript
-// In VideoCard or DataProvider
-const generateVideoId = (url: string): string => {
-  // Option 1: Hash
-  return `video_${hashCode(url)}`;
+// In PrefetchManager.ts
+function detectVideoFormat(url: string): 'HLS' | 'DASH' | 'MP4' | 'UNKNOWN' {
+  if (url.includes('.m3u8')) return 'HLS';
+  if (url.includes('.mpd')) return 'DASH';
+  if (url.includes('.mp4')) return 'MP4';
+  return 'UNKNOWN';
+}
+
+async prefetchVideo(videoId: string, videoUrl: string, ...): Promise<void> {
+  const format = detectVideoFormat(videoUrl);
   
-  // Option 2: Sequential
-  return `video_${index}`;
-  
-  // Option 3: Extract from URL
-  return url.match(/MED[A-Z0-9]+/)?.[0] || url;
-};
+  switch (format) {
+    case 'HLS':
+      await CacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
+      break;
+    case 'MP4':
+      // Use AVAsset preloading or direct download
+      await CacheManager.prefetchMP4(videoId, videoUrl);
+      break;
+    case 'DASH':
+      // Implement DASH prefetch if needed
+      logger.warn('prefetch', `DASH not supported yet: ${videoId}`);
+      break;
+    default:
+      logger.warn('prefetch', `Unknown format, skipping: ${videoId}`);
+  }
+}
 ```
+
+**Native Side**:
+```swift
+// For MP4 direct caching
+RCT_EXPORT_METHOD(prefetchMP4:(NSString *)videoId
+                  videoUrl:(NSString *)videoUrl
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    let url = URL(string: videoUrl)!
+    let asset = AVURLAsset(url: url)
+    
+    // Preload asset for faster playback
+    asset.loadValuesAsynchronously(forKeys: ["playable", "duration"]) {
+        NSLog("[CacheManager] ✅ MP4 preloaded: \(videoId)")
+        resolve(true)
+    }
+}
+```
+
+---
+
+### 5. Separate AVPlayer and AVPlayerLayer Pooling
+**Priority**: Medium - better resource management
+**Status**: Currently pools AVPlayer instances, layers are created on-demand
+
+**Problem**:
+- Creating AVPlayerLayer is moderately expensive
+- Multiple layers could share same player for memory efficiency
+- Current design: 1 player = 1 layer (tight coupling)
+
+**Proposed Design**:
+- Pool AVPlayerLayer instances separately
+- Reuse layers across different videos
+- Multiple layers could point to same player (e.g., PiP scenarios)
+
+**Benefits**:
+- More layers than players (memory efficient)
+- Faster layer attachment to views
+- Better support for future features (PiP, multi-view)
+
+**Implementation**:
+```swift
+// VideoPlayerPool.swift
+class VideoPlayerPool {
+    private var playerPool: [AVPlayer] = []
+    private var layerPool: [AVPlayerLayer] = []  // NEW
+    
+    // Separate acquisition
+    func acquirePlayer() -> AVPlayer { ... }
+    func acquireLayer() -> AVPlayerLayer { ... }  // NEW
+    
+    func releasePlayer(_ player: AVPlayer) { ... }
+    func releaseLayer(_ layer: AVPlayerLayer) { ... }  // NEW
+}
+
+// VideoPlayerView.swift
+private var player: AVPlayer?
+private var playerLayer: AVPlayerLayer?
+
+func setupPlayer() {
+    self.player = VideoPlayerPool.shared.acquirePlayer()
+    self.playerLayer = VideoPlayerPool.shared.acquireLayer()
+    self.playerLayer?.player = self.player
+}
+
+func cleanupPlayer() {
+    self.playerLayer?.player = nil
+    VideoPlayerPool.shared.releaseLayer(self.playerLayer!)
+    VideoPlayerPool.shared.releasePlayer(self.player!)
+}
+```
+
+**Considerations**:
+- Layer reuse requires careful cleanup (remove from superlayer)
+- Player/layer association management complexity
+- Testing for layer lifecycle bugs
+
+---
+
+### 6. Manifest Rewriting for Smooth Offline Playback
+**Priority**: Medium - better offline UX
+**Status**: Deferred - partial playback works for now
+
+**Current Behavior**:
+- Videos prefetch first N segments (e.g., 2 segments)
+- Offline playback plays cached segments, shows loader when exhausted
+- AVPlayer tries to fetch remaining segments, fails, shows error/loader
+
+**Desired Behavior**:
+- Rewrite HLS manifest to only include cached segments
+- Video plays smoothly to end of cached content
+- Show "Offline - Limited Playback" indicator
+- Optionally loop cached portion
+
+**Implementation**:
+```objc
+// CacheManager.m
+RCT_EXPORT_METHOD(generateOfflineManifest:(NSString *)videoId
+                  originalManifestUrl:(NSString *)originalUrl
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    // 1. Get prefetch stats for this video
+    NSDictionary *stats = [self.prefetchStats objectForKey:videoId];
+    NSInteger cachedSegments = [stats[@"segmentCount"] integerValue];
+    
+    // 2. Fetch original manifest
+    // 3. Parse and rewrite to include only first N segments
+    // 4. Add #EXT-X-ENDLIST tag (mark as complete)
+    // 5. Return rewritten manifest as data URL or temp file
+}
+```
+
+**Use Cases**:
+- Airplane mode demos
+- Low connectivity playback
+- Testing cache behavior
+- Offline mode feature
+
+**Related**:
+- Update VideoPlayerView to use offline manifest when network unavailable
+- Add UI indicator for limited offline playback
+- Consider progressive enhancement (download more segments in background)
 
 ---
 

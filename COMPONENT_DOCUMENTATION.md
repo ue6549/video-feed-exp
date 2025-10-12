@@ -356,6 +356,18 @@ class CacheManagerService {
     await NativeCacheManager.clearCache();
   }
 
+  async prefetchVideo(
+    videoId: string,
+    videoUrl: string,
+    segmentCount: number
+  ): Promise<boolean> {
+    return await NativeCacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
+  }
+
+  async cancelPrefetch(videoId: string): Promise<boolean> {
+    return await NativeCacheManager.cancelPrefetch(videoId);
+  }
+
   async generateOfflineManifest(
     videoURL: string,
     cachedSegments: SegmentInfo[],
@@ -370,37 +382,100 @@ class CacheManagerService {
 }
 ```
 
-### CacheManager.swift (Native Implementation)
-Native iOS cache manager using KTVHTTPCache.
+### CacheManager.m (Native Implementation)
+Native iOS cache manager using KTVHTTPCache (Objective-C).
 
-```swift
-@objc(CacheManager)
-class CacheManager: NSObject {
-  @objc static func setupCache(_ maxSizeMB: Int) {
-    let configuration = KTVHTTPCacheConfiguration()
-    configuration.maxCacheLength = UInt(maxSizeMB) * 1024 * 1024
-    KTVHTTPCache.shared.setup(with: configuration)
-  }
-  
-  @objc static func getCachedURL(_ originalURL: String) -> String {
-    guard let url = URL(string: originalURL) else { return originalURL }
-    let cachedURL = KTVHTTPCache.shared.cacheURL(with: url)
-    return cachedURL?.absoluteString ?? originalURL
-  }
-  
-  @objc static func generateOfflineManifest(
-    _ videoURL: String,
-    _ cachedSegments: [[String: Any]],
-    _ templateId: String
-  ) -> String {
-    // Generate HLS manifest from template
-    return renderManifest(template: template, segments: cachedSegments)
-  }
+```objc
+@interface CacheManager ()
+@property (nonatomic, strong) NSMutableDictionary<NSString *, KTVHCDataLoader *> *prefetchLoaders;
+@end
+
+@implementation CacheManager
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.prefetchLoaders = [NSMutableDictionary dictionary];
+    }
+    return self;
 }
+
+RCT_EXPORT_METHOD(setupCache:(NSInteger)maxSizeMB
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    long long maxBytes = (long long)maxSizeMB * 1024 * 1024;
+    [KTVHTTPCache cacheSetMaxCacheLength:maxBytes];
+    
+    NSError *error = nil;
+    BOOL started = [KTVHTTPCache proxyStart:&error];
+    
+    if (started) {
+        resolve(@(YES));
+    } else {
+        reject(@"START_ERROR", @"Failed to start proxy server", error);
+    }
+}
+
+RCT_EXPORT_METHOD(getCachedURL:(NSString *)originalURL
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *url = [NSURL URLWithString:originalURL];
+    NSURL *cachedURL = [KTVHTTPCache proxyURLWithOriginalURL:url];
+    resolve(cachedURL ? cachedURL.absoluteString : originalURL);
+}
+
+RCT_EXPORT_METHOD(prefetchVideo:(NSString *)videoId
+                  videoUrl:(NSString *)videoUrl
+                  segmentCount:(NSInteger)segmentCount
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *manifestURL = [NSURL URLWithString:videoUrl];
+    if (!manifestURL) {
+        reject(@"invalid_url", @"Invalid video URL", nil);
+        return;
+    }
+    
+    // Use KTV's cache loader to prefetch through proxy
+    KTVHCDataRequest *req = [[KTVHCDataRequest alloc] initWithURL:manifestURL headers:nil];
+    KTVHCDataLoader *loader = [KTVHTTPCache cacheLoaderWithRequest:req];
+    
+    if (loader) {
+        // Keep strong reference (prevents dealloc during async download)
+        [self.prefetchLoaders setObject:loader forKey:videoId];
+        [loader prepare];  // Triggers prefetch through KTV proxy
+        resolve(@YES);
+    } else {
+        reject(@"prefetch_failed", @"KTV cache loader creation failed", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(cancelPrefetch:(NSString *)videoId
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    KTVHCDataLoader *loader = [self.prefetchLoaders objectForKey:videoId];
+    if (loader) {
+        [loader close];
+        [self.prefetchLoaders removeObjectForKey:videoId];
+    }
+    resolve(@YES);
+}
+
+@end
 ```
 
+**Key Features:**
+- KTVHTTPCache proxy setup and configuration
+- URL rewriting for cached playback
+- Native prefetch using KTV's cache loader API
+- Prefetch cancellation support
+- Strong reference management for async loaders
+- Cache statistics and clearing
+
 ### PrefetchManager.ts
-Intelligent video segment prefetching (VOD only).
+Intelligent video prefetching using native KTVHTTPCache (VOD only).
 
 ```typescript
 class PrefetchManager {
@@ -409,7 +484,8 @@ class PrefetchManager {
   private statusMap = new Map<string, PrefetchStatus>();
 
   async prefetchVideo(
-    videoUrl: string,
+    videoId: string,        // Clean ID (e.g., vid-3-2)
+    videoUrl: string,       // Video manifest URL
     videoType: 'VOD' | 'LIVE',
     priority: number = 0
   ): Promise<void> {
@@ -420,35 +496,47 @@ class PrefetchManager {
     if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) return;
 
     // Add to queue and start processing
-    this.queue.push({ videoUrl, videoType, priority, segmentCount: 2 });
+    this.queue.push({ videoId, videoUrl, videoType, priority, segmentCount: 2 });
     this.processQueue();
   }
 
   private async startDownload(request: PrefetchRequest): Promise<void> {
-    // 1. Fetch and parse manifest
-    const manifest = await this.fetchManifest(request.videoUrl);
+    const { videoId, videoUrl, videoType, segmentCount } = request;
     
-    // 2. Detect if actually VOD from manifest
-    if (this.isLiveManifest(manifest)) {
-      console.warn('Manifest indicates LIVE, skipping prefetch');
+    // VOD-only check
+    if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) {
+      logger.warn('prefetch', `⚠️ LIVE video ${videoId}, skipping (VOD-only mode)`);
       return;
     }
 
-    // 3. Extract segments
-    const segments = this.parseSegments(manifest).slice(0, request.segmentCount);
+    // Use native CacheManager to prefetch through KTV proxy
+    await CacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
     
-    // 4. Download segments
-    await this.downloadSegments(request.videoUrl, segments);
+    // Mark as completed (KTV handles download internally)
+    this.statusMap.set(videoId, {
+      videoId,
+      state: 'completed',
+      progress: 100,
+      segmentsDownloaded: segmentCount,
+      totalSegments: segmentCount,
+    });
   }
 }
 ```
 
 **Key Features:**
-- VOD-only prefetching
-- Live content detection from manifest
+- **Native prefetch through KTVHTTPCache** - Uses KTV's cache loader API
+- VOD-only prefetching (configurable)
 - Priority-based queue management
-- Status tracking and cancellation
-- Concurrent download limits
+- Status tracking and cancellation support
+- Concurrent download limits (default: 3)
+- Clean video IDs for logging
+
+**Architecture:**
+- PrefetchManager queues requests and manages concurrency
+- CacheManager bridges to native KTVHTTPCache
+- KTVHTTPCache downloads and caches segments automatically
+- No manual manifest parsing or segment downloading in JS
 
 ---
 

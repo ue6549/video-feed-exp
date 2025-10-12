@@ -19,5 +19,14 @@ RCT_EXTERN_METHOD(getPoolStats:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(clearPool:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXPORT_METHOD(setMaxPlayers:(NSInteger)maxPlayers
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    [VideoPlayerPool setMaxPlayersWithMaxPlayers:maxPlayers
+                                         resolve:resolve
+                                          reject:reject];
+}
+
 @end
 

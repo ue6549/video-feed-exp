@@ -41,6 +41,7 @@ export interface AppConfigType {
     segmentCount: number;
     maxConcurrent: number;
     priorities: string[];
+    strategy: 'auto' | 'avplayer' | 'manifest';  // Prefetch strategy
     carousel: {
       initialVideos: number;     // Number of videos to prefetch when carousel appears
       horizontalLookahead: number; // Future: videos to prefetch ahead during horizontal scroll
@@ -50,6 +51,11 @@ export interface AppConfigType {
     maxSizeMB: number;
     strategy: 'LRU';
     manifestTemplateId: string;
+  };
+  playerPool: {
+    maxPlayers: number;
+    avplayerPrefetchBufferSeconds: number;
+    avplayerPrefetchTimeoutSeconds: number;
   };
   playback: {
     previewDuration: number;
@@ -112,6 +118,7 @@ export class AppConfig {
       segmentCount: 2,
       maxConcurrent: 3,
       priorities: ['short', 'carousel', 'merch'],
+      strategy: 'auto',  // Try AVPlayer first, fallback to manifest
       carousel: {
         initialVideos: 2,        // Prefetch first 2 videos when carousel appears
         horizontalLookahead: 2,  // Future: prefetch 2 ahead during horizontal scroll
@@ -122,10 +129,15 @@ export class AppConfig {
       strategy: 'LRU',
       manifestTemplateId: 'hls-vod-v3',
     },
+    playerPool: {
+      maxPlayers: 3,                        // Hard limit on AVPlayer pool
+      avplayerPrefetchBufferSeconds: 2,     // Buffer 2 seconds for prefetch
+      avplayerPrefetchTimeoutSeconds: 10,   // Safety timeout for prefetch
+    },
     playback: {
-      previewDuration: 30,
-      sequencingEnabled: true,
-      rotateToSoftPlay: true,
+      previewDuration: 0,         // Disabled - needs proper lifecycle implementation
+      sequencingEnabled: false,    // Disabled - needs proper implementation
+      rotateToSoftPlay: false,     // Disabled - needs proper implementation
     },
     performance: {
       isLowEndDevice: false,
@@ -254,6 +266,7 @@ export class AppConfig {
         segmentCount: 2,
         maxConcurrent: 3,
         priorities: ['short', 'carousel', 'merch'],
+        strategy: 'auto',
         carousel: {
           initialVideos: 2,
           horizontalLookahead: 2,
@@ -263,6 +276,11 @@ export class AppConfig {
         maxSizeMB: 500,
         strategy: 'LRU',
         manifestTemplateId: 'hls-vod-v3',
+      },
+      playerPool: {
+        maxPlayers: 3,
+        avplayerPrefetchBufferSeconds: 2,
+        avplayerPrefetchTimeoutSeconds: 10,
       },
       playback: {
         previewDuration: 30,

@@ -29,8 +29,8 @@ export interface VisibilityTransitioningConfig {
 // Define the visibility thresholds for our custom logic
 export const SHORTS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
     movingIn: {
-        // 5% or more visible (incoming) -> Start prefetch
-        prefetch: 5,
+        // 10% or more visible (incoming) -> Start prefetch (increased from 5% for earlier player attachment)
+        prefetch: 10,
         // 25% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
         // 50% or more visible (incoming) -> Play video
@@ -41,15 +41,15 @@ export const SHORTS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
         willResignActive: 90,
         // 20% or less visible (outgoing) -> Remove video component
         notActive: 20,
-        // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
-        released: 5,
+        // 10% or less visible (outgoing) -> Cancel prefetch, full cleanup (increased from 5% to match incoming)
+        released: 10,
     }
 };
 
 export const CAROUSEL_CARDS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
     movingIn: {
-        // 5% or more visible (incoming) -> Start prefetch
-        prefetch: 5,
+        // 10% or more visible (incoming) -> Start prefetch (increased from 5% for earlier player attachment)
+        prefetch: 10,
         // 25% or more visible (incoming) -> Add video component, paused
         prepareToBeActive: 25,
         // 90% or more visible (incoming) -> Play video (carousel needs high visibility)
@@ -60,7 +60,7 @@ export const CAROUSEL_CARDS_VISIBILITY_CONFIG: VisibilityTransitioningConfig = {
         willResignActive: 70,
         // 10% or less visible (outgoing) -> Remove video component
         notActive: 10,
-        // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
-        released: 5,
+        // 10% or less visible (outgoing) -> Cancel prefetch, full cleanup (increased from 5% to match incoming)
+        released: 10,
     }
 };

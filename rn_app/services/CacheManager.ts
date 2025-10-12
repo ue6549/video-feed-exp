@@ -275,6 +275,78 @@ class CacheManagerService {
       throw error;
     }
   }
+  /**
+   * Prefetch video through KTVHTTPCache
+   * @param videoId Clean video ID for tracking
+   * @param videoUrl Video manifest URL
+   * @param segmentCount Number of segments to prefetch (hint, KTV may cache more)
+   */
+  async prefetchVideo(
+    videoId: string,
+    videoUrl: string,
+    segmentCount: number
+  ): Promise<boolean> {
+    try {
+      logger.debug('prefetch', `Prefetch request: ${videoId} (${segmentCount} segments)`);
+      const result = await NativeCacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
+      return result;
+    } catch (error) {
+      logger.error('prefetch', `Prefetch failed for ${videoId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel ongoing prefetch
+   */
+  async cancelPrefetch(videoId: string): Promise<boolean> {
+    try {
+      const result = await NativeCacheManager.cancelPrefetch(videoId);
+      logger.debug('prefetch', `Cancelled prefetch: ${videoId}`);
+      return result;
+    } catch (error) {
+      logger.error('prefetch', `Failed to cancel prefetch ${videoId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get prefetch statistics for a specific video
+   */
+  async getPrefetchStats(videoId: string): Promise<{ segmentCount: number; totalBytes: number }> {
+    try {
+      const stats = await NativeCacheManager.getPrefetchStats(videoId);
+      return stats;
+    } catch (error) {
+      logger.error('prefetch', `Failed to get prefetch stats for ${videoId}: ${error}`);
+      return { segmentCount: 0, totalBytes: 0 };
+    }
+  }
+
+  /**
+   * Get prefetch statistics for all videos
+   */
+  async getAllPrefetchStats(): Promise<Record<string, { segmentCount: number; totalBytes: number }>> {
+    try {
+      const stats = await NativeCacheManager.getAllPrefetchStats();
+      return stats;
+    } catch (error) {
+      logger.error('prefetch', `Failed to get all prefetch stats: ${error}`);
+      return {};
+    }
+  }
+
+  /**
+   * Update prefetch configuration
+   */
+  async setPrefetchConfig(bufferSeconds: number, timeoutSeconds: number): Promise<void> {
+    try {
+      await NativeCacheManager.setPrefetchConfig(bufferSeconds, timeoutSeconds);
+      logger.info('prefetch', `Config updated: buffer=${bufferSeconds}s, timeout=${timeoutSeconds}s`);
+    } catch (error) {
+      logger.error('prefetch', `Failed to update prefetch config: ${error}`);
+    }
+  }
 }
 
 export default new CacheManagerService();

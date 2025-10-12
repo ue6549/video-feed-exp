@@ -387,7 +387,7 @@ const FeedScreen: React.FC = () => {
           rowRenderer={rowRenderer}
           dataProvider={dataProviderRef.current}
           layoutProvider={layoutProviderRef.current}
-          style={[styles.list, styles.contentContainer, { paddingTop: insets.top }]}
+          style={styles.list}
           forceNonDeterministicRendering={true}
           extendedState={{ geekOn, applyLodConfigOptimisations }}
           onEndReached={onEndReached}

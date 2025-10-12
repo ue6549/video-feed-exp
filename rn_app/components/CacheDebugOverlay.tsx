@@ -12,6 +12,7 @@ export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVid
   const [cacheSize, setCacheSize] = useState(0);
   const [proxyStatus, setProxyStatus] = useState('Unknown');
   const [currentVideoStatus, setCurrentVideoStatus] = useState<string>('N/A');
+  const [prefetchStats, setPrefetchStats] = useState<Record<string, { segmentCount: number; totalBytes: number }>>({});
 
   useEffect(() => {
     const updateStats = async () => {
@@ -30,6 +31,10 @@ export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVid
               : 'MISS'
           );
         }
+        
+        // Get prefetch statistics
+        const allStats = await CacheManager.getAllPrefetchStats();
+        setPrefetchStats(allStats);
       } catch (error) {
         console.error('Cache debug overlay error:', error);
       }
@@ -66,12 +71,25 @@ export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVid
               Current: {currentVideoStatus}
             </Text>
           )}
+          
+          {Object.keys(prefetchStats).length > 0 && (
+            <View style={styles.prefetchSection}>
+              <Text style={styles.sectionTitle}>Prefetched:</Text>
+              {Object.entries(prefetchStats).map(([videoId, stats]) => (
+                <Text key={videoId} style={styles.prefetchStat} numberOfLines={1}>
+                  {videoId}: {stats.segmentCount} segs ({(stats.totalBytes / 1024 / 1024).toFixed(1)} MB)
+                </Text>
+              ))}
+            </View>
+          )}
+          
           <TouchableOpacity 
             onPress={async () => {
               try {
                 await CacheManager.clearAllCache();
                 setCacheSize(0);
                 setCurrentVideoStatus('N/A');
+                setPrefetchStats({});
               } catch (error) {
                 console.error('Failed to clear cache:', error);
               }
@@ -121,6 +139,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     marginBottom: 4,
+    fontFamily: 'Menlo',
+  },
+  prefetchSection: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#444',
+  },
+  sectionTitle: {
+    color: '#aaa',
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  prefetchStat: {
+    color: '#0f0',
+    fontSize: 10,
+    marginBottom: 2,
     fontFamily: 'Menlo',
   },
   clearButton: {

@@ -136,7 +136,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, visibilityConfig, geekMode,
     const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
     
     const now = () => Date.now();
-
+    
     useEffect(() => {
         const playListener = (videoId: string) => {
             if (videoId === item.id) {
@@ -220,8 +220,10 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, visibilityConfig, geekMode,
             
             // ⚠️ CRITICAL: Apply player attachment SYNCHRONOUSLY before emitting state change
             const shouldHavePlayer = (
+                newState === MediaCardVisibility.prefetch ||  // ← Added: Attach at 10% visibility
                 newState === MediaCardVisibility.prepareToBeActive || 
-                newState === MediaCardVisibility.isActive
+                newState === MediaCardVisibility.isActive ||
+                newState === MediaCardVisibility.willResignActive
             );
             
             const shouldNotHavePlayer = (
@@ -279,8 +281,8 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, visibilityConfig, geekMode,
         setIsBuffering(e.isBuffering);
         if (e.isBuffering) {
             metrics.mark('video_buffer_start', item.id, playIdRef.current);
-        } else {
-            metrics.mark('video_buffer_end', item.id, playIdRef.current);
+            } else {
+                metrics.mark('video_buffer_end', item.id, playIdRef.current);
         }
     };
     
@@ -439,12 +441,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ item, visibilityConfig, geekMode,
             {/* Debug Info */}
             {geekMode && (
                 <>
-                    <View style={{ position: 'absolute', top: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
-                        <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-                    </View>
-                    <View style={{ position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
-                        <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-                    </View>
+            <View style={{ position: 'absolute', top: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+            </View>
+            <View style={{ position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: 'white', fontSize: 10 }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
+            </View>
                     {playIdRef.current && (<DebugHUD playId={playIdRef.current} key={playIdRef.current} visible />)}
                 </>
             )}
@@ -462,7 +464,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'green',
+        backgroundColor: 'rgba(0,0,0,0.3)', // Semi-transparent, shows thumbnail underneath
     },
     errorContainer: {
         ...StyleSheet.absoluteFillObject,
