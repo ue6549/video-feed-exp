@@ -152,6 +152,7 @@ export class FeedPrefetchController extends PrefetchController {
 
     this.logPrefetch(
       `🎯 Short video widget ${widgetIndex}: ${videoId} at priority ${priority}`,
+    );
 
     this.prefetchVideos(
       [
@@ -177,6 +178,7 @@ export class FeedPrefetchController extends PrefetchController {
     const range = Math.min(
       AppConfig.config.visibility.prefetchRange,
       feedData.length - 1,
+    );
 
     if (range > 0) {
       this.handleVisibleIndicesChanged([0], feedData);
@@ -192,6 +194,7 @@ export class FeedPrefetchController extends PrefetchController {
 
     this.logPrefetch(
       `📥 Page loaded: new widgets from index ${newPageStartIndex}`,
+    );
 
     // Prefetch first 3 widgets from new page
     const prefetchCount = Math.min(3, allFeedData.length - newPageStartIndex);

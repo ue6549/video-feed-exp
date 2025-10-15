@@ -30,6 +30,7 @@ const App = () => {
         // Set player pool size
         await VideoPlayerPool.setMaxPlayers(
           AppConfig.config.playerPool.maxPlayers,
+        );
 
         // Set prefetch config
         await CacheManager.setPrefetchConfig(

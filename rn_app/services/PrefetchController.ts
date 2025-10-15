@@ -42,6 +42,7 @@ export abstract class PrefetchController {
     logger.debug(
       'prefetch',
       `[${this.name}] Prefetching ${videos.length} videos (priority: ${finalPriority})`,
+    );
 
     videos.forEach(video => {
       PrefetchManager.prefetchVideo(

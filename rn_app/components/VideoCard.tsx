@@ -34,20 +34,20 @@ import {logger} from '../utilities/Logger';
 
 // Sample interface for your video item data
 interface VideoItem {
-  id: string;
+    id: string;
   videoCategory?: WidgetType; // e.g., 'short' or 'carousel'
   videoSource: {
     url: string;
     videoType?: 'VOD' | 'LIVE';
   };
-  thumbnailUrl: string;
-  aspectRatio?: string; // e.g., '16:9'
+    thumbnailUrl: string;
+    aspectRatio?: string; // e.g., '16:9'
 }
 
 const toRawVisibilityConfig = (
   config: VisibilityTransitioningConfig,
 ): RawVisibilityTransitioningConfig => {
-  return {
+    return {
     movingIn: [
       config.movingIn.prefetch,
       config.movingIn.prepareToBeActive,
@@ -66,29 +66,29 @@ const toRawVisibilityConfig = (
  * Uses custom VideoPlayerView native module for playback
  */
 export interface VideoCardProps extends ViewProps {
-  item: VideoItem;
+    item: VideoItem;
 
-  geekMode?: boolean; // Show the debug HUD with metrics
+    geekMode?: boolean; // Show the debug HUD with metrics
 
   // Visibility configuration for playback control
-  visibilityConfig?: VisibilityTransitioningConfig;
+    visibilityConfig?: VisibilityTransitioningConfig;
 }
 
 // Define the visibility thresholds for our custom logic
 const DEFAULT_VISIBILITY_THRESHOLDS: VisibilityTransitioningConfig = {
-  movingIn: {
+    movingIn: {
     // 5% or more visible (incoming) -> Start prefetch
     prefetch: 5,
     // 25% or more visible (incoming) -> Add video component, paused
-    prepareToBeActive: 25,
-    // 50% or more visible (incoming) -> Play video
-    isActive: 50,
-  },
-  movingOut: {
+        prepareToBeActive: 25,
+        // 50% or more visible (incoming) -> Play video
+        isActive: 50,
+    },
+    movingOut: {
     // 90% or less visible (outgoing) -> Pause video
-    willResignActive: 90,
+        willResignActive: 90,
     // 20% or less visible (outgoing) -> Remove video component
-    notActive: 20,
+        notActive: 20,
     // 5% or less visible (outgoing) -> Cancel prefetch, full cleanup
     released: 5,
   },
@@ -138,16 +138,16 @@ const VideoCard: React.FC<VideoCardProps> = ({
   geekMode,
   ...rest
 }) => {
-  const playStartTs = useRef<number | null>(null);
+    const playStartTs = useRef<number | null>(null);
 
   const [debugText, setDebugText] = useState(
     `${MediaCardVisibility.notActive} - 0%`,
   );
-  const [isPlayerAttached, setIsPlayerAttached] = useState(false);
-  const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
-  const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
-  const [retryKey, setRetryKey] = useState<number>(0);
-  const [loaderState, setLoaderState] = useState<LoaderState>('loading');
+    const [isPlayerAttached, setIsPlayerAttached] = useState(false);
+    const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
+    const [lastVisibilityPercentage, setLastVisibilityPercentage] = useState(0);
+    const [retryKey, setRetryKey] = useState<number>(0);
+    const [loaderState, setLoaderState] = useState<LoaderState>('loading');
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [isVideoReadyForDisplay, setIsVideoReadyForDisplay] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -162,27 +162,27 @@ const VideoCard: React.FC<VideoCardProps> = ({
   // Animated opacity for smooth crossfade
   const thumbnailOpacity = useRef(new Animated.Value(1)).current;
 
-  const playIdRef = React.useRef<string>('');
+    const playIdRef = React.useRef<string>('');
   const genPlayId = React.useCallback(
     () => `${item.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     [item.id],
-  );
-  const beginAttempt = React.useCallback(() => {
-    playIdRef.current = genPlayId();
-    metrics.mark('attemptStart', item.id, playIdRef.current);
-  }, [genPlayId, item.id]);
+    );
+    const beginAttempt = React.useCallback(() => {
+        playIdRef.current = genPlayId();
+        metrics.mark('attemptStart', item.id, playIdRef.current);
+    }, [genPlayId, item.id]);
 
-  const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
+    const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
 
   const now = () => Date.now();
-
-  useEffect(() => {
-    const playListener = (videoId: string) => {
-      if (videoId === item.id) {
+    
+    useEffect(() => {
+        const playListener = (videoId: string) => {
+            if (videoId === item.id) {
         logger.info('video', `[${item.id}] ⏯️ PLAY event received`);
-        playStartTs.current = now();
-        metrics.mark('video_play', item.id, playIdRef.current);
-        setIsPlayerPlaying(true);
+                playStartTs.current = now();
+                metrics.mark('video_play', item.id, playIdRef.current);
+                setIsPlayerPlaying(true);
         setShowPlayButton(false);
         logger.info(
           'video',
@@ -190,13 +190,13 @@ const VideoCard: React.FC<VideoCardProps> = ({
             item.id
           }] ✅ Set isPlayerPlaying=true, paused prop will be: ${false}`,
         );
-      }
-    };
-    const pauseListener = (videoId: string) => {
-      if (videoId === item.id) {
+            }
+        };
+        const pauseListener = (videoId: string) => {
+            if (videoId === item.id) {
         logger.info('video', `[${item.id}] ⏸️ PAUSE event received`);
-        metrics.mark('video_pause', item.id, playIdRef.current);
-        setIsPlayerPlaying(false);
+                metrics.mark('video_pause', item.id, playIdRef.current);
+                setIsPlayerPlaying(false);
         logger.info(
           'video',
           `[${
@@ -210,24 +210,24 @@ const VideoCard: React.FC<VideoCardProps> = ({
         ) {
           setShowPlayButton(true);
         }
-      }
-    };
+            }
+        };
 
-    playbackEvents.on('play', playListener);
-    playbackEvents.on('pause', pauseListener);
+        playbackEvents.on('play', playListener);
+        playbackEvents.on('pause', pauseListener);
 
-    return () => {
-      //TODO: Report notActive here to remove from the pubsub
-      //TODO: Also send willResignActive on video end
+        return () => {
+            //TODO: Report notActive here to remove from the pubsub
+            //TODO: Also send willResignActive on video end
       handleVisibilityChange(
         item.id,
         item.videoCategory ?? 'default',
         MediaCardVisibility.notActive,
       );
-      playbackEvents.off('play', playListener);
-      playbackEvents.off('pause', pauseListener);
-    };
-  }, [item.id]);
+            playbackEvents.off('play', playListener);
+            playbackEvents.off('pause', pauseListener);
+        };
+    }, [item.id]);
 
   const lastVisibilityStateRef = useRef<MediaCardVisibility>(
     MediaCardVisibility.notActive,
@@ -253,8 +253,8 @@ const VideoCard: React.FC<VideoCardProps> = ({
     nativeEvent: VisibilityStateChangeEvent;
   }) => {
     const {uniqueId, direction, visibilityPercentage} = event.nativeEvent;
-    const incoming = direction === 'movingIn';
-    setLastVisibilityPercentage(visibilityPercentage);
+        const incoming = direction === 'movingIn';
+        setLastVisibilityPercentage(visibilityPercentage);
 
     logger.debug(
       'visibility',
@@ -263,9 +263,9 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
     let newState: MediaCardVisibility | null = null;
 
-    if (incoming) {
+        if (incoming) {
       // Determine current state based on visibility percentage
-      if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
+            if (visibilityPercentage >= THRESHOLDS.movingIn.isActive) {
         newState = MediaCardVisibility.isActive;
       } else if (
         visibilityPercentage >= THRESHOLDS.movingIn.prepareToBeActive
@@ -292,7 +292,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
       logger.info(
         'visibility',
         `[${item.id}] ${lastVisibilityStateRef.current} → ${newState}`,
-
+      );
 
       // ⚠️ CRITICAL: Apply player attachment SYNCHRONOUSLY before emitting state change
       const shouldHavePlayer =
@@ -346,22 +346,22 @@ const VideoCard: React.FC<VideoCardProps> = ({
   };
 
   // Video event handlers
-  const handleError = (error: OnVideoErrorData) => {
+    const handleError = (error: OnVideoErrorData) => {
     logger.error(
       'video',
       `[${item.id}] Playback error: ${error.error || 'Unknown error'}`,
     );
-    metrics.error('video_error', item.id, playIdRef.current, error);
-    console.error('Video playback error', error);
-    setLoaderState('error');
-  };
+        metrics.error('video_error', item.id, playIdRef.current, error);
+        console.error('Video playback error', error);
+        setLoaderState('error');
+    };
 
-  const handleRetry = () => {
-    // Force a re-render of the Video component by changing its key
-    // TODO: should the load config be rest here or will onLodStart takecare of it
-    setRetryKey(prevKey => prevKey + 1);
-    setLoaderState('loading');
-  };
+    const handleRetry = () => {
+        // Force a re-render of the Video component by changing its key
+        // TODO: should the load config be rest here or will onLodStart takecare of it
+        setRetryKey(prevKey => prevKey + 1);
+        setLoaderState('loading');
+    };
 
   const handleManualPlay = () => {
     if (!isPlayerAttached) {
@@ -370,16 +370,16 @@ const VideoCard: React.FC<VideoCardProps> = ({
     }
     playbackEvents.emit('play', item.id);
     setShowPlayButton(false);
-  };
+    };
 
-  const onBuffer = (e: OnBufferData) => {
+    const onBuffer = (e: OnBufferData) => {
     // Track buffer events for metrics - no optimization logic
     setIsBuffering(e.isBuffering);
-    if (e.isBuffering) {
-      metrics.mark('video_buffer_start', item.id, playIdRef.current);
-    } else {
-      metrics.mark('video_buffer_end', item.id, playIdRef.current);
-    }
+        if (e.isBuffering) {
+            metrics.mark('video_buffer_start', item.id, playIdRef.current);
+            } else {
+                metrics.mark('video_buffer_end', item.id, playIdRef.current);
+            }
   };
 
   const onReadyForDisplay = () => {
@@ -400,89 +400,89 @@ const VideoCard: React.FC<VideoCardProps> = ({
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
-
-  const onProgress = (e: OnProgressData) => {
+    };
+    
+    const onProgress = (e: OnProgressData) => {
     // Progress tracking - uncomment if you need detailed progress metrics
-    // metrics.mark('video_progress', item.id, playIdRef.current, { currentTime: e.currentTime, playableDuration: e.playableDuration });
-  };
-
-  const onEnd = () => {
-    metrics.mark('video_ended', item.id, playIdRef.current);
-    setIsPlayerPlaying(false);
+        // metrics.mark('video_progress', item.id, playIdRef.current, { currentTime: e.currentTime, playableDuration: e.playableDuration });
+    };
+    
+    const onEnd = () => {
+        metrics.mark('video_ended', item.id, playIdRef.current);
+        setIsPlayerPlaying(false);
     setIsPlayerAttached(false);
     setLoaderState('stopped');
-  };
-
-  const onPlaybackRateChange = (e: OnPlaybackRateChangeData) => {
+    };
+    
+    const onPlaybackRateChange = (e: OnPlaybackRateChangeData) => {
     metrics.mark('video_playback_rate_change', item.id, playIdRef.current, {
       playbackRate: e.playbackRate,
     });
   };
-  const renderLoader = () => {
-    // Use the same renderLoader function, but change the content based on state
-    if (loaderState === 'error') {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Video failed to load.</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-            <Text style={styles.retryButtonText}>Try again</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+    const renderLoader = () => {
+        // Use the same renderLoader function, but change the content based on state
+        if (loaderState === 'error') {
+            return (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>Video failed to load.</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+                        <Text style={styles.retryButtonText}>Try again</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
 
-    if (loaderState === 'stopped') {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Video failed to load.</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-            <Text style={styles.retryButtonText}>Video ended</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+        if (loaderState === 'stopped') {
+            return (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>Video failed to load.</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+                        <Text style={styles.retryButtonText}>Video ended</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.loaderContainer}>
+                <FastImage
+                    source={{
+                        uri: item.thumbnailUrl,
+                        priority: FastImage.priority.high,
+                        cache: FastImage.cacheControl.immutable,
+                    }}
+                    style={[styles.media, StyleSheet.absoluteFill]}
+                    resizeMode="contain"
+                />
+                <ActivityIndicator animating={true} size={'large'} />
+            </View>
+        );
+    };
 
     return (
-      <View style={styles.loaderContainer}>
-        <FastImage
-          source={{
-            uri: item.thumbnailUrl,
-            priority: FastImage.priority.high,
-            cache: FastImage.cacheControl.immutable,
-          }}
-          style={[styles.media, StyleSheet.absoluteFill]}
-          resizeMode="contain"
-        />
-        <ActivityIndicator animating={true} size={'large'} />
-      </View>
-    );
-  };
-
-  return (
-    // Spread the rest props (including 'style') to the VisibilityTrackingView
-    <VisibilityTrackingView
-      {...rest}
+        // Spread the rest props (including 'style') to the VisibilityTrackingView
+        <VisibilityTrackingView
+            {...rest}
       throttleInterval={AppConfig.config.visibility.nativeThrottleMs}
-      visibilityConfig={toRawVisibilityConfig(THRESHOLDS)}
-      uniqueId={item.id}
-      onVisibilityStateChange={onVisibilityChange}>
+            visibilityConfig={toRawVisibilityConfig(THRESHOLDS)}
+            uniqueId={item.id}
+            onVisibilityStateChange={onVisibilityChange}>
       {/* Thumbnail ALWAYS visible as background - smooth crossfade using Animated */}
       <Animated.View
         style={[StyleSheet.absoluteFill, {opacity: thumbnailOpacity}]}>
-        <FastImage
-          source={{
-            uri: item.thumbnailUrl,
-            priority: FastImage.priority.high,
+                <FastImage
+                    source={{
+                        uri: item.thumbnailUrl,
+                        priority: FastImage.priority.high,
             cache: FastImage.cacheControl.immutable,
-          }}
-          style={[styles.media, StyleSheet.absoluteFill]}
-          resizeMode="contain"
-        />
+                    }}
+                    style={[styles.media, StyleSheet.absoluteFill]}
+                    resizeMode="contain"
+                />
       </Animated.View>
 
       {/* Video player overlays thumbnail when mounted */}
-      {isPlayerAttached && (
+            {isPlayerAttached && (
         <VideoPlayerView
           source={item.videoSource.url}
           videoId={item.id}
@@ -550,7 +550,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
               metrics.mark('buffer_end', item.id, playIdRef.current);
             }
           }}
-          onReadyForDisplay={onReadyForDisplay}
+                    onReadyForDisplay={onReadyForDisplay}
         />
       )}
 
@@ -566,7 +566,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
         <PlayButton onPress={handleManualPlay} visible={showPlayButton} />
       )}
 
-      {/* Debug Info */}
+            {/* Debug Info */}
       {geekMode && (
         <>
           <View
@@ -584,7 +584,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 color: 'white',
                 fontSize: 10,
               }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-          </View>
+            </View>
           <View
             style={{
               position: 'absolute',
@@ -600,7 +600,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 color: 'white',
                 fontSize: 10,
               }}>{`${debugText} - ${lastVisibilityPercentage}%`}</Text>
-          </View>
+            </View>
           {playIdRef.current && (
             <DebugHUD
               playId={playIdRef.current}
@@ -610,45 +610,45 @@ const VideoCard: React.FC<VideoCardProps> = ({
           )}
         </>
       )}
-    </VisibilityTrackingView>
-  );
+        </VisibilityTrackingView>
+    );
 };
 
 const styles = StyleSheet.create({
-  media: {
-    width: '100%',
-    height: '100%',
-  },
-  loaderContainer: {
-    ...StyleSheet.absoluteFillObject,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    media: {
+        width: '100%',
+        height: '100%',
+    },
+    loaderContainer: {
+        ...StyleSheet.absoluteFillObject,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)', // Semi-transparent, shows thumbnail underneath
-  },
-  errorContainer: {
-    ...StyleSheet.absoluteFillObject,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-  },
-  errorText: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+    },
+    errorContainer: {
+        ...StyleSheet.absoluteFillObject,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+    },
+    errorText: {
+        color: 'white',
+        fontSize: 16,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    retryButton: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 5,
+    },
+    retryButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
 });
 
 export default VideoCard;
