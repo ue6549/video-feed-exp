@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import SettingsModal from '../components/SettingsModal';
+// import SettingsModal from '../components/SettingsModal';
 
 const SettingsScreen: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -16,10 +16,10 @@ const SettingsScreen: React.FC = () => {
         <Text style={styles.openButtonText}>Open Settings</Text>
       </TouchableOpacity>
 
-      <SettingsModal
+      {/* <SettingsModal
         visible={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-      />
+      /> */}
     </View>
   );
 };

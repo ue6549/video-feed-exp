@@ -284,6 +284,7 @@ const FeedScreen: React.FC = () => {
       width,
       height,
       75,
+    );
 
     return (
       <View style={[styles.merchContainer, {width: contentWidth}]}>
@@ -292,6 +293,7 @@ const FeedScreen: React.FC = () => {
             <Text style={styles.merchHeaderText}>Sponsored</Text>
           </View>
 
+          <View
             style={[
               styles.merchImageContainer,
               {aspectRatio: aspectRatioValue},
@@ -481,6 +483,7 @@ const FeedScreen: React.FC = () => {
       <MetricsReportModal
         visible={showReport}
         onClose={() => setShowReport(false)}
+      />
 
       {/* Cache Debug Overlay */}
       <CacheDebugOverlay currentVideoUrl={currentVideoUrl} />

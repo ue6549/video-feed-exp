@@ -42,6 +42,7 @@ describe('PlaybackManager Integration', () => {
       'short',
       MediaCardVisibility.isActive,
       'VOD',
+    );
 
     // Then move it to willResignActive
     handleVisibilityChange(
@@ -122,6 +123,7 @@ describe('PlaybackManager Integration', () => {
       'short',
       MediaCardVisibility.isActive,
       'VOD',
+    );
 
     // Then release it - should not throw
     expect(() => {

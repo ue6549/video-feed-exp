@@ -375,7 +375,6 @@ function VideoFeed(): JSX.Element {
 
                     return (
                         <View style={{ width, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
-              }}>
               <VideoCard
                 item={{
                   id: videoId,
