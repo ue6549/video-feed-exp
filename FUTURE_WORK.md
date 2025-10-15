@@ -472,32 +472,122 @@ playback: {
 **Priority**: Medium (long-term improvement)
 **Status**: Research/exploration phase
 
+**Current Issues with KTVHTTPCache:**
+- UI freezing when network changes (main thread blocking)
+- Stuck loading states after network failure
+- Local proxy server overhead
+- Recovery issues on network changes
+
+**Alternative Approach 1: AVAssetDownloadTask + KTV Hybrid**
+
+**Concept:**
+- Use `AVAssetDownloadTask` for prefetch (instead of AVPlayer)
+- Download stops after 2 seconds (partial .movpkg)
+- Playback uses AVPlayer with local asset URL OR KTV proxy
+
+**Benefits**:
+✅ Lighter than AVPlayer prefetch (no player overhead)
+✅ Returns local URL immediately (can play while downloading)
+✅ Continues downloading if played online
+✅ Apple-native API
+
+**Challenges**:
+❌ Partial downloads may not play offline (without .movpkg plist manipulation)
+❌ Need to manage local asset URLs
+❌ Coordination between download task and KTV
+⚠️ Unknown: Does KTV recognize segments downloaded by AVAssetDownloadTask?
+
+**Implementation:**
+```swift
+// Use download task for prefetch instead of AVPlayer
+let task = downloadSession.makeAssetDownloadTask(
+    asset: AVURLAsset(url: ktvProxiedURL),
+    assetTitle: videoId,
+    assetArtworkData: nil,
+    options: nil
+)
+
+// Monitor progress, cancel after 2s buffered
+task.resume()
+
+// For playback: Try local URL first, fallback to KTV proxy
+if let localURL = task.urlAsset.url {
+    AVPlayerItem(url: localURL)
+}
+```
+
+---
+
+**Alternative Approach 2: Pure AVAssetDownloadTask (No KTV)**
+
+**Concept:**
+- Completely replace KTV with download tasks
+- All videos use download tasks (prefetch + playback)
+- Always play from local .movpkg URLs
+- Accept: Partial downloads don't play offline (v1 limitation)
+
+**Benefits**:
+✅ No KTV complexity/overhead
+✅ No UI freezing risk
+✅ Apple-native, App Store friendly
+✅ Clear architecture (one caching path)
+✅ Background downloads supported
+
+**Challenges**:
+❌ Partial offline playback broken (major UX issue)
+❌ Must manage download task lifecycle
+❌ Must track local asset URLs per video
+❌ Migration effort (large refactor)
+
+**Partial Offline Workaround: Dummy Manifest Approach**
+
+User's clever idea:
+```
+1. Generate dummy HLS manifest (only first 2 segments)
+2. Download dummy manifest fully (marks as completed)
+3. Offline: Plays 2 seconds from local (acceptable for prefetch)
+4. Online: Play 2s instantly, simultaneously download full video, swap asset
+```
+
+**Complexity:**
+- Must generate truncated manifests
+- Must manage asset swapping mid-playback
+- Storage overhead (dummy + full video)
+
+---
+
+**Alternative Approach 3: Fix KTV Issues (Current Path)**
+
+**Immediate fixes:**
+- Add timeouts (5s prefetch, 15s playback)
+- Add cancellation on network loss
+- Investigate main thread blocking
+- Add error recovery
+
+**Future investigation:**
+- KTV threading model
+- KTV session management
+- Network transition handling
+
+**Recommendation:** Fix KTV first, then prototype download tasks if issues persist
+
+---
+
 **Current Approach: KTVHTTPCache**
 - Third-party library for HTTP caching
 - Local proxy server architecture
 - Works but has limitations and security concerns
 
-**Alternative: AVAssetDownloadTask**
-- Apple's native HLS download API
-- Designed for offline playback
-- App Store compliant
-- Better integration with iOS
-
 **Benefits**:
-✅ Native iOS support (no third-party dependency)
-✅ Proper offline playback (system-managed)
-✅ Quality/bitrate selection control
-✅ Background downloads (continues when app suspended)
-✅ Storage management (system can purge if needed)
-✅ Progress tracking built-in
-✅ DRM support (FairPlay)
+✅ Works (segments cache, some offline playback)
+✅ Widely used solution (community support)
+✅ Transparent caching (AVPlayer doesn't know)
 
 **Challenges**:
-❌ Different API paradigm (downloads vs streaming proxy)
-❌ Requires significant refactor
-❌ More complex integration
-❌ Less flexible than KTV proxy approach
-❌ Download management complexity
+❌ UI freezing on network changes
+❌ Stuck loading states
+❌ Main thread blocking
+❌ Session recovery issues
 
 **Use Cases**:
 - True offline mode (download full videos for offline viewing)

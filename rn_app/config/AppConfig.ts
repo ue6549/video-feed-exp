@@ -41,9 +41,9 @@ export interface AppConfigType {
     segmentCount: number;
     maxConcurrent: number;
     priorities: string[];
-    strategy: 'auto' | 'avplayer' | 'manifest';  // Prefetch strategy
+    strategy: 'auto' | 'avplayer' | 'manifest'; // Prefetch strategy
     carousel: {
-      initialVideos: number;     // Number of videos to prefetch when carousel appears
+      initialVideos: number; // Number of videos to prefetch when carousel appears
       horizontalLookahead: number; // Future: videos to prefetch ahead during horizontal scroll
     };
   };
@@ -85,7 +85,7 @@ export interface AppConfigType {
 
 export class AppConfig {
   private static listeners: Array<(config: AppConfigType) => void> = [];
-  
+
   static config: AppConfigType = {
     feed: {
       maxContentWidth: 768,
@@ -95,12 +95,12 @@ export class AppConfig {
     },
     widgets: {
       carousel: {
-        cardsVisible: { small: 2.5, medium: 3.5, large: 3.5 },
+        cardsVisible: {small: 2.5, medium: 3.5, large: 3.5},
         maxConcurrentVideos: 3,
       },
-      short: { maxConcurrentVideos: 1 },
-      merch: { maxConcurrentVideos: 1 },
-      default: { maxConcurrentVideos: 1 },
+      short: {maxConcurrentVideos: 1},
+      merch: {maxConcurrentVideos: 1},
+      default: {maxConcurrentVideos: 1},
     },
     visibility: {
       prefetchRange: 5,
@@ -118,10 +118,10 @@ export class AppConfig {
       segmentCount: 2,
       maxConcurrent: 3,
       priorities: ['short', 'carousel', 'merch'],
-      strategy: 'auto',  // Try AVPlayer first, fallback to manifest
+      strategy: 'auto', // Try AVPlayer first, fallback to manifest
       carousel: {
-        initialVideos: 2,        // Prefetch first 2 videos when carousel appears
-        horizontalLookahead: 2,  // Future: prefetch 2 ahead during horizontal scroll
+        initialVideos: 2, // Prefetch first 2 videos when carousel appears
+        horizontalLookahead: 2, // Future: prefetch 2 ahead during horizontal scroll
       },
     },
     cache: {
@@ -130,14 +130,14 @@ export class AppConfig {
       manifestTemplateId: 'hls-vod-v3',
     },
     playerPool: {
-      maxPlayers: 3,                        // Hard limit on AVPlayer pool
-      avplayerPrefetchBufferSeconds: 2,     // Buffer 2 seconds for prefetch
-      avplayerPrefetchTimeoutSeconds: 10,   // Safety timeout for prefetch
+      maxPlayers: 3, // Hard limit on AVPlayer pool
+      avplayerPrefetchBufferSeconds: 2, // Buffer 2 seconds for prefetch
+      avplayerPrefetchTimeoutSeconds: 5, // Safety timeout for prefetch (fail fast)
     },
     playback: {
-      previewDuration: 0,         // Disabled - needs proper lifecycle implementation
-      sequencingEnabled: false,    // Disabled - needs proper implementation
-      rotateToSoftPlay: false,     // Disabled - needs proper implementation
+      previewDuration: 0, // Disabled - needs proper lifecycle implementation
+      sequencingEnabled: false, // Disabled - needs proper implementation
+      rotateToSoftPlay: false, // Disabled - needs proper implementation
     },
     performance: {
       isLowEndDevice: false,
@@ -148,7 +148,7 @@ export class AppConfig {
       showOnlyCachedVideos: true,
     },
     logging: {
-      enabled: __DEV__,  // Auto-enable in debug mode
+      enabled: __DEV__, // Auto-enable in debug mode
       level: __DEV__ ? 'debug' : 'none',
       modules: {
         visibility: true,
@@ -164,12 +164,12 @@ export class AppConfig {
    * Update configuration with deep merge
    */
   static update(newConfig: Partial<AppConfigType>): boolean {
-    const oldConfig = { ...this.config };
+    const oldConfig = {...this.config};
     this.config = this.deepMerge(this.config, newConfig);
-    
+
     // Notify listeners
     this.listeners.forEach(listener => listener(this.config));
-    
+
     // Check if reload is required
     return this.requiresReload(oldConfig, this.config);
   }
@@ -187,22 +187,28 @@ export class AppConfig {
   /**
    * Check if changes require app reload
    */
-  private static requiresReload(oldConfig: AppConfigType, newConfig: AppConfigType): boolean {
+  private static requiresReload(
+    oldConfig: AppConfigType,
+    newConfig: AppConfigType,
+  ): boolean {
     // Navigation changes require reload
     if (oldConfig.feed.maxContentWidth !== newConfig.feed.maxContentWidth) {
       return true;
     }
-    
+
     // Performance class changes require reload
-    if (oldConfig.performance.isLowEndDevice !== newConfig.performance.isLowEndDevice) {
+    if (
+      oldConfig.performance.isLowEndDevice !==
+      newConfig.performance.isLowEndDevice
+    ) {
       return true;
     }
-    
+
     // Cache strategy changes require reload
     if (oldConfig.cache.strategy !== newConfig.cache.strategy) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -210,16 +216,20 @@ export class AppConfig {
    * Deep merge utility
    */
   private static deepMerge(target: any, source: any): any {
-    const result = { ...target };
-    
+    const result = {...target};
+
     for (const key in source) {
-      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (
+        source[key] &&
+        typeof source[key] === 'object' &&
+        !Array.isArray(source[key])
+      ) {
         result[key] = this.deepMerge(target[key] || {}, source[key]);
       } else {
         result[key] = source[key];
       }
     }
-    
+
     return result;
   }
 
@@ -227,7 +237,9 @@ export class AppConfig {
    * Get configuration value by path
    */
   static get(path: string): any {
-    return path.split('.').reduce((obj: any, key) => obj?.[key], this.config as any);
+    return path
+      .split('.')
+      .reduce((obj: any, key) => obj?.[key], this.config as any);
   }
 
   /**
@@ -243,12 +255,12 @@ export class AppConfig {
       },
       widgets: {
         carousel: {
-          cardsVisible: { small: 2.5, medium: 3.5, large: 3.5 },
+          cardsVisible: {small: 2.5, medium: 3.5, large: 3.5},
           maxConcurrentVideos: 3,
         },
-        short: { maxConcurrentVideos: 1 },
-        merch: { maxConcurrentVideos: 1 },
-        default: { maxConcurrentVideos: 1 },
+        short: {maxConcurrentVideos: 1},
+        merch: {maxConcurrentVideos: 1},
+        default: {maxConcurrentVideos: 1},
       },
       visibility: {
         prefetchRange: 5,
@@ -280,7 +292,7 @@ export class AppConfig {
       playerPool: {
         maxPlayers: 3,
         avplayerPrefetchBufferSeconds: 2,
-        avplayerPrefetchTimeoutSeconds: 10,
+        avplayerPrefetchTimeoutSeconds: 5,
       },
       playback: {
         previewDuration: 30,
@@ -307,8 +319,7 @@ export class AppConfig {
         },
       },
     };
-    
+
     this.listeners.forEach(listener => listener(this.config));
   }
 }
-

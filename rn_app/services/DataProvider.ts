@@ -1,5 +1,5 @@
-import { IFeedItem, VideoData, Thumbnail } from '../types';
-import { AppConfig } from '../config/AppConfig';
+import {IFeedItem, VideoData, Thumbnail} from '../types';
+import {AppConfig} from '../config/AppConfig';
 
 // Raw video data from the JSON file
 interface RawVideoData {
@@ -34,7 +34,7 @@ class DataProvider {
 
     while (i < this.rawVideos.length) {
       const widgetIndex = widgets.length; // Current position in feed
-      
+
       // Random merch insertion (25% chance after 2+ steps)
       if (stepSinceLastMerch > 2 && Math.random() > 0.75) {
         stepSinceLastMerch = 0;
@@ -47,7 +47,7 @@ class DataProvider {
         widgets.push(carouselWidget);
         i += 6; // Move index forward by 6 for carousel
         stepSinceLastMerch += 1;
-      } 
+      }
       // Regular short video widget
       else {
         const shortWidget = this.createShortWidget(i, widgetIndex);
@@ -80,7 +80,10 @@ class DataProvider {
     };
   }
 
-  private createCarouselWidget(startIndex: number, widgetIndex?: number): IFeedItem {
+  private createCarouselWidget(
+    startIndex: number,
+    widgetIndex?: number,
+  ): IFeedItem {
     const carouselVideos = this.rawVideos.slice(startIndex, startIndex + 6);
     return {
       id: `carousel-${startIndex}`,
@@ -100,7 +103,9 @@ class DataProvider {
   }
 
   private createMerchWidget(index: number, widgetIndex?: number): IFeedItem {
-    const imageUrl = `https://picsum.photos/seed/${Math.floor(Math.random() * 10)}/{@width}/{@height}`;
+    const imageUrl = `https://picsum.photos/seed/${Math.floor(
+      Math.random() * 10,
+    )}/{@width}/{@height}`;
     return {
       id: `merch-${index}`,
       widgetType: 'merch',
@@ -108,7 +113,7 @@ class DataProvider {
       color: this.generateRandomColor(),
       data: {
         width: 0,
-        type: "ImageValue",
+        type: 'ImageValue',
         height: 0,
         aspectRatio: '5:4',
         dynamicImageUrl: imageUrl,
@@ -117,7 +122,9 @@ class DataProvider {
   }
 
   private generateRandomColor(): string {
-    return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+    return `#${Math.floor(Math.random() * 16777215)
+      .toString(16)
+      .padStart(6, '0')}`;
   }
 
   /**
@@ -131,13 +138,16 @@ class DataProvider {
     // Simulate network delay
     await this.simulateNetworkDelay();
 
-    const pageSize = page === 0 
-      ? AppConfig.config.feed.firstPageSize 
-      : AppConfig.config.feed.subsequentPageSize;
+    const pageSize =
+      page === 0
+        ? AppConfig.config.feed.firstPageSize
+        : AppConfig.config.feed.subsequentPageSize;
 
-    const start = page === 0 ? 0 : 
-      AppConfig.config.feed.firstPageSize + 
-      (page - 1) * AppConfig.config.feed.subsequentPageSize;
+    const start =
+      page === 0
+        ? 0
+        : AppConfig.config.feed.firstPageSize +
+          (page - 1) * AppConfig.config.feed.subsequentPageSize;
 
     const end = start + pageSize;
     const pageWidgets = this.allWidgets.slice(start, end);
@@ -152,7 +162,9 @@ class DataProvider {
    * Get total number of pages available
    */
   getTotalPages(): number {
-    if (!this.isInitialized) return 0;
+    if (!this.isInitialized) {
+      return 0;
+    }
 
     const firstPageSize = AppConfig.config.feed.firstPageSize;
     const subsequentPageSize = AppConfig.config.feed.subsequentPageSize;
@@ -164,7 +176,7 @@ class DataProvider {
 
     const remainingWidgets = totalWidgets - firstPageSize;
     const subsequentPages = Math.ceil(remainingWidgets / subsequentPageSize);
-    
+
     return 1 + subsequentPages;
   }
 
@@ -220,4 +232,3 @@ class DataProvider {
 }
 
 export default DataProvider;
-

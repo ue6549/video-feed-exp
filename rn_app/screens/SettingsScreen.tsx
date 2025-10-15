@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import SettingsModal from '../components/SettingsModal';
 
 const SettingsScreen: React.FC = () => {
@@ -9,11 +9,10 @@ const SettingsScreen: React.FC = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Settings</Text>
       <Text style={styles.subtitle}>Configure your video feed experience</Text>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={styles.openButton}
-        onPress={() => setShowSettingsModal(true)}
-      >
+        onPress={() => setShowSettingsModal(true)}>
         <Text style={styles.openButtonText}>Open Settings</Text>
       </TouchableOpacity>
 

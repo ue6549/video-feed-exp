@@ -1,6 +1,6 @@
-import { NativeModules } from 'react-native';
+import {NativeModules} from 'react-native';
 
-const { VideoPlayerPool: NativeVideoPlayerPool } = NativeModules;
+const {VideoPlayerPool: NativeVideoPlayerPool} = NativeModules;
 
 export interface PoolStats {
   availablePlayers: number;
@@ -51,14 +51,12 @@ class VideoPlayerPoolService {
     layerUtilization: number;
   }> {
     const stats = await this.getPoolStats();
-    
-    const playerUtilization = stats.maxPlayers > 0 
-      ? (stats.activePlayers / stats.maxPlayers) * 100 
-      : 0;
-    
-    const layerUtilization = stats.maxLayers > 0 
-      ? (stats.activeLayers / stats.maxLayers) * 100 
-      : 0;
+
+    const playerUtilization =
+      stats.maxPlayers > 0 ? (stats.activePlayers / stats.maxPlayers) * 100 : 0;
+
+    const layerUtilization =
+      stats.maxLayers > 0 ? (stats.activeLayers / stats.maxLayers) * 100 : 0;
 
     return {
       playerUtilization,
@@ -71,7 +69,9 @@ class VideoPlayerPoolService {
    */
   async isPoolHealthy(): Promise<boolean> {
     const utilization = await this.getPoolUtilization();
-    return utilization.playerUtilization < 90 && utilization.layerUtilization < 90;
+    return (
+      utilization.playerUtilization < 90 && utilization.layerUtilization < 90
+    );
   }
 
   /**
@@ -80,7 +80,7 @@ class VideoPlayerPoolService {
   async logPoolStats(): Promise<void> {
     const stats = await this.getPoolStats();
     const utilization = await this.getPoolUtilization();
-    
+
     console.log('VideoPlayerPool Stats:', {
       ...stats,
       ...utilization,
@@ -89,4 +89,3 @@ class VideoPlayerPoolService {
 }
 
 export default new VideoPlayerPoolService();
-

@@ -1,33 +1,39 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { 
-  View, 
-  FlatList, 
-  StyleSheet, 
-  Dimensions, 
-  StatusBar, 
-  TouchableWithoutFeedback, 
-  Text, 
+import React, {useRef, useState, useEffect} from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  TouchableWithoutFeedback,
+  Text,
   TouchableOpacity,
   Alert,
-  Animated
+  Animated,
 } from 'react-native';
-import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import {RecyclerListView, DataProvider, LayoutProvider} from 'recyclerlistview';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 
-import { AppConfig } from '../config/AppConfig';
-import { IFeedItem, WidgetType } from '../types';
-import { SHORTS_VISIBILITY_CONFIG, CAROUSEL_CARDS_VISIBILITY_CONFIG } from '../platback_manager/MediaCardVisibility';
+import {AppConfig} from '../config/AppConfig';
+import {IFeedItem, WidgetType} from '../types';
+import {
+  SHORTS_VISIBILITY_CONFIG,
+  CAROUSEL_CARDS_VISIBILITY_CONFIG,
+} from '../platback_manager/MediaCardVisibility';
 import * as Utilities from '../utilities/Utilities';
-import { generateVideoId } from '../utilities/videoIdGenerator';
+import {generateVideoId} from '../utilities/videoIdGenerator';
 import ShortVideoWidget from '../widgets/ShortVideoWidget';
-import { MetricsReportModal } from '../instrumentation/MetricsReportModal';
+import {MetricsReportModal} from '../instrumentation/MetricsReportModal';
 import DataProviderService from '../services/DataProvider';
-import { FeedPrefetchController } from '../services/FeedPrefetchController';
+import {FeedPrefetchController} from '../services/FeedPrefetchController';
 import feedDataRaw from '../resources/video-feed';
 import CacheDebugOverlay from '../components/CacheDebugOverlay';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
 // Type assertion for feed data
 const feedData = feedDataRaw as any[];
@@ -45,44 +51,59 @@ const CAROUSEL_HEIGHT = 300;
 // Create LayoutProvider
 const createLayoutProvider = (data: IFeedItem[]) => {
   return new LayoutProvider(
-    (index) => data[index]?.widgetType || 'short',
+    index => data[index]?.widgetType || 'short',
     (type, dim, index) => {
       const item = data[index];
-      if (!item) return;
+      if (!item) {return;}
 
       if (item.widgetType === 'carousel') {
-        dim.width = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
+        dim.width = Math.min(
+          screenWidth,
+          AppConfig.config.feed.maxContentWidth,
+        );
         dim.height = CAROUSEL_HEIGHT;
       } else if (item.widgetType === 'merch') {
-        const aspectRatioValue = Utilities.parseAspectRatio((item.data as any).aspectRatio) ?? Utilities.DEFULT_ASPECT_RATIO;
-        dim.width = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
+        const aspectRatioValue =
+          Utilities.parseAspectRatio((item.data as any).aspectRatio) ??
+          Utilities.DEFULT_ASPECT_RATIO;
+        dim.width = Math.min(
+          screenWidth,
+          AppConfig.config.feed.maxContentWidth,
+        );
         dim.height = dim.width / aspectRatioValue;
-      } else { // short video
-        const aspectRatioValue = Utilities.parseAspectRatio((item.data as any).thumbail.aspectRatio) ?? Utilities.DEFULT_ASPECT_RATIO;
-        dim.width = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
+      } else {
+        // short video
+        const aspectRatioValue =
+          Utilities.parseAspectRatio((item.data as any).thumbail.aspectRatio) ??
+          Utilities.DEFULT_ASPECT_RATIO;
+        dim.width = Math.min(
+          screenWidth,
+          AppConfig.config.feed.maxContentWidth,
+        );
         dim.height = dim.width / aspectRatioValue;
       }
-    }
+    },
   );
 };
 
 const FeedScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  
+
   // State
   const [feedData, setFeedData] = useState<IFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMorePages, setHasMorePages] = useState(true);
-  
+
   // FAB state and animation
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const animation = useRef<Animated.Value>(new Animated.Value(0)).current;
   const [geekOn, setGeekOn] = useState<boolean>(false);
-  const [applyLodConfigOptimisations, setApplyLodConfigOptimisations] = useState<boolean>(true);
-  
+  const [applyLodConfigOptimisations, setApplyLodConfigOptimisations] =
+    useState<boolean>(true);
+
   // Current video URL for cache debug overlay
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | undefined>();
   const [showReport, setShowReport] = useState(false);
@@ -106,7 +127,7 @@ const FeedScreen: React.FC = () => {
       setFeedData(firstPageData);
       setCurrentPage(0);
       setHasMorePages(dataProviderService.hasMorePages());
-      
+
       // Update RecyclerListView providers
       dataProviderRef.current = createDataProvider(firstPageData);
       layoutProviderRef.current = createLayoutProvider(firstPageData);
@@ -122,20 +143,20 @@ const FeedScreen: React.FC = () => {
   };
 
   const loadMoreData = async () => {
-    if (isLoadingMore || !hasMorePages) return;
+    if (isLoadingMore || !hasMorePages) {return;}
 
     setIsLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
       const newPageData = await dataProviderService.getPage(nextPage);
-      
+
       const updatedData = [...feedData, ...newPageData];
       const newPageStartIndex = feedData.length; // Where new page starts
-      
+
       setFeedData(updatedData);
       setCurrentPage(nextPage);
       setHasMorePages(dataProviderService.hasMorePages());
-      
+
       // Update RecyclerListView providers
       dataProviderRef.current = createDataProvider(updatedData);
       layoutProviderRef.current = createLayoutProvider(updatedData);
@@ -162,7 +183,7 @@ const FeedScreen: React.FC = () => {
   const clearThumbnailCache = async (): Promise<void> => {
     toggleFab();
     try {
-      const { default: FastImage } = await import('@d11/react-native-fast-image');
+      const {default: FastImage} = await import('@d11/react-native-fast-image');
       await FastImage.clearDiskCache();
       await FastImage.clearMemoryCache();
       Alert.alert('Success', 'Thumbnail cache has been cleared.');
@@ -190,7 +211,7 @@ const FeedScreen: React.FC = () => {
   // FAB animation styles
   const menuButtonStyles = {
     transform: [
-      { scale: animation },
+      {scale: animation},
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
@@ -202,7 +223,7 @@ const FeedScreen: React.FC = () => {
 
   const geekButtonStyles = {
     transform: [
-      { scale: animation },
+      {scale: animation},
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
@@ -214,7 +235,7 @@ const FeedScreen: React.FC = () => {
 
   const clearCacheButtonStyles = {
     transform: [
-      { scale: animation },
+      {scale: animation},
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
@@ -226,7 +247,7 @@ const FeedScreen: React.FC = () => {
 
   const settingsButtonStyles = {
     transform: [
-      { scale: animation },
+      {scale: animation},
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
@@ -248,25 +269,40 @@ const FeedScreen: React.FC = () => {
   };
 
   const _renderMerch = (feedItem: IFeedItem) => {
-    const contentWidth = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
-    const aspectRatioValue = Utilities.parseAspectRatio((feedItem.data as any).aspectRatio) ?? Utilities.DEFULT_ASPECT_RATIO;
-    const { width, height, aspectRatio } = Utilities.getMediaDimensions((feedItem.data as any).aspectRatio);
-    const imageUrl = Utilities.getImageUrl((feedItem.data as any).dynamicImageUrl, width, height, 75);
-    
+    const contentWidth = Math.min(
+      screenWidth,
+      AppConfig.config.feed.maxContentWidth,
+    );
+    const aspectRatioValue =
+      Utilities.parseAspectRatio((feedItem.data as any).aspectRatio) ??
+      Utilities.DEFULT_ASPECT_RATIO;
+    const {width, height, aspectRatio} = Utilities.getMediaDimensions(
+      (feedItem.data as any).aspectRatio,
+    );
+    const imageUrl = Utilities.getImageUrl(
+      (feedItem.data as any).dynamicImageUrl,
+      width,
+      height,
+      75,
+
     return (
-      <View style={[styles.merchContainer, { width: contentWidth }]}>
-        <View style={[styles.merchContent, { backgroundColor: feedItem.color }]}>
+      <View style={[styles.merchContainer, {width: contentWidth}]}>
+        <View style={[styles.merchContent, {backgroundColor: feedItem.color}]}>
           <View style={styles.merchHeader}>
             <Text style={styles.merchHeaderText}>Sponsored</Text>
           </View>
-          
-          <View style={[styles.merchImageContainer, { aspectRatio: aspectRatioValue }]}>
+
+            style={[
+              styles.merchImageContainer,
+              {aspectRatio: aspectRatioValue},
+            ]}>
             {/* FastImage will be imported dynamically */}
-            <View style={[styles.merchImagePlaceholder, { backgroundColor: '#000' }]}>
+            <View
+              style={[styles.merchImagePlaceholder, {backgroundColor: '#000'}]}>
               <Text style={styles.merchImageText}>Image: {imageUrl}</Text>
             </View>
           </View>
-          
+
           <View style={styles.merchFooter}>
             <Text style={styles.merchFooterText}>Buy Now!</Text>
           </View>
@@ -276,28 +312,40 @@ const FeedScreen: React.FC = () => {
   };
 
   const _renderCarousel = (feedItem: IFeedItem) => {
-    const contentWidth = Math.min(screenWidth, AppConfig.config.feed.maxContentWidth);
+    const contentWidth = Math.min(
+      screenWidth,
+      AppConfig.config.feed.maxContentWidth,
+    );
     const visibleCards = getVisibleCards(screenWidth);
     const widgetIndex = feedItem.widgetIndex ?? 0;
-    
+
     return (
-      <View style={[styles.carouselContainer, { width: contentWidth }]}>
+      <View style={[styles.carouselContainer, {width: contentWidth}]}>
         <FlatList
           data={feedItem.data as any[]}
           keyExtractor={(_, index) => `carousel-item-${index}`}
           horizontal
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item, index: videoIndex }) => {
-            const { width, height, aspectRatio } = Utilities.getMediaDimensions(
-              item.thumbail.aspectRatio, 
-              undefined, 
-              CAROUSEL_HEIGHT - 20
+          renderItem={({item, index: videoIndex}) => {
+            const {width, height, aspectRatio} = Utilities.getMediaDimensions(
+              item.thumbail.aspectRatio,
+              undefined,
+              CAROUSEL_HEIGHT - 20,
             );
-            const thumbnailUrl = Utilities.getImageUrl(item.thumbail.dynamicImageUrl, width, height, 75);
+            const thumbnailUrl = Utilities.getImageUrl(
+              item.thumbail.dynamicImageUrl,
+              width,
+              height,
+              75,
+            );
             const videoId = generateVideoId(widgetIndex, videoIndex);
-            
+
             return (
-              <View style={[styles.carouselItem, { width, height: CAROUSEL_HEIGHT - 20 }]}>
+              <View
+                style={[
+                  styles.carouselItem,
+                  {width, height: CAROUSEL_HEIGHT - 20},
+                ]}>
                 <ShortVideoWidget
                   videoProps={{
                     item: {
@@ -305,27 +353,32 @@ const FeedScreen: React.FC = () => {
                       videoSource: item.videoSource,
                       thumbnailUrl,
                       aspectRatio: item.thumbail.aspectRatio,
-                      videoCategory: feedItem.widgetType as WidgetType
+                      videoCategory: feedItem.widgetType as WidgetType,
                     },
                     visibilityConfig: CAROUSEL_CARDS_VISIBILITY_CONFIG,
                     geekMode: geekOn,
                   }}
-                  style={[styles.carouselVideoCard, { backgroundColor: '#000' }]}
-                  title='Carousel Video'
-                  topComment='Swipe to see more videos'
+                  style={[styles.carouselVideoCard, {backgroundColor: '#000'}]}
+                  title="Carousel Video"
+                  topComment="Swipe to see more videos"
                 />
               </View>
             );
           }}
-          contentContainerStyle={[styles.carouselContent, { backgroundColor: feedItem.color }]}
+          contentContainerStyle={[
+            styles.carouselContent,
+            {backgroundColor: feedItem.color},
+          ]}
         />
       </View>
     );
   };
 
   const getVisibleCards = (screenWidth: number): number => {
-    if (screenWidth < 768) return AppConfig.config.widgets.carousel.cardsVisible.small;
-    if (screenWidth < 1024) return AppConfig.config.widgets.carousel.cardsVisible.medium;
+    if (screenWidth < 768)
+      {return AppConfig.config.widgets.carousel.cardsVisible.small;}
+    if (screenWidth < 1024)
+      {return AppConfig.config.widgets.carousel.cardsVisible.medium;}
     return AppConfig.config.widgets.carousel.cardsVisible.large;
   };
 
@@ -335,13 +388,29 @@ const FeedScreen: React.FC = () => {
     } else if (item.widgetType === 'merch') {
       return _renderMerch(item);
     } else {
-      const { width, height, aspectRatio } = Utilities.getMediaDimensions((item.data as any).thumbail.aspectRatio);
-      const thumbnailUrl = Utilities.getImageUrl((item.data as any).thumbail.dynamicImageUrl, width, height, 75);
+      const {width, height, aspectRatio} = Utilities.getMediaDimensions(
+        (item.data as any).thumbail.aspectRatio,
+      );
+      const thumbnailUrl = Utilities.getImageUrl(
+        (item.data as any).thumbail.dynamicImageUrl,
+        width,
+        height,
+        75,
+      );
       const widgetIndex = item.widgetIndex ?? 0;
       const videoId = generateVideoId(widgetIndex, 0); // Short videos have only one video (index 0)
 
       return (
-        <View style={[styles.shortVideoContainer, { width: Math.min(screenWidth, AppConfig.config.feed.maxContentWidth) }]}>
+        <View
+          style={[
+            styles.shortVideoContainer,
+            {
+              width: Math.min(
+                screenWidth,
+                AppConfig.config.feed.maxContentWidth,
+              ),
+            },
+          ]}>
           <ShortVideoWidget
             videoProps={{
               item: {
@@ -349,14 +418,14 @@ const FeedScreen: React.FC = () => {
                 videoSource: (item.data as any).videoSource,
                 thumbnailUrl,
                 aspectRatio: (item.data as any).thumbail.aspectRatio,
-                videoCategory: item.widgetType as WidgetType
+                videoCategory: item.widgetType as WidgetType,
               },
               visibilityConfig: SHORTS_VISIBILITY_CONFIG,
-              geekMode: geekOn
+              geekMode: geekOn,
             }}
-            style={[styles.shortVideoCard, { backgroundColor: item.color }]}
-            title='Sample Title'
-            topComment='Top comment goes here. If only someone would comment on my code...'
+            style={[styles.shortVideoCard, {backgroundColor: item.color}]}
+            title="Sample Title"
+            topComment="Top comment goes here. If only someone would comment on my code..."
           />
         </View>
       );
@@ -380,7 +449,7 @@ const FeedScreen: React.FC = () => {
   return (
     <SafeAreaProvider>
       <StatusBar hidden />
-      
+
       {/* Main Feed */}
       <View style={styles.container}>
         <RecyclerListView
@@ -389,11 +458,14 @@ const FeedScreen: React.FC = () => {
           layoutProvider={layoutProviderRef.current}
           style={styles.list}
           forceNonDeterministicRendering={true}
-          extendedState={{ geekOn, applyLodConfigOptimisations }}
+          extendedState={{geekOn, applyLodConfigOptimisations}}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.1}
           onVisibleIndicesChanged={(all, now, notNow) => {
-            prefetchControllerRef.current.handleVisibleIndicesChanged(now, feedData);
+            prefetchControllerRef.current.handleVisibleIndicesChanged(
+              now,
+              feedData,
+            );
           }}
         />
       </View>
@@ -406,13 +478,15 @@ const FeedScreen: React.FC = () => {
       </View>
 
       {/* Report Modal */}
-      <MetricsReportModal visible={showReport} onClose={() => setShowReport(false)} />
-      
+      <MetricsReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+
       {/* Cache Debug Overlay */}
       <CacheDebugOverlay currentVideoUrl={currentVideoUrl} />
 
       {/* FAB and options */}
-      <View style={[styles.fabContainer, { padding: insets.bottom }]}>
+      <View style={[styles.fabContainer, {padding: insets.bottom}]}>
         {isOpen && (
           <TouchableWithoutFeedback onPress={toggleFab}>
             <View style={styles.fabOverlay} />
@@ -420,26 +494,36 @@ const FeedScreen: React.FC = () => {
         )}
 
         <TouchableWithoutFeedback onPress={openSettings}>
-          <Animated.View style={[styles.fab, styles.secondaryFab, settingsButtonStyles]}>
+          <Animated.View
+            style={[styles.fab, styles.secondaryFab, settingsButtonStyles]}>
             <Text style={styles.fabText}>Settings</Text>
           </Animated.View>
         </TouchableWithoutFeedback>
 
         <TouchableWithoutFeedback onPress={clearThumbnailCache}>
-          <Animated.View style={[styles.fab, styles.secondaryFab, clearCacheButtonStyles]}>
+          <Animated.View
+            style={[styles.fab, styles.secondaryFab, clearCacheButtonStyles]}>
             <Text style={styles.fabText}>Clear Cache</Text>
           </Animated.View>
         </TouchableWithoutFeedback>
 
         <TouchableWithoutFeedback onPress={toggelGeekMode}>
-          <Animated.View style={[styles.fab, styles.secondaryFab, geekButtonStyles]}>
-            <Text style={styles.fabText}>{geekOn ? 'Hide Stats' : 'Show Stats'}</Text>
+          <Animated.View
+            style={[styles.fab, styles.secondaryFab, geekButtonStyles]}>
+            <Text style={styles.fabText}>
+              {geekOn ? 'Hide Stats' : 'Show Stats'}
+            </Text>
           </Animated.View>
         </TouchableWithoutFeedback>
 
         <TouchableWithoutFeedback onPress={toggelLoadConfigOptimisations}>
-          <Animated.View style={[styles.fab, styles.secondaryFab, menuButtonStyles]}>
-            <Text style={styles.fabText}>{applyLodConfigOptimisations ? 'Standard Load Params' : 'Optimise Load Params'}</Text>
+          <Animated.View
+            style={[styles.fab, styles.secondaryFab, menuButtonStyles]}>
+            <Text style={styles.fabText}>
+              {applyLodConfigOptimisations
+                ? 'Standard Load Params'
+                : 'Optimise Load Params'}
+            </Text>
           </Animated.View>
         </TouchableWithoutFeedback>
 
@@ -598,4 +682,3 @@ const styles = StyleSheet.create({
 });
 
 export default FeedScreen;
-

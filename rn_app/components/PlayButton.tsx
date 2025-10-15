@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Text } from 'react-native';
+import {TouchableOpacity, View, StyleSheet} from 'react-native';
+import {Text} from 'react-native';
 
 interface PlayButtonProps {
   onPress: () => void;
@@ -8,24 +8,30 @@ interface PlayButtonProps {
   visible?: boolean;
 }
 
-const PlayButton: React.FC<PlayButtonProps> = ({ 
-  onPress, 
-  size = 60, 
-  visible = true 
+const PlayButton: React.FC<PlayButtonProps> = ({
+  onPress,
+  size = 60,
+  visible = true,
 }) => {
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
 
   return (
-    <TouchableOpacity 
-      style={[styles.container, { width: size, height: size }]} 
+    <TouchableOpacity
+      style={[styles.container, {width: size, height: size}]}
       onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <View style={[styles.playIcon, { 
-        borderLeftWidth: size * 0.4,
-        borderTopWidth: size * 0.25,
-        borderBottomWidth: size * 0.25,
-      }]} />
+      activeOpacity={0.8}>
+      <View
+        style={[
+          styles.playIcon,
+          {
+            borderLeftWidth: size * 0.4,
+            borderTopWidth: size * 0.25,
+            borderBottomWidth: size * 0.25,
+          },
+        ]}
+      />
     </TouchableOpacity>
   );
 };
@@ -35,7 +41,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -30 }, { translateY: -30 }],
+    transform: [{translateX: -30}, {translateY: -30}],
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 30,
     justifyContent: 'center',
@@ -53,4 +59,3 @@ const styles = StyleSheet.create({
 });
 
 export default PlayButton;
-

@@ -1,4 +1,4 @@
-import { ManifestTemplate } from '../types';
+import {ManifestTemplate} from '../types';
 
 // Default HLS VOD template
 export const HLS_VOD_TEMPLATE: ManifestTemplate = {
@@ -12,7 +12,7 @@ export const HLS_VOD_TEMPLATE: ManifestTemplate = {
 #EXT-X-MEDIA-SEQUENCE:{{mediaSequence}}
 #EXT-X-PLAYLIST-TYPE:{{playlistType}}
 {{segments}}
-#EXT-X-ENDLIST`
+#EXT-X-ENDLIST`,
 };
 
 // HLS Event template (for live-like content)
@@ -26,7 +26,7 @@ export const HLS_EVENT_TEMPLATE: ManifestTemplate = {
 #EXT-X-TARGETDURATION:{{targetDuration}}
 #EXT-X-MEDIA-SEQUENCE:{{mediaSequence}}
 #EXT-X-PLAYLIST-TYPE:{{playlistType}}
-{{segments}}`
+{{segments}}`,
 };
 
 // HLS Live template (no end list)
@@ -39,7 +39,7 @@ export const HLS_LIVE_TEMPLATE: ManifestTemplate = {
 #EXT-X-VERSION:{{version}}
 #EXT-X-TARGETDURATION:{{targetDuration}}
 #EXT-X-MEDIA-SEQUENCE:{{mediaSequence}}
-{{segments}}`
+{{segments}}`,
 };
 
 // Template registry
@@ -72,19 +72,27 @@ export class ManifestTemplateManager {
    * Get template by ID
    */
   getTemplate(templateId: string): ManifestTemplate | undefined {
-    return this.templates.get(templateId) || this.serverTemplates.get(templateId);
+    return (
+      this.templates.get(templateId) || this.serverTemplates.get(templateId)
+    );
   }
 
   /**
    * Fetch template from server
    */
-  async fetchTemplate(templateId: string, serverUrl?: string): Promise<ManifestTemplate | null> {
+  async fetchTemplate(
+    templateId: string,
+    serverUrl?: string,
+  ): Promise<ManifestTemplate | null> {
     try {
-      const url = serverUrl || `https://api.example.com/templates/${templateId}`;
+      const url =
+        serverUrl || `https://api.example.com/templates/${templateId}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
-        console.warn(`Failed to fetch template ${templateId}: ${response.status}`);
+        console.warn(
+          `Failed to fetch template ${templateId}: ${response.status}`,
+        );
         return null;
       }
 
@@ -99,7 +107,7 @@ export class ManifestTemplateManager {
 
       // Store in server templates
       this.serverTemplates.set(templateId, template);
-      
+
       console.log(`Fetched template ${templateId} from server`);
       return template;
     } catch (error) {
@@ -120,8 +128,8 @@ export class ManifestTemplateManager {
    */
   generateManifest(
     templateId: string,
-    segments: Array<{ url: string; duration: number; sequence: number }>,
-    overrides?: Partial<ManifestTemplate>
+    segments: Array<{url: string; duration: number; sequence: number}>,
+    overrides?: Partial<ManifestTemplate>,
   ): string {
     const template = this.getTemplate(templateId);
     if (!template) {
@@ -130,16 +138,25 @@ export class ManifestTemplateManager {
     }
 
     // Apply overrides
-    const finalTemplate = { ...template, ...overrides };
+    const finalTemplate = {...template, ...overrides};
 
     // Render template
     let manifest = finalTemplate.template;
-    
+
     // Replace placeholders
     manifest = manifest.replace(/\{\{version\}\}/g, finalTemplate.version);
-    manifest = manifest.replace(/\{\{targetDuration\}\}/g, finalTemplate.targetDuration.toString());
-    manifest = manifest.replace(/\{\{mediaSequence\}\}/g, finalTemplate.mediaSequence.toString());
-    manifest = manifest.replace(/\{\{playlistType\}\}/g, finalTemplate.playlistType);
+    manifest = manifest.replace(
+      /\{\{targetDuration\}\}/g,
+      finalTemplate.targetDuration.toString(),
+    );
+    manifest = manifest.replace(
+      /\{\{mediaSequence\}\}/g,
+      finalTemplate.mediaSequence.toString(),
+    );
+    manifest = manifest.replace(
+      /\{\{playlistType\}\}/g,
+      finalTemplate.playlistType,
+    );
 
     // Generate segments
     const segmentLines = segments
@@ -155,7 +172,7 @@ export class ManifestTemplateManager {
    * Generate default manifest (fallback)
    */
   private generateDefaultManifest(
-    segments: Array<{ url: string; duration: number; sequence: number }>
+    segments: Array<{url: string; duration: number; sequence: number}>,
   ): string {
     let manifest = `#EXTM3U
 #EXT-X-VERSION:3
@@ -220,4 +237,3 @@ export class ManifestTemplateManager {
 }
 
 export default new ManifestTemplateManager();
-

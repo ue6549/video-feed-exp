@@ -1,5 +1,5 @@
-import { FeedPrefetchController } from '../../rn_app/services/FeedPrefetchController';
-import { IFeedItem, VideoData } from '../../rn_app/types';
+import {FeedPrefetchController} from '../../rn_app/services/FeedPrefetchController';
+import {IFeedItem, VideoData} from '../../rn_app/types';
 import PrefetchManager from '../../rn_app/services/PrefetchManager';
 
 // Mock PrefetchManager
@@ -13,10 +13,10 @@ jest.mock('../../rn_app/services/PrefetchManager', () => ({
 const createMockWidget = (
   widgetIndex: number,
   widgetType: 'short' | 'carousel' | 'merch',
-  videoCount: number = 1
+  videoCount: number = 1,
 ): IFeedItem => {
   if (widgetType === 'carousel') {
-    const videos: VideoData[] = Array.from({ length: videoCount }, (_, idx) => ({
+    const videos: VideoData[] = Array.from({length: videoCount}, (_, idx) => ({
       videoSource: {
         sourceType: 'hls',
         url: `https://test.com/video-${widgetIndex}-${idx}.m3u8`,
@@ -31,7 +31,7 @@ const createMockWidget = (
         type: 'ImageValue',
       },
     }));
-    
+
     return {
       id: `carousel-${widgetIndex}`,
       widgetType: 'carousel',
@@ -85,7 +85,7 @@ describe('FeedPrefetchController', () => {
   beforeEach(() => {
     controller = new FeedPrefetchController();
     jest.clearAllMocks();
-    
+
     // Create mock feed: 2 shorts, 1 carousel (6 videos), 2 shorts
     mockFeedData = [
       createMockWidget(0, 'short'),
@@ -102,9 +102,10 @@ describe('FeedPrefetchController', () => {
 
     // Should have called prefetchVideo for short videos
     expect(PrefetchManager.prefetchVideo).toHaveBeenCalled();
-    
+
     // Verify it was called multiple times (for multiple widgets)
-    const callCount = (PrefetchManager.prefetchVideo as jest.Mock).mock.calls.length;
+    const callCount = (PrefetchManager.prefetchVideo as jest.Mock).mock.calls
+      .length;
     expect(callCount).toBeGreaterThan(0);
   });
 
@@ -113,10 +114,10 @@ describe('FeedPrefetchController', () => {
     controller.handleVisibleIndicesChanged([1], mockFeedData);
 
     const calls = (PrefetchManager.prefetchVideo as jest.Mock).mock.calls;
-    
+
     // Find calls for carousel videos (vid-2-X)
     const carouselCalls = calls.filter(call => call[0].startsWith('vid-2-'));
-    
+
     // Should include at least the first 2 carousel videos
     expect(carouselCalls.length).toBeGreaterThanOrEqual(2);
   });
@@ -125,16 +126,21 @@ describe('FeedPrefetchController', () => {
     controller.handleVisibleIndicesChanged([1], mockFeedData);
 
     const calls = (PrefetchManager.prefetchVideo as jest.Mock).mock.calls;
-    
+
     // Find calls for carousel videos vid-2-2, vid-2-3, etc. (remaining)
     const remainingCalls = calls.filter(call => {
       const videoId = call[0];
-      return videoId === 'vid-2-2' || videoId === 'vid-2-3' || videoId === 'vid-2-4' || videoId === 'vid-2-5';
+      return (
+        videoId === 'vid-2-2' ||
+        videoId === 'vid-2-3' ||
+        videoId === 'vid-2-4' ||
+        videoId === 'vid-2-5'
+      );
     });
-    
+
     // Should have queued remaining videos
     expect(remainingCalls.length).toBeGreaterThan(0);
-    
+
     // Remaining videos should have low priority (10)
     if (remainingCalls.length > 0) {
       const priority = remainingCalls[0][3]; // 4th parameter is priority
@@ -146,15 +152,15 @@ describe('FeedPrefetchController', () => {
     controller.handleVisibleIndicesChanged([0], mockFeedData);
 
     const calls = (PrefetchManager.prefetchVideo as jest.Mock).mock.calls;
-    
+
     // Find priorities for vid-1-0 and vid-4-0
     const vid1Call = calls.find(call => call[0] === 'vid-1-0');
     const vid4Call = calls.find(call => call[0] === 'vid-4-0');
-    
+
     if (vid1Call && vid4Call) {
       const priority1 = vid1Call[3];
       const priority4 = vid4Call[3];
-      
+
       // Closer widget should have higher priority
       expect(priority1).toBeGreaterThan(priority4);
     }
@@ -182,8 +188,10 @@ describe('FeedPrefetchController', () => {
 
   it('should not prefetch if disabled in config', () => {
     // Temporarily disable prefetch
-    const originalEnabled = require('../../rn_app/config/AppConfig').AppConfig.config.prefetch.enabled;
-    require('../../rn_app/config/AppConfig').AppConfig.config.prefetch.enabled = false;
+    const originalEnabled = require('../../rn_app/config/AppConfig').AppConfig
+      .config.prefetch.enabled;
+    require('../../rn_app/config/AppConfig').AppConfig.config.prefetch.enabled =
+      false;
 
     controller.handleVisibleIndicesChanged([0], mockFeedData);
 
@@ -191,7 +199,8 @@ describe('FeedPrefetchController', () => {
     expect(PrefetchManager.prefetchVideo).not.toHaveBeenCalled();
 
     // Restore
-    require('../../rn_app/config/AppConfig').AppConfig.config.prefetch.enabled = originalEnabled;
+    require('../../rn_app/config/AppConfig').AppConfig.config.prefetch.enabled =
+      originalEnabled;
   });
 
   it('should skip merch widgets', () => {
@@ -206,4 +215,3 @@ describe('FeedPrefetchController', () => {
     expect(PrefetchManager.prefetchVideo).not.toHaveBeenCalled();
   });
 });
-

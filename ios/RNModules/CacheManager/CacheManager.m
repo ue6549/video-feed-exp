@@ -541,5 +541,20 @@ RCT_EXPORT_METHOD(setPrefetchConfig:(double)bufferSeconds
     resolve(@YES);
 }
 
+RCT_EXPORT_METHOD(cancelAllPrefetches:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSLog(@"[CacheManager] 🛑 Cancelling all active prefetches");
+    
+    // Cancel all AVPlayer prefetches
+    NSArray *videoIds = [self.avplayerPrefetches.allKeys copy];
+    for (NSString *videoId in videoIds) {
+        [self stopAVPlayerPrefetch:videoId reason:@"cancelled_by_user"];
+    }
+    
+    NSLog(@"[CacheManager] ✅ Cancelled %lu active prefetches", (unsigned long)videoIds.count);
+    resolve(@YES);
+}
+
 @end
 

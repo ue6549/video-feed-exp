@@ -1,14 +1,13 @@
 // Enhanced PlaybackManager with VOD/LIVE handling, low-end support, and sequencing
-import { EventEmitter } from 'eventemitter3';
-import { MediaCardVisibility } from './MediaCardVisibility';
-import { AppConfig } from '../config/AppConfig';
-import { WidgetType } from '../types';
-import { logger } from '../utilities/Logger';
+import {EventEmitter} from 'eventemitter3';
+import {MediaCardVisibility} from './MediaCardVisibility';
+import {AppConfig} from '../config/AppConfig';
+import {WidgetType} from '../types';
+import {logger} from '../utilities/Logger';
 
 export const playbackEvents = new EventEmitter();
 export type PlaybackEvent = 'play' | 'pause' | 'prefetch' | 'sequence';
 export type PlayItemType = WidgetType;
-
 
 // type PlayItemType = 'short' | 'ad' | 'carousel' | 'merch';
 // type MediaCardVisibility = 'prepareToActive' | 'Active' | 'willResignActive' | 'notActive';
@@ -35,34 +34,36 @@ const previewTimers = new Map<string, NodeJS.Timeout>();
 const softPlayQueue: SoftPlayVideo[] = [];
 
 function playVideo(videoId: string, videoState: VideoState): void {
-    logger.info('playback', `▶️ PLAY: ${videoId}`);
-    videoState.isPlaying = true;
-    playbackEvents.emit('play', videoId);
-    logger.info('playback', `📢 Play event emitted for: ${videoId}`);
-    
-    // Start preview timer for VOD content if sequencing is enabled
-    if (AppConfig.config.playback.sequencingEnabled && 
-        videoState.type === 'VOD' && 
-        AppConfig.config.playback.rotateToSoftPlay) {
-      startPreviewTimer(videoId, videoState);
-    }
+  logger.info('playback', `▶️ PLAY: ${videoId}`);
+  videoState.isPlaying = true;
+  playbackEvents.emit('play', videoId);
+  logger.info('playback', `📢 Play event emitted for: ${videoId}`);
+
+  // Start preview timer for VOD content if sequencing is enabled
+  if (
+    AppConfig.config.playback.sequencingEnabled &&
+    videoState.type === 'VOD' &&
+    AppConfig.config.playback.rotateToSoftPlay
+  ) {
+    startPreviewTimer(videoId, videoState);
+  }
 }
 
 function pauseVideo(videoId: string, videoState: VideoState): void {
-    logger.info('playback', `⏸️ PAUSE: ${videoId}`);
-    videoState.isPlaying = false;
-    playbackEvents.emit('pause', videoId);
-    logger.info('playback', `📢 Pause event emitted for: ${videoId}`);
-    
-    // Clear preview timer
-    clearPreviewTimer(videoId);
+  logger.info('playback', `⏸️ PAUSE: ${videoId}`);
+  videoState.isPlaying = false;
+  playbackEvents.emit('pause', videoId);
+  logger.info('playback', `📢 Pause event emitted for: ${videoId}`);
+
+  // Clear preview timer
+  clearPreviewTimer(videoId);
 }
 
 export function handleVisibilityChange(
-  videoId: string, 
-  videoType: PlayItemType, 
+  videoId: string,
+  videoType: PlayItemType,
   mediaVisibilityState: MediaCardVisibility,
-  videoSourceType: 'VOD' | 'LIVE' = 'VOD'
+  videoSourceType: 'VOD' | 'LIVE' = 'VOD',
 ) {
   // Update video state
   const videoState = videoMap.get(videoId) || {
@@ -107,39 +108,45 @@ function handlePrefetch(videoId: string, videoState: VideoState): void {
   // No-op - prefetch will be handled by FeedScreen (future work)
 }
 
-function handlePrepareToBeActive(videoId: string, videoState: VideoState): void {
+function handlePrepareToBeActive(
+  videoId: string,
+  videoState: VideoState,
+): void {
   logger.info('playback', `${videoId} → prepareToBeActive`);
   videoState.visibilityState = MediaCardVisibility.prepareToBeActive;
-  
+
   // Add to soft play queue
   addToSoftPlayQueue(videoId, videoState.category);
 }
 
 function handleActive(videoId: string, videoState: VideoState): void {
   logger.info('playback', `${videoId} → isActive (type: ${videoState.type})`);
-  
+
   const isLowEndDevice = AppConfig.config.performance.isLowEndDevice;
   logger.info('playback', `  isLowEndDevice: ${isLowEndDevice}`);
-  
+
   if (isLowEndDevice) {
-    logger.info('playback', `  → Calling handleLowEndDeviceActive()`);
+    logger.info('playback', '  → Calling handleLowEndDeviceActive()');
     handleLowEndDeviceActive(videoId, videoState);
   } else {
-    logger.info('playback', `  → Calling handleNormalDeviceActive()`);
+    logger.info('playback', '  → Calling handleNormalDeviceActive()');
     handleNormalDeviceActive(videoId, videoState);
   }
 }
 
-function handleLowEndDeviceActive(videoId: string, videoState: VideoState): void {
+function handleLowEndDeviceActive(
+  videoId: string,
+  videoState: VideoState,
+): void {
   // On low-end devices, check autoplay setting
   const autoplayEnabled = AppConfig.config.performance.autoplayOnLowEnd;
-  
+
   if (!autoplayEnabled) {
     // Don't autoplay on low-end devices unless user manually starts
     logger.info('playback', `${videoId} autoplay disabled on low-end device`);
     return;
   }
-  
+
   // Only play one video at a time
   if (getPlayingCount() === 0) {
     playVideo(videoId, videoState);
@@ -149,22 +156,25 @@ function handleLowEndDeviceActive(videoId: string, videoState: VideoState): void
   }
 }
 
-function handleNormalDeviceActive(videoId: string, videoState: VideoState): void {
+function handleNormalDeviceActive(
+  videoId: string,
+  videoState: VideoState,
+): void {
   // Check if we can play this video based on category limits
   const canPlay = canPlayVideo(videoState.category);
   logger.info('playback', `  canPlayVideo(${videoState.category}): ${canPlay}`);
-  
+
   if (canPlay) {
     logger.info('playback', `  ✅ Calling playVideo(${videoId})`);
     playVideo(videoId, videoState);
   } else {
-    logger.warn('playback', `  ⚠️ Cannot play - trying to make room`);
+    logger.warn('playback', '  ⚠️ Cannot play - trying to make room');
     // Try to make room by pausing lower priority videos
     if (tryToMakeRoom(videoState.category)) {
       logger.info('playback', `  ✅ Made room - calling playVideo(${videoId})`);
       playVideo(videoId, videoState);
     } else {
-      logger.warn('playback', `  ❌ No room - adding to soft play queue`);
+      logger.warn('playback', '  ❌ No room - adding to soft play queue');
       addToSoftPlayQueue(videoId, videoState.category);
     }
   }
@@ -172,31 +182,31 @@ function handleNormalDeviceActive(videoId: string, videoState: VideoState): void
 
 function handleWillResignActive(videoId: string, videoState: VideoState): void {
   logger.info('playback', `${videoId} → willResignActive`);
-  
+
   if (videoState.isPlaying) {
     pauseVideo(videoId, videoState);
   }
-  
+
   // Try to activate waiting videos
   tryToActivateWaiting();
 }
 
 function handleNotActive(videoId: string, videoState: VideoState): void {
   logger.info('playback', `${videoId} → notActive`);
-  
+
   if (videoState.isPlaying) {
     pauseVideo(videoId, videoState);
   }
-  
+
   // Clear preview timer
   clearPreviewTimer(videoId);
-  
+
   // Remove from active videos
   videoMap.delete(videoId);
-  
+
   // Remove from soft play queue
   removeFromSoftPlayQueue(videoId);
-  
+
   // Try to activate waiting videos
   tryToActivateWaiting();
 }
@@ -204,22 +214,24 @@ function handleNotActive(videoId: string, videoState: VideoState): void {
 function handleReleased(videoId: string, videoState: VideoState): void {
   // Full cleanup - cancel prefetch, clear timers, remove from maps
   logger.info('playback', `${videoId} → released`);
-  
+
   // Prefetch cleanup removed - will be handled by FeedScreen in future
-  
+
   // Clear preview timer if active
   clearPreviewTimer(videoId);
-  
+
   // Remove from soft play queue
   removeFromSoftPlayQueue(videoId);
-  
+
   // Remove from video map
   videoMap.delete(videoId);
 }
 
 function getCurrentPlayingType(): PlayItemType | null {
   for (let v of videoMap.values()) {
-    if (v.isPlaying) return v.category;
+    if (v.isPlaying) {
+      return v.category;
+    }
   }
   return null;
 }
@@ -228,7 +240,7 @@ function getCurrentPlayingType(): PlayItemType | null {
 
 // /**
 //  * PlaybackManager class to manage video playback based on visibility and priority.
-//  * 
+//  *
 //  * Combination of Media types that can play together
 //  * 1. Short videos can not play with Carousels
 //  * 2. Only one Short video can play at a time
@@ -259,7 +271,6 @@ function getCurrentPlayingType(): PlayItemType | null {
 //         return all;
 //     }
 
-
 //     handleVisibilityChange(videoId: string, videoType: PlayItemType, mediaVisibilityState: MediaCardVisibility) {
 //         const isHardAsk = mediaVisibilityState === MediaCardVisibility.isActive;
 //         const isSoftAsk = mediaVisibilityState === MediaCardVisibility.prepareToBeActive;
@@ -268,7 +279,7 @@ function getCurrentPlayingType(): PlayItemType | null {
 //             this.mediaSourceToVisbility.delete(videoId);
 //             this.mediaSourceToType.delete(videoId);
 //         }
-//         else if (mediaVisibilityState === MediaCardVisibility.prepareToBeActive 
+//         else if (mediaVisibilityState === MediaCardVisibility.prepareToBeActive
 //             || mediaVisibilityState === MediaCardVisibility.isActive
 //             || mediaVisibilityState === MediaCardVisibility.willResignActive) {
 
@@ -283,10 +294,10 @@ function getCurrentPlayingType(): PlayItemType | null {
 //                 if (this.currentPlayingVideos().size == 0) {
 //                     // Play any video, add to approapriate set
 //                 }
-//                 if (videoType === 'short' 
+//                 if (videoType === 'short'
 //                     && this.currentPlayingShortVideos.size < this.maxConcurrentShortVideos
 //                     && this.currentPlayingCarouselVideos.size === 0) {
-                    
+
 //                 }
 //                 if (videoType === 'merch' && this.currentPlayingVideos().size < this.maxConcurrentPlayingVideos) {
 //                     // Play if there is space
@@ -302,11 +313,11 @@ function getCurrentPlayingType(): PlayItemType | null {
 
 function startPreviewTimer(videoId: string, videoState: VideoState): void {
   const previewDuration = AppConfig.config.playback.previewDuration * 1000;
-  
+
   const timer = setTimeout(() => {
     onPreviewEnd(videoId, videoState);
   }, previewDuration);
-  
+
   previewTimers.set(videoId, timer);
   videoState.previewStartTime = Date.now();
 }
@@ -321,19 +332,19 @@ function clearPreviewTimer(videoId: string): void {
 
 function onPreviewEnd(videoId: string, videoState: VideoState): void {
   clearPreviewTimer(videoId);
-  
+
   // Find next soft play video
   const nextVideo = findNextSoftPlayVideo(videoState.category);
-  
+
   if (nextVideo) {
     // Pause current video
     pauseVideo(videoId, videoState);
-    
+
     // Play next video
     const nextVideoState = videoMap.get(nextVideo.id);
     if (nextVideoState) {
       playVideo(nextVideo.id, nextVideoState);
-      playbackEvents.emit('sequence', { from: videoId, to: nextVideo.id });
+      playbackEvents.emit('sequence', {from: videoId, to: nextVideo.id});
     }
   }
 }
@@ -341,11 +352,11 @@ function onPreviewEnd(videoId: string, videoState: VideoState): void {
 function addToSoftPlayQueue(videoId: string, category: WidgetType): void {
   // Remove if already in queue
   removeFromSoftPlayQueue(videoId);
-  
+
   // Add with priority
   const priority = getCategoryPriority(category);
-  softPlayQueue.push({ id: videoId, category, priority });
-  
+  softPlayQueue.push({id: videoId, category, priority});
+
   // Sort by priority (higher priority first)
   softPlayQueue.sort((a, b) => b.priority - a.priority);
 }
@@ -357,22 +368,30 @@ function removeFromSoftPlayQueue(videoId: string): void {
   }
 }
 
-function findNextSoftPlayVideo(currentCategory: WidgetType): SoftPlayVideo | null {
+function findNextSoftPlayVideo(
+  currentCategory: WidgetType,
+): SoftPlayVideo | null {
   // Look for videos in soft play queue that can play
   for (const video of softPlayQueue) {
     const videoState = videoMap.get(video.id);
-    if (videoState && videoState.visibilityState === MediaCardVisibility.prepareToBeActive) {
+    if (
+      videoState &&
+      videoState.visibilityState === MediaCardVisibility.prepareToBeActive
+    ) {
       return video;
     }
   }
-  
+
   return null;
 }
 
 function tryToActivateWaiting(): void {
   // Look for videos that should be playing but aren't
   for (const [videoId, videoState] of videoMap) {
-    if (videoState.visibilityState === MediaCardVisibility.isActive && !videoState.isPlaying) {
+    if (
+      videoState.visibilityState === MediaCardVisibility.isActive &&
+      !videoState.isPlaying
+    ) {
       if (canPlayVideo(videoState.category)) {
         playVideo(videoId, videoState);
       }
@@ -381,16 +400,17 @@ function tryToActivateWaiting(): void {
 }
 
 function canPlayVideo(category: WidgetType): boolean {
-  const maxConcurrent = AppConfig.config.widgets[category]?.maxConcurrentVideos || 1;
+  const maxConcurrent =
+    AppConfig.config.widgets[category]?.maxConcurrentVideos || 1;
   const currentPlaying = getPlayingCountForCategory(category);
-  
+
   return currentPlaying < maxConcurrent;
 }
 
 function tryToMakeRoom(targetCategory: WidgetType): boolean {
   // For now, simple implementation - pause one video of lower priority
   const targetPriority = getCategoryPriority(targetCategory);
-  
+
   for (const [videoId, videoState] of videoMap) {
     if (videoState.isPlaying) {
       const currentPriority = getCategoryPriority(videoState.category);
@@ -400,7 +420,7 @@ function tryToMakeRoom(targetCategory: WidgetType): boolean {
       }
     }
   }
-  
+
   return false;
 }
 
@@ -453,12 +473,12 @@ export function clearAllPlayback(): void {
       pauseVideo(videoId, videoState);
     }
   }
-  
+
   // Clear all timers
   for (const timer of previewTimers.values()) {
     clearTimeout(timer);
   }
-  
+
   // Clear all state
   videoMap.clear();
   previewTimers.clear();

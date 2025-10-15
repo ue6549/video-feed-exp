@@ -1,5 +1,5 @@
-import { AppConfig } from '../config/AppConfig';
-import { IFeedItem, VideoData, OfflineVideoInfo } from '../types';
+import {AppConfig} from '../config/AppConfig';
+import {IFeedItem, VideoData, OfflineVideoInfo} from '../types';
 import CacheManager from './CacheManager';
 import ManifestTemplateManager from '../config/ManifestTemplates';
 
@@ -16,9 +16,9 @@ class OfflineManager {
    */
   private async initializeOfflineMode(): Promise<void> {
     this.isOfflineMode = AppConfig.config.offline.mockOfflineMode;
-    
+
     // Subscribe to config changes
-    AppConfig.subscribe((config) => {
+    AppConfig.subscribe(config => {
       this.isOfflineMode = config.offline.mockOfflineMode;
     });
 
@@ -49,7 +49,10 @@ class OfflineManager {
       if (item.widgetType === 'merch') {
         // Merch items are always available offline (images)
         offlineItems.push(item);
-      } else if (item.widgetType === 'short' || item.widgetType === 'carousel') {
+      } else if (
+        item.widgetType === 'short' ||
+        item.widgetType === 'carousel'
+      ) {
         // Check if video is cached
         const isCached = await this.isVideoCached(item);
         if (isCached) {
@@ -70,18 +73,22 @@ class OfflineManager {
     }
 
     const videoData = this.extractVideoData(feedItem);
-    if (!videoData) return false;
+    if (!videoData) {
+      return false;
+    }
 
     // Check if video URL is cached
     const isCached = await CacheManager.isCached(videoData.videoSource.url);
-    
+
     if (isCached) {
       // Update cached videos map
       this.cachedVideos.set(videoData.videoSource.url, {
         videoUrl: videoData.videoSource.url,
         cachedSegments: [], // Would be populated from cache
         isFullyCached: true,
-        manifestUrl: await this.generateOfflineManifest(videoData.videoSource.url),
+        manifestUrl: await this.generateOfflineManifest(
+          videoData.videoSource.url,
+        ),
       });
     }
 
@@ -102,16 +109,19 @@ class OfflineManager {
     try {
       // Get cached segments (this would be implemented with actual cache data)
       const cachedSegments = await this.getCachedSegments(videoUrl);
-      
+
       // Generate manifest using template
       const manifest = ManifestTemplateManager.generateManifest(
         AppConfig.config.cache.manifestTemplateId,
-        cachedSegments
+        cachedSegments,
       );
 
       return manifest;
     } catch (error) {
-      console.error(`Failed to generate offline manifest for ${videoUrl}:`, error);
+      console.error(
+        `Failed to generate offline manifest for ${videoUrl}:`,
+        error,
+      );
       return videoUrl; // Fallback to original URL
     }
   }
@@ -119,7 +129,9 @@ class OfflineManager {
   /**
    * Get cached segments for a video
    */
-  private async getCachedSegments(videoUrl: string): Promise<Array<{ url: string; duration: number; sequence: number }>> {
+  private async getCachedSegments(
+    videoUrl: string,
+  ): Promise<Array<{url: string; duration: number; sequence: number}>> {
     // This would be implemented to get actual cached segments
     // For now, return empty array
     return [];
@@ -131,10 +143,10 @@ class OfflineManager {
   private async loadCachedVideos(): Promise<void> {
     try {
       const cachedVideoUrls = await CacheManager.getCachedVideos();
-      
+
       for (const videoUrl of cachedVideoUrls) {
         const isFullyCached = await CacheManager.isVideoFullyCached(videoUrl);
-        
+
         this.cachedVideos.set(videoUrl, {
           videoUrl,
           cachedSegments: [],
@@ -157,7 +169,7 @@ class OfflineManager {
       const carouselData = feedItem.data as VideoData[];
       return carouselData[0]; // Return first video for simplicity
     }
-    
+
     return null;
   }
 
@@ -206,7 +218,7 @@ class OfflineManager {
    */
   async toggleOfflineMode(): Promise<void> {
     const newOfflineMode = !this.isOfflineMode;
-    
+
     // Update config
     AppConfig.update({
       offline: {
@@ -268,4 +280,3 @@ class OfflineManager {
 }
 
 export default new OfflineManager();
-

@@ -1,7 +1,7 @@
-import { EventEmitter } from 'eventemitter3';
-import { AppConfig } from '../config/AppConfig';
-import { WidgetType } from '../types';
-import { MediaCardVisibility } from '../platback_manager/MediaCardVisibility';
+import {EventEmitter} from 'eventemitter3';
+import {AppConfig} from '../config/AppConfig';
+import {WidgetType} from '../types';
+import {MediaCardVisibility} from '../platback_manager/MediaCardVisibility';
 import PrefetchManager from './PrefetchManager';
 
 export const playbackEvents = new EventEmitter();
@@ -32,9 +32,9 @@ class EnhancedPlaybackManager {
 
   constructor() {
     this.isLowEndDevice = AppConfig.config.performance.isLowEndDevice;
-    
+
     // Subscribe to config changes
-    AppConfig.subscribe((config) => {
+    AppConfig.subscribe(config => {
       this.isLowEndDevice = config.performance.isLowEndDevice;
     });
   }
@@ -46,7 +46,7 @@ class EnhancedPlaybackManager {
     videoId: string,
     videoType: 'VOD' | 'LIVE',
     state: MediaCardVisibility,
-    category: WidgetType
+    category: WidgetType,
   ): void {
     // Update video state
     const videoState = this.activeVideos.get(videoId) || {
@@ -81,7 +81,10 @@ class EnhancedPlaybackManager {
   /**
    * Handle prepare to be active state
    */
-  private handlePrepareToBeActive(videoId: string, videoState: VideoState): void {
+  private handlePrepareToBeActive(
+    videoId: string,
+    videoState: VideoState,
+  ): void {
     // Prefetch VOD content only
     if (videoState.type === 'VOD' && !videoState.isPrefetched) {
       this.prefetchVideo(videoId, videoState);
@@ -105,7 +108,10 @@ class EnhancedPlaybackManager {
   /**
    * Handle low-end device active state
    */
-  private handleLowEndDeviceActive(videoId: string, videoState: VideoState): void {
+  private handleLowEndDeviceActive(
+    videoId: string,
+    videoState: VideoState,
+  ): void {
     // On low-end devices, only play one video at a time
     if (this.getPlayingCount() === 0) {
       this.playVideo(videoId, videoState);
@@ -118,10 +124,13 @@ class EnhancedPlaybackManager {
   /**
    * Handle normal device active state
    */
-  private handleNormalDeviceActive(videoId: string, videoState: VideoState): void {
+  private handleNormalDeviceActive(
+    videoId: string,
+    videoState: VideoState,
+  ): void {
     // Check if we can play this video based on category limits
     const canPlay = this.canPlayVideo(videoState.category);
-    
+
     if (canPlay) {
       this.playVideo(videoId, videoState);
     } else {
@@ -137,11 +146,14 @@ class EnhancedPlaybackManager {
   /**
    * Handle will resign active state
    */
-  private handleWillResignActive(videoId: string, videoState: VideoState): void {
+  private handleWillResignActive(
+    videoId: string,
+    videoState: VideoState,
+  ): void {
     if (videoState.isPlaying) {
       this.pauseVideo(videoId, videoState);
     }
-    
+
     // Try to activate waiting videos
     this.tryToActivateWaiting();
   }
@@ -153,16 +165,16 @@ class EnhancedPlaybackManager {
     if (videoState.isPlaying) {
       this.pauseVideo(videoId, videoState);
     }
-    
+
     // Clear preview timer
     this.clearPreviewTimer(videoId);
-    
+
     // Remove from active videos
     this.activeVideos.delete(videoId);
-    
+
     // Remove from soft play queue
     this.removeFromSoftPlayQueue(videoId);
-    
+
     // Try to activate waiting videos
     this.tryToActivateWaiting();
   }
@@ -173,11 +185,13 @@ class EnhancedPlaybackManager {
   private playVideo(videoId: string, videoState: VideoState): void {
     videoState.isPlaying = true;
     playbackEvents.emit('play', videoId);
-    
+
     // Start preview timer for VOD content if sequencing is enabled
-    if (AppConfig.config.playback.sequencingEnabled && 
-        videoState.type === 'VOD' && 
-        AppConfig.config.playback.rotateToSoftPlay) {
+    if (
+      AppConfig.config.playback.sequencingEnabled &&
+      videoState.type === 'VOD' &&
+      AppConfig.config.playback.rotateToSoftPlay
+    ) {
       this.startPreviewTimer(videoId, videoState);
     }
   }
@@ -188,7 +202,7 @@ class EnhancedPlaybackManager {
   private pauseVideo(videoId: string, videoState: VideoState): void {
     videoState.isPlaying = false;
     playbackEvents.emit('pause', videoId);
-    
+
     // Clear preview timer
     this.clearPreviewTimer(videoId);
   }
@@ -196,22 +210,34 @@ class EnhancedPlaybackManager {
   /**
    * Prefetch a video
    */
-  private async prefetchVideo(videoId: string, videoState: VideoState): Promise<void> {
-    if (videoState.type !== 'VOD') return;
-    
+  private async prefetchVideo(
+    videoId: string,
+    videoState: VideoState,
+  ): Promise<void> {
+    if (videoState.type !== 'VOD') {
+      return;
+    }
+
     try {
       // Get video URL (this would come from the video data)
       const videoUrl = this.getVideoUrl(videoId);
-      if (!videoUrl) return;
-      
+      if (!videoUrl) {
+        return;
+      }
+
       // Determine priority based on category
       const priority = this.getCategoryPriority(videoState.category);
-      
+
       // Start prefetching (updated API with videoId)
       // TODO: Update to use clean video ID when EnhancedPlaybackManager is reactivated
-      await PrefetchManager.prefetchVideo(videoId, videoUrl, videoState.type, priority);
+      await PrefetchManager.prefetchVideo(
+        videoId,
+        videoUrl,
+        videoState.type,
+        priority,
+      );
       videoState.isPrefetched = true;
-      
+
       playbackEvents.emit('prefetch', videoId);
     } catch (error) {
       console.error(`Failed to prefetch video ${videoId}:`, error);
@@ -223,11 +249,11 @@ class EnhancedPlaybackManager {
    */
   private startPreviewTimer(videoId: string, videoState: VideoState): void {
     const previewDuration = AppConfig.config.playback.previewDuration * 1000;
-    
+
     const timer = setTimeout(() => {
       this.onPreviewEnd(videoId, videoState);
     }, previewDuration);
-    
+
     this.previewTimers.set(videoId, timer);
     videoState.previewStartTime = Date.now();
   }
@@ -248,19 +274,19 @@ class EnhancedPlaybackManager {
    */
   private onPreviewEnd(videoId: string, videoState: VideoState): void {
     this.clearPreviewTimer(videoId);
-    
+
     // Find next soft play video
     const nextVideo = this.findNextSoftPlayVideo(videoState.category);
-    
+
     if (nextVideo) {
       // Pause current video
       this.pauseVideo(videoId, videoState);
-      
+
       // Play next video
       const nextVideoState = this.activeVideos.get(nextVideo.id);
       if (nextVideoState) {
         this.playVideo(nextVideo.id, nextVideoState);
-        playbackEvents.emit('sequence', { from: videoId, to: nextVideo.id });
+        playbackEvents.emit('sequence', {from: videoId, to: nextVideo.id});
       }
     }
   }
@@ -271,11 +297,11 @@ class EnhancedPlaybackManager {
   private addToSoftPlayQueue(videoId: string, category: WidgetType): void {
     // Remove if already in queue
     this.removeFromSoftPlayQueue(videoId);
-    
+
     // Add with priority
     const priority = this.getCategoryPriority(category);
-    this.softPlayQueue.push({ id: videoId, category, priority });
-    
+    this.softPlayQueue.push({id: videoId, category, priority});
+
     // Sort by priority (higher priority first)
     this.softPlayQueue.sort((a, b) => b.priority - a.priority);
   }
@@ -284,21 +310,28 @@ class EnhancedPlaybackManager {
    * Remove video from soft play queue
    */
   private removeFromSoftPlayQueue(videoId: string): void {
-    this.softPlayQueue = this.softPlayQueue.filter(video => video.id !== videoId);
+    this.softPlayQueue = this.softPlayQueue.filter(
+      video => video.id !== videoId,
+    );
   }
 
   /**
    * Find next soft play video
    */
-  private findNextSoftPlayVideo(currentCategory: WidgetType): SoftPlayVideo | null {
+  private findNextSoftPlayVideo(
+    currentCategory: WidgetType,
+  ): SoftPlayVideo | null {
     // Look for videos in soft play queue that can play
     for (const video of this.softPlayQueue) {
       const videoState = this.activeVideos.get(video.id);
-      if (videoState && videoState.visibilityState === MediaCardVisibility.prepareToBeActive) {
+      if (
+        videoState &&
+        videoState.visibilityState === MediaCardVisibility.prepareToBeActive
+      ) {
         return video;
       }
     }
-    
+
     return null;
   }
 
@@ -308,7 +341,10 @@ class EnhancedPlaybackManager {
   private tryToActivateWaiting(): void {
     // Look for videos that should be playing but aren't
     for (const [videoId, videoState] of this.activeVideos) {
-      if (videoState.visibilityState === MediaCardVisibility.isActive && !videoState.isPlaying) {
+      if (
+        videoState.visibilityState === MediaCardVisibility.isActive &&
+        !videoState.isPlaying
+      ) {
         if (this.canPlayVideo(videoState.category)) {
           this.playVideo(videoId, videoState);
         }
@@ -320,9 +356,10 @@ class EnhancedPlaybackManager {
    * Check if a video category can play
    */
   private canPlayVideo(category: WidgetType): boolean {
-    const maxConcurrent = AppConfig.config.widgets[category]?.maxConcurrentVideos || 1;
+    const maxConcurrent =
+      AppConfig.config.widgets[category]?.maxConcurrentVideos || 1;
     const currentPlaying = this.getPlayingCountForCategory(category);
-    
+
     return currentPlaying < maxConcurrent;
   }
 
@@ -332,7 +369,7 @@ class EnhancedPlaybackManager {
   private tryToMakeRoom(targetCategory: WidgetType): boolean {
     // For now, simple implementation - pause one video of lower priority
     const targetPriority = this.getCategoryPriority(targetCategory);
-    
+
     for (const [videoId, videoState] of this.activeVideos) {
       if (videoState.isPlaying) {
         const currentPriority = this.getCategoryPriority(videoState.category);
@@ -342,7 +379,7 @@ class EnhancedPlaybackManager {
         }
       }
     }
-    
+
     return false;
   }
 
@@ -416,12 +453,12 @@ class EnhancedPlaybackManager {
         this.pauseVideo(videoId, videoState);
       }
     }
-    
+
     // Clear all timers
     for (const timer of this.previewTimers.values()) {
       clearTimeout(timer);
     }
-    
+
     // Clear all state
     this.activeVideos.clear();
     this.previewTimers.clear();
@@ -430,4 +467,3 @@ class EnhancedPlaybackManager {
 }
 
 export default new EnhancedPlaybackManager();
-

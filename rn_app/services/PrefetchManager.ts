@@ -1,6 +1,6 @@
-import { AppConfig } from '../config/AppConfig';
-import { PrefetchRequest, PrefetchStatus } from '../types';
-import { logger } from '../utilities/Logger';
+import {AppConfig} from '../config/AppConfig';
+import {PrefetchRequest, PrefetchStatus} from '../types';
+import {logger} from '../utilities/Logger';
 import CacheManager from './CacheManager';
 
 interface SegmentInfo {
@@ -38,13 +38,13 @@ class PrefetchManager {
     videoId: string,
     videoUrl: string,
     videoType: 'VOD' | 'LIVE',
-    priority: number = 0
+    priority: number = 0,
   ): Promise<void> {
     logger.info('prefetch', `🎯 PREFETCH START: ${videoId}`);
     logger.debug('prefetch', `  URL: ${videoUrl}`);
     logger.debug('prefetch', `  Type: ${videoType}`);
     logger.debug('prefetch', `  Priority: ${priority}`);
-    
+
     // Skip if prefetching is disabled
     if (!this.isEnabled) {
       logger.warn('prefetch', '⚠️ Prefetch is DISABLED in config');
@@ -53,25 +53,34 @@ class PrefetchManager {
 
     // VOD-only check
     if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) {
-      logger.info('prefetch', `ℹ️ Skipping prefetch for LIVE video (VOD-only mode)`);
+      logger.info(
+        'prefetch',
+        'ℹ️ Skipping prefetch for LIVE video (VOD-only mode)',
+      );
       return;
     } else if (!AppConfig.config.prefetch.vodOnly) {
-      logger.info('prefetch', `🎬 Prefetching for both VOD and LIVE`);
+      logger.info('prefetch', '🎬 Prefetching for both VOD and LIVE');
     } else {
-      logger.info('prefetch', `🎬 Prefetching VOD only`);
+      logger.info('prefetch', '🎬 Prefetching VOD only');
     }
 
     // Check if already prefetching or completed
     const existingStatus = this.statusMap.get(videoId);
-    if (existingStatus && ['downloading', 'completed'].includes(existingStatus.state)) {
-      logger.debug('prefetch', `✅ Already prefetching or completed: ${videoId}`);
+    if (
+      existingStatus &&
+      ['downloading', 'completed'].includes(existingStatus.state)
+    ) {
+      logger.debug(
+        'prefetch',
+        `✅ Already prefetching or completed: ${videoId}`,
+      );
       return;
     }
 
     // Add to queue
     const request: PrefetchRequest = {
-      videoId,      // Clean ID for tracking/logging
-      videoUrl,     // Actual URL to prefetch
+      videoId, // Clean ID for tracking/logging
+      videoUrl, // Actual URL to prefetch
       videoType,
       priority,
       segmentCount: AppConfig.config.prefetch.segmentCount,
@@ -91,7 +100,10 @@ class PrefetchManager {
 
     logger.info('prefetch', `✅ Queued: ${videoId} (priority: ${priority})`);
     const stats = this.getQueueStats();
-    logger.debug('prefetch', `📊 Queue: ${stats.queueLength}, Active: ${stats.activeDownloads}`);
+    logger.debug(
+      'prefetch',
+      `📊 Queue: ${stats.queueLength}, Active: ${stats.activeDownloads}`,
+    );
 
     // Process queue
     this.processQueue();
@@ -110,7 +122,7 @@ class PrefetchManager {
    */
   async cancelPrefetch(videoUrl: string): Promise<void> {
     const videoId = this.getVideoId(videoUrl);
-    
+
     // Cancel active download
     const controller = this.activeDownloads.get(videoId);
     if (controller) {
@@ -119,7 +131,9 @@ class PrefetchManager {
     }
 
     // Remove from queue
-    this.queue = this.queue.filter(req => this.getVideoId(req.videoUrl) !== videoId);
+    this.queue = this.queue.filter(
+      req => this.getVideoId(req.videoUrl) !== videoId,
+    );
 
     // Update status
     const status = this.statusMap.get(videoId);
@@ -204,12 +218,12 @@ class PrefetchManager {
    * Start prefetch using native KTVHTTPCache
    */
   private async startDownload(request: PrefetchRequest): Promise<void> {
-    const { videoId, videoUrl, videoType, segmentCount } = request;
-    
+    const {videoId, videoUrl, videoType, segmentCount} = request;
+
     // Mark as active (for concurrency control)
     const controller = new AbortController();
     this.activeDownloads.set(videoId, controller);
-    
+
     // Update status
     this.statusMap.set(videoId, {
       videoId,
@@ -222,7 +236,10 @@ class PrefetchManager {
     try {
       // VOD-only check (already checked in prefetchVideo, but double-check here)
       if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) {
-        logger.warn('prefetch', `⚠️ LIVE video ${videoId}, skipping (VOD-only mode)`);
+        logger.warn(
+          'prefetch',
+          `⚠️ LIVE video ${videoId}, skipping (VOD-only mode)`,
+        );
         this.statusMap.set(videoId, {
           videoId,
           state: 'failed',
@@ -246,7 +263,6 @@ class PrefetchManager {
       });
 
       logger.info('prefetch', `✅ Prefetch complete: ${videoId}`);
-
     } catch (error) {
       if (controller.signal.aborted) {
         logger.info('prefetch', `🛑 Prefetch cancelled: ${videoId}`);
@@ -282,7 +298,7 @@ class PrefetchManager {
     let hash = 0;
     for (let i = 0; i < url.length; i++) {
       const char = url.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -298,4 +314,3 @@ class PrefetchManager {
 }
 
 export default new PrefetchManager();
-

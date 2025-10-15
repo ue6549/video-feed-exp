@@ -1,6 +1,6 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { RootStackParamList, SCREEN_NAMES } from './types';
+import {createStackNavigator} from '@react-navigation/stack';
+import {RootStackParamList, SCREEN_NAMES} from './types';
 import FeedScreen from '../screens/FeedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
@@ -8,11 +8,11 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const RootNavigator: React.FC = () => {
   return (
-    <Stack.Navigator 
-      screenOptions={{ 
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
         gestureEnabled: true,
-        cardStyleInterpolator: ({ current, layouts }) => {
+        cardStyleInterpolator: ({current, layouts}) => {
           return {
             cardStyle: {
               transform: [
@@ -26,17 +26,16 @@ const RootNavigator: React.FC = () => {
             },
           };
         },
-      }}
-    >
-      <Stack.Screen 
-        name={SCREEN_NAMES.FEED} 
+      }}>
+      <Stack.Screen
+        name={SCREEN_NAMES.FEED}
         component={FeedScreen}
         options={{
           title: 'Video Feed',
         }}
       />
-      <Stack.Screen 
-        name={SCREEN_NAMES.SETTINGS} 
+      <Stack.Screen
+        name={SCREEN_NAMES.SETTINGS}
         component={SettingsScreen}
         options={{
           title: 'Settings',
@@ -55,4 +54,3 @@ const RootNavigator: React.FC = () => {
 };
 
 export default RootNavigator;
-
