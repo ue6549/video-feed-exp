@@ -38,7 +38,9 @@ export class FeedPrefetchController extends PrefetchController {
       return;
     }
 
-    if (visibleIndices.length === 0) {return;}
+    if (visibleIndices.length === 0) {
+      return;
+    }
 
     const lastVisible = Math.max(...visibleIndices);
     const range = AppConfig.config.visibility.prefetchRange;
@@ -56,7 +58,9 @@ export class FeedPrefetchController extends PrefetchController {
       i <= prefetchUntil;
       i++
     ) {
-      if (i >= feedData.length) {break;}
+      if (i >= feedData.length) {
+        break;
+      }
 
       const widget = feedData[i];
       const distance = i - lastVisible;
@@ -170,7 +174,9 @@ export class FeedPrefetchController extends PrefetchController {
    * Trigger initial prefetch when feed loads
    */
   onInitialLoad(feedData: IFeedItem[]): void {
-    if (!AppConfig.config.prefetch.enabled) {return;}
+    if (!AppConfig.config.prefetch.enabled) {
+      return;
+    }
 
     this.logPrefetch(`📥 Initial load: ${feedData.length} widgets available`);
 
@@ -190,7 +196,9 @@ export class FeedPrefetchController extends PrefetchController {
    * Trigger prefetch when new page loads (pagination)
    */
   onPageLoad(allFeedData: IFeedItem[], newPageStartIndex: number): void {
-    if (!AppConfig.config.prefetch.enabled) {return;}
+    if (!AppConfig.config.prefetch.enabled) {
+      return;
+    }
 
     this.logPrefetch(
       `📥 Page loaded: new widgets from index ${newPageStartIndex}`,

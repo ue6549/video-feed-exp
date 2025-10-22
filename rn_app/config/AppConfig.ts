@@ -177,10 +177,7 @@ export class AppConfig {
     },
     proxySecurity: {
       enabled: true,
-      allowedDomains: [
-        '2gud-live-cdn.akamaized.net',
-        'cdn.example.com'
-      ],
+      allowedDomains: ['2gud-live-cdn.akamaized.net', 'cdn.example.com'],
       allowedExtensions: ['.m3u8', '.ts', '.m4s', '.mp4'],
       maxRequestsPerMinute: 600,
       tokenRotationInterval: 300, // 5 minutes
@@ -189,9 +186,9 @@ export class AppConfig {
       logSecurityEvents: true,
       rateLimitConfig: {
         capacity: 100,
-        refillRate: 10
+        refillRate: 10,
       },
-      deploymentPhase: 'monitoring' as const
+      deploymentPhase: 'monitoring' as const,
     },
   };
 
@@ -356,10 +353,7 @@ export class AppConfig {
       },
       proxySecurity: {
         enabled: true,
-        allowedDomains: [
-          '2gud-live-cdn.akamaized.net',
-          'cdn.example.com'
-        ],
+        allowedDomains: ['2gud-live-cdn.akamaized.net', 'cdn.example.com'],
         allowedExtensions: ['.m3u8', '.ts', '.m4s', '.mp4'],
         maxRequestsPerMinute: 600,
         tokenRotationInterval: 300,
@@ -368,9 +362,9 @@ export class AppConfig {
         logSecurityEvents: true,
         rateLimitConfig: {
           capacity: 100,
-          refillRate: 10
+          refillRate: 10,
         },
-        deploymentPhase: 'monitoring' as const
+        deploymentPhase: 'monitoring' as const,
       },
     };
 

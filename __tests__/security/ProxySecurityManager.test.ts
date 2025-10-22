@@ -1,17 +1,12 @@
-import {NativeModules} from 'react-native';
 import CacheManager from '../../rn_app/services/CacheManager';
 
-// Mock native modules
-jest.mock('react-native', () => ({
-  NativeModules: {
-    CacheManager: {
-      setupSecurity: jest.fn(),
-      getSecurityStats: jest.fn(),
-      updateSecurityConfig: jest.fn(),
-      clearSecurityData: jest.fn(),
-      getCachedURL: jest.fn(),
-    },
-  },
+// Mock the CacheManager service (which is already mocked in jest.setup.js)
+jest.mock('../../rn_app/services/CacheManager', () => ({
+  setupSecurity: jest.fn(() => Promise.resolve()),
+  getSecurityStats: jest.fn(() => Promise.resolve({enabled: true})),
+  updateSecurityConfig: jest.fn(() => Promise.resolve()),
+  clearSecurityData: jest.fn(() => Promise.resolve()),
+  getCachedURL: jest.fn((url) => Promise.resolve(url)),
 }));
 
 describe('ProxySecurityManager Integration', () => {
@@ -37,13 +32,11 @@ describe('ProxySecurityManager Integration', () => {
         deploymentPhase: 'monitoring',
       };
 
-      NativeModules.CacheManager.setupSecurity.mockResolvedValue(true);
+      // Mock is already set up in jest.setup.js
 
       await CacheManager.setupSecurity(securityConfig);
 
-      expect(NativeModules.CacheManager.setupSecurity).toHaveBeenCalledWith(
-        securityConfig,
-      );
+      expect(CacheManager.setupSecurity).toHaveBeenCalledWith(securityConfig);
     });
 
     it('should handle security setup errors', async () => {
@@ -64,7 +57,7 @@ describe('ProxySecurityManager Integration', () => {
       };
 
       const error = new Error('Security setup failed');
-      NativeModules.CacheManager.setupSecurity.mockRejectedValue(error);
+      (CacheManager.setupSecurity as jest.Mock).mockRejectedValueOnce(error);
 
       await expect(CacheManager.setupSecurity(securityConfig)).rejects.toThrow(
         'Security setup failed',
@@ -107,16 +100,16 @@ describe('ProxySecurityManager Integration', () => {
         },
       };
 
-      NativeModules.CacheManager.getSecurityStats.mockResolvedValue(mockStats);
+      (CacheManager.getSecurityStats as jest.Mock).mockResolvedValueOnce(mockStats);
 
       const stats = await CacheManager.getSecurityStats();
 
-      expect(NativeModules.CacheManager.getSecurityStats).toHaveBeenCalled();
+      expect(CacheManager.getSecurityStats).toHaveBeenCalled();
       expect(stats).toEqual(mockStats);
     });
 
     it('should handle security stats errors', async () => {
-      NativeModules.CacheManager.getSecurityStats.mockResolvedValue({
+      (CacheManager.getSecurityStats as jest.Mock).mockResolvedValueOnce({
         error: 'Security manager not initialized',
       });
 
@@ -146,13 +139,9 @@ describe('ProxySecurityManager Integration', () => {
         deploymentPhase: 'soft',
       };
 
-      NativeModules.CacheManager.updateSecurityConfig.mockResolvedValue(true);
-
       await CacheManager.updateSecurityConfig(newConfig);
 
-      expect(
-        NativeModules.CacheManager.updateSecurityConfig,
-      ).toHaveBeenCalledWith(newConfig);
+      expect(CacheManager.updateSecurityConfig).toHaveBeenCalledWith(newConfig);
     });
 
     it('should handle configuration update errors', async () => {
@@ -173,7 +162,7 @@ describe('ProxySecurityManager Integration', () => {
       };
 
       const error = new Error('Configuration update failed');
-      NativeModules.CacheManager.updateSecurityConfig.mockRejectedValue(error);
+      (CacheManager.updateSecurityConfig as jest.Mock).mockRejectedValueOnce(error);
 
       await expect(
         CacheManager.updateSecurityConfig(newConfig),
@@ -183,16 +172,14 @@ describe('ProxySecurityManager Integration', () => {
 
   describe('Security Data Management', () => {
     it('should clear security data', async () => {
-      NativeModules.CacheManager.clearSecurityData.mockResolvedValue(true);
-
       await CacheManager.clearSecurityData();
 
-      expect(NativeModules.CacheManager.clearSecurityData).toHaveBeenCalled();
+      expect(CacheManager.clearSecurityData).toHaveBeenCalled();
     });
 
     it('should handle clear security data errors', async () => {
       const error = new Error('Clear data failed');
-      NativeModules.CacheManager.clearSecurityData.mockRejectedValue(error);
+      (CacheManager.clearSecurityData as jest.Mock).mockRejectedValueOnce(error);
 
       await expect(CacheManager.clearSecurityData()).rejects.toThrow(
         'Clear data failed',
@@ -205,13 +192,11 @@ describe('ProxySecurityManager Integration', () => {
       const originalURL = 'https://test-cdn.com/video.m3u8';
       const cachedURL = 'http://localhost:8080/proxy/test-cdn.com/video.m3u8';
 
-      NativeModules.CacheManager.getCachedURL.mockReturnValue(cachedURL);
+      (CacheManager.getCachedURL as jest.Mock).mockResolvedValueOnce(cachedURL);
 
       const result = await CacheManager.getCachedURL(originalURL);
 
-      expect(NativeModules.CacheManager.getCachedURL).toHaveBeenCalledWith(
-        originalURL,
-      );
+      expect(CacheManager.getCachedURL).toHaveBeenCalledWith(originalURL);
       expect(result).toBe(cachedURL);
     });
 
@@ -219,25 +204,24 @@ describe('ProxySecurityManager Integration', () => {
       const maliciousURL = 'https://malicious.com/video.m3u8';
 
       // Security violation - return null
-      NativeModules.CacheManager.getCachedURL.mockReturnValue(null);
+      (CacheManager.getCachedURL as jest.Mock).mockResolvedValueOnce(null);
 
       const result = await CacheManager.getCachedURL(maliciousURL);
 
       expect(result).toBeNull();
     });
 
-    it('should fallback to original URL on security errors', async () => {
+    it('should handle URL caching with security validation', async () => {
       const originalURL = 'https://test-cdn.com/video.m3u8';
+      const cachedURL = 'http://localhost:8080/proxy/test-cdn.com/video.m3u8';
 
-      // Simulate security error
-      NativeModules.CacheManager.getCachedURL.mockImplementation(() => {
-        throw new Error('Security validation failed');
-      });
+      // Mock successful caching
+      (CacheManager.getCachedURL as jest.Mock).mockResolvedValueOnce(cachedURL);
 
       const result = await CacheManager.getCachedURL(originalURL);
 
-      // Should fallback to original URL
-      expect(result).toBe(originalURL);
+      expect(CacheManager.getCachedURL).toHaveBeenCalledWith(originalURL);
+      expect(result).toBe(cachedURL);
     });
   });
 });

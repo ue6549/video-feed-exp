@@ -66,7 +66,9 @@ const App = () => {
     }, 5000);
 
     const sub = AppState.addEventListener('change', s => {
-      if (s !== 'active') {metricsFlushToFile();}
+      if (s !== 'active') {
+        metricsFlushToFile();
+      }
     });
 
     return () => {
