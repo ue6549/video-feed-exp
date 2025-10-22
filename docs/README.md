@@ -10,6 +10,9 @@ Testing guides and procedures for manual and automated testing.
 - **`TESTING_GUIDE.md`** - Comprehensive manual testing procedures
 - **`AVPLAYER_PREFETCH_TESTING.md`** - Specific testing for AVPlayer prefetch functionality
 - **`TESTING_NETWORK_ISSUES.md`** - Network-related testing and error handling
+- **`SETUP_INSTRUCTIONS.md`** - Setup and installation instructions
+- **`RUN_APP.md`** - How to run the application
+- **`TESTING_INTEGRATION.md`** - Integration testing procedures
 
 ### `/architecture/`
 System architecture and component documentation.
@@ -31,11 +34,23 @@ Issue tracking and debugging guides.
 Current implementation status and progress tracking.
 
 - **`PREFETCH_STATUS.md`** - Current status of prefetch implementation
+- **`FUTURE_WORK.md`** - Future work and backlog items
 
 ### `/changelog/`
 Completed features and changes.
 
 - **`CHANGELOG.md`** - Record of completed features and improvements
+- **`CHANGES_SUMMARY.md`** - Summary of changes
+- **`BUILD_SUCCESS_SUMMARY.md`** - Build success documentation
+- **`IMPLEMENTATION_SUMMARY.md`** - Implementation summary
+
+### `/misc/`
+Miscellaneous documentation and utilities.
+
+- **`GIT_WORKFLOW.md`** - Git workflow and branching strategy
+- **`QUICK_REFERENCE.md`** - Quick reference guide
+- **`BRANCH_SUMMARY_*.md`** - Branch-specific summaries
+- **`add_native_modules_to_xcode.md`** - Xcode setup instructions
 
 ## 🚀 Quick Start
 
