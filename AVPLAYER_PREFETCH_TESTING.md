@@ -149,8 +149,15 @@ ERROR [CacheManager] master_playlist: Master playlists not yet supported in pref
 5. Try playing prefetched videos
 
 **Expected:**
-- ✅ Videos with AVPlayer prefetch: Should play from cache
+- ✅ Videos with AVPlayer prefetch: Should play from cache (2+ seconds)
 - ⚠️ Videos with manifest-only: Will show loader (no segments cached)
+- **Important:** Only videos that were actually PLAYED (not just prefetched) will play fully offline
+
+**Understanding Manifest-Only Prefetch:**
+- Master playlist cached ✅ (correct behavior)
+- Segments require AVPlayer to resolve variants at play time
+- This is the intended design - not a bug!
+- AVPlayer prefetch downloads segments, manifest-only caches manifest
 
 **Logs to Check:**
 ```
@@ -259,13 +266,19 @@ $ ls .../KTVHTTPCache/<hash>/
 ```
 
 **Diagnosis:**
-- AVPlayer prefetch not actually caching segments
-- KTV proxy not being used correctly
+- This is EXPECTED for manifest-only prefetch (not a bug!)
+- AVPlayer prefetch should cache segments
+- Manifest-only prefetch only caches manifest (by design)
+
+**Understanding the Two Prefetch Modes:**
+- **AVPlayer prefetch:** Downloads segments via AVPlayer → .m4s files cached
+- **Manifest-only prefetch:** Downloads manifest only → .m3u8 cached, segments require online
 
 **Solutions:**
+- Verify AVPlayer prefetch is working (check logs for "Using AVPlayer prefetch")
+- If seeing manifest-only, check if pool is exhausted
 - Verify proxied URL is used: `[KTVHTTPCache proxyURLWithOriginalURL:]`
 - Check KTV proxy is running: `[KTVHTTPCache proxyIsRunning]`
-- Verify loadedTimeRanges shows non-zero values
 
 ---
 

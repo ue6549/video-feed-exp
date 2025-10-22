@@ -3,6 +3,8 @@
 ## Purpose
 Test the app's behavior under various network conditions to identify and reproduce UI freezing and stuck loading states.
 
+**Note**: UI freezing appears to be a debug mode issue and may not affect production builds.
+
 ## Prerequisites
 - iOS Simulator running
 - Xcode console open

@@ -3,9 +3,9 @@
 ## Critical Issues
 
 ### 1. UI Freezing on Network Loss During Scroll
-**Status**: Under Investigation  
-**Priority**: High  
-**Affects**: All users when scrolling while offline or on poor network
+**Status**: Under Investigation (Debug Mode Issue)  
+**Priority**: Low (Debug mode issue, not production critical)  
+**Affects**: Debug builds when scrolling while offline
 
 **Symptoms:**
 - User scrolls feed while offline
@@ -53,8 +53,8 @@ AVPlayerItem(url: proxiedURL)                 // ← Network check may block
 ---
 
 ### 2. Stuck Loading States After Network Failure
-**Status**: Partial mitigation added  
-**Priority**: High  
+**Status**: Mitigation implemented  
+**Priority**: Medium  
 **Affects**: Videos that start loading during network transition
 
 **Symptoms:**

@@ -368,6 +368,24 @@ class CacheManagerService {
     return await NativeCacheManager.cancelPrefetch(videoId);
   }
 
+  async setPrefetchConfig(bufferSeconds: number, timeoutSeconds: number): Promise<void> {
+    try {
+      await NativeCacheManager.setPrefetchConfig(bufferSeconds, timeoutSeconds);
+      logger.info('prefetch', `Config updated: buffer=${bufferSeconds}s, timeout=${timeoutSeconds}s`);
+    } catch (error) {
+      logger.error('prefetch', `Failed to update prefetch config: ${error}`);
+    }
+  }
+
+  async cancelAllPrefetches(): Promise<void> {
+    try {
+      await NativeCacheManager.cancelAllPrefetches();
+      logger.info('prefetch', 'Cancelled all active prefetches');
+    } catch (error) {
+      logger.error('prefetch', `Failed to cancel prefetches: ${error}`);
+    }
+  }
+
   async generateOfflineManifest(
     videoURL: string,
     cachedSegments: SegmentInfo[],
@@ -638,6 +656,8 @@ interface VideoCardProps extends ViewProps {
 - Manual play button for low-end devices
 - Integration with PlaybackManager
 - Debug HUD overlay (geekMode)
+- **Player attachment at 10% visibility** (earlier than before)
+- **Timing logs** for performance debugging
 
 **Video ID Format:**
 Video IDs use a structured format for clean logs:
@@ -797,50 +817,55 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
 ## Native Modules
 
 ### VideoPlayerPool.swift
-AVPlayer and AVPlayerLayer pooling for performance.
+AVPlayer and AVPlayerLayer pooling for performance with hard limits.
 
 ```swift
 class VideoPlayerPool {
-  private static let maxPlayers = 5
-  private static let maxLayers = 8
+  private static let maxPlayers = 3  // Hard limit (was 5)
   private static var availablePlayers: [AVPlayer] = []
-  private static var availableLayers: [AVPlayerLayer] = []
-  private static var usedPlayers: Set<AVPlayer> = []
-  private static var usedLayers: Set<AVPlayerLayer> = []
+  private static var activePlayers: Set<AVPlayer> = []
+  private static let queue = DispatchQueue(label: "VideoPlayerPool", attributes: .concurrent)
 
-  static func acquirePlayer() -> AVPlayer {
-    if let player = availablePlayers.popLast() {
-      usedPlayers.insert(player)
-      return player
+  // Try to acquire player, returns nil if pool exhausted
+  static func tryAcquirePlayer() -> AVPlayer? {
+    return queue.sync(flags: .barrier) {
+      if let availablePlayer = availablePlayers.popLast() {
+        availablePlayer.pause()
+        availablePlayer.replaceCurrentItem(with: nil)
+        activePlayers.insert(availablePlayer)
+        NSLog("[VideoPlayerPool] ✅ Acquired player from pool (active: %d)", activePlayers.count)
+        return availablePlayer
+      }
+      
+      let totalPlayers = availablePlayers.count + activePlayers.count
+      if totalPlayers < maxPlayers {
+        let newPlayer = createNewPlayer()
+        activePlayers.insert(newPlayer)
+        NSLog("[VideoPlayerPool] ➕ Created new player (active: %d/%d)", activePlayers.count, maxPlayers)
+        return newPlayer
+      }
+      
+      NSLog("[VideoPlayerPool] ⚠️ Pool exhausted (active: %d/%d)", activePlayers.count, maxPlayers)
+      return nil
     }
-    
-    let player = AVPlayer()
-    usedPlayers.insert(player)
-    return player
   }
 
   static func releasePlayer(_ player: AVPlayer) {
-    usedPlayers.remove(player)
-    player.pause()
-    player.replaceCurrentItem(with: nil)
-    availablePlayers.append(player)
-  }
-
-  static func acquireLayer() -> AVPlayerLayer {
-    if let layer = availableLayers.popLast() {
-      usedLayers.insert(layer)
-      return layer
+    queue.async(flags: .barrier) {
+      activePlayers.remove(player)
+      player.pause()
+      player.replaceCurrentItem(with: nil)
+      availablePlayers.append(player)
+      NSLog("[VideoPlayerPool] ✅ Player released (active: %d/%d)", activePlayers.count, maxPlayers)
     }
-    
-    let layer = AVPlayerLayer()
-    usedLayers.insert(layer)
-    return layer
   }
 
-  static func releaseLayer(_ layer: AVPlayerLayer) {
-    usedLayers.remove(layer)
-    layer.player = nil
-    availableLayers.append(layer)
+  // Update max players at runtime
+  static func setMaxPlayers(_ newMax: Int) {
+    queue.async(flags: .barrier) {
+      maxPlayers = newMax
+      NSLog("[VideoPlayerPool] 🔧 Max players updated: %d", maxPlayers)
+    }
   }
 }
 ```

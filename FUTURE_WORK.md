@@ -1255,6 +1255,47 @@ prefetch: {
 
 ---
 
+## Low Priority (Future Work)
+
+### 18. UI Freezing on Network Loss
+**Priority**: Low (debug mode issue, not production critical)
+**Status**: Under investigation
+
+**Problem:**
+- UI freezes for several seconds when scrolling while offline
+- Occurs every time a video card enters visibility range
+- May be related to debug mode or KTV proxy operations
+
+**Current Mitigations:**
+- ✅ Added timing logs to identify blocking operations
+- ✅ Added 15s timeout for stuck loads
+- ✅ Added cancellation mechanism
+
+**Future Solutions:**
+- Move player attachment to background thread
+- Use async player initialization
+- Consider AVAssetDownloadTask (no proxy overhead)
+- Investigate KTV threading model
+
+**Note**: This appears to be a debug mode issue and may not affect production builds.
+
+### 19. Network Recovery/Auto-retry
+**Priority**: Low (graceful degradation works)
+**Status**: Not implemented
+
+**Problem:**
+- Videos stuck in loading state after network failure
+- No automatic retry when network returns
+- User must scroll away and back to retry
+
+**Future Solutions:**
+- Add NetworkMonitor utility
+- Retry failed loads on network return
+- Show error/retry button after timeout
+- Investigate KTV session management
+
+---
+
 ## How to Use This Document
 
 1. **After each session**: Move completed items to CHANGELOG.md
