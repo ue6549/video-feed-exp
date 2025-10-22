@@ -8,7 +8,7 @@
 #import "CacheManager.h"
 #import <KTVHTTPCache/KTVHTTPCache.h>
 #import <AVFoundation/AVFoundation.h>
-#import "VideoFeedApp-Swift.h"  // Swift bridging header for VideoPlayerPool
+#import "VideoFeedApp-Swift.h"  // Swift bridging header for VideoPlayerPool and Security modules
 
 // Context for KVO observation
 static void *AVPlayerPrefetchContext = &AVPlayerPrefetchContext;
@@ -29,6 +29,9 @@ static void *AVPlayerPrefetchContext = &AVPlayerPrefetchContext;
 // Configurable settings
 @property (nonatomic, assign) double avplayerPrefetchBufferSeconds;
 @property (nonatomic, assign) double avplayerPrefetchTimeoutSeconds;
+
+// Security
+@property (nonatomic, strong) ProxySecurityManager *securityManager;
 @end
 
 @implementation CacheManager
@@ -83,6 +86,26 @@ RCT_EXPORT_METHOD(setupCache:(NSInteger)maxSizeMB
     }
 }
 
+RCT_EXPORT_METHOD(setupSecurity:(NSDictionary *)securityConfig
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSLog(@"[CacheManager] 🔒 Setting up security configuration");
+    
+    // Parse security configuration from React Native
+    SecurityConfig *config = [self parseSecurityConfig:securityConfig];
+    
+    // Initialize security manager
+    self.securityManager = [[ProxySecurityManager alloc] initWithConfig:config];
+    
+    NSLog(@"[CacheManager] ✅ Security manager initialized");
+    NSLog(@"[CacheManager] Security enabled: %@", config.enabled ? @"YES" : @"NO");
+    NSLog(@"[CacheManager] Allowed domains: %@", config.allowedDomains);
+    NSLog(@"[CacheManager] Deployment phase: %@", config.deploymentPhase.rawValue);
+    
+    resolve(@(YES));
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getCachedURL:(NSString *)originalURL)
 {
     NSLog(@"[CacheManager] 🔍 getCachedURL called for: %@", originalURL);
@@ -96,6 +119,23 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getCachedURL:(NSString *)originalURL)
     if (!url) {
         NSLog(@"[CacheManager] ⚠️ Invalid URL: %@", originalURL);
         return originalURL;
+    }
+    
+    // Security validation
+    if (self.securityManager) {
+        // Get authentication token
+        NSString *authToken = [self.securityManager getAuthToken];
+        NSDictionary *headers = @{@"X-Cache-Auth": authToken};
+        
+        // Validate request
+        ValidationResult result = [self.securityManager validateRequest:url headers:headers];
+        
+        if (result == ValidationResultBlocked) {
+            NSLog(@"[CacheManager] 🚫 Security violation - request blocked for: %@", originalURL);
+            return nil; // Block the request
+        }
+        
+        NSLog(@"[CacheManager] ✅ Security validation passed for: %@", originalURL);
     }
     
     NSURL *proxyURL = [KTVHTTPCache proxyURLWithOriginalURL:url];
@@ -554,6 +594,83 @@ RCT_EXPORT_METHOD(cancelAllPrefetches:(RCTPromiseResolveBlock)resolve
     
     NSLog(@"[CacheManager] ✅ Cancelled %lu active prefetches", (unsigned long)videoIds.count);
     resolve(@YES);
+}
+
+#pragma mark - Security Methods
+
+- (SecurityConfig *)parseSecurityConfig:(NSDictionary *)configDict {
+    // Parse configuration from React Native
+    BOOL enabled = [configDict[@"enabled"] boolValue];
+    NSArray *allowedDomains = configDict[@"allowedDomains"] ?: @[];
+    NSArray *allowedExtensions = configDict[@"allowedExtensions"] ?: @[];
+    NSInteger maxRequestsPerMinute = [configDict[@"maxRequestsPerMinute"] integerValue] ?: 600;
+    NSTimeInterval tokenRotationInterval = [configDict[@"tokenRotationInterval"] doubleValue] ?: 300;
+    BOOL enforceHTTPS = [configDict[@"enforceHTTPS"] boolValue];
+    NSInteger maxURLLength = [configDict[@"maxURLLength"] integerValue] ?: 2048;
+    BOOL logSecurityEvents = [configDict[@"logSecurityEvents"] boolValue];
+    
+    // Parse rate limit config
+    NSDictionary *rateLimitDict = configDict[@"rateLimitConfig"] ?: @{};
+    NSInteger capacity = [rateLimitDict[@"capacity"] integerValue] ?: 100;
+    double refillRate = [rateLimitDict[@"refillRate"] doubleValue] ?: 10.0;
+    RateLimitConfig *rateLimitConfig = [[RateLimitConfig alloc] initWithCapacity:capacity refillRate:refillRate];
+    
+    // Parse deployment phase
+    NSString *phaseString = configDict[@"deploymentPhase"] ?: @"monitoring";
+    DeploymentPhase deploymentPhase = DeploymentPhaseMonitoring;
+    if ([phaseString isEqualToString:@"soft"]) {
+        deploymentPhase = DeploymentPhaseSoft;
+    } else if ([phaseString isEqualToString:@"full"]) {
+        deploymentPhase = DeploymentPhaseFull;
+    }
+    
+    return [[SecurityConfig alloc] initWithEnabled:enabled
+                                    allowedDomains:allowedDomains
+                                 allowedExtensions:allowedExtensions
+                               maxRequestsPerMinute:maxRequestsPerMinute
+                              tokenRotationInterval:tokenRotationInterval
+                                      enforceHTTPS:enforceHTTPS
+                                      maxURLLength:maxURLLength
+                                 logSecurityEvents:logSecurityEvents
+                                   rateLimitConfig:rateLimitConfig
+                                  deploymentPhase:deploymentPhase];
+}
+
+RCT_EXPORT_METHOD(getSecurityStats:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (self.securityManager) {
+        NSDictionary *stats = [self.securityManager getSecurityStats];
+        resolve(stats);
+    } else {
+        resolve(@{@"error": @"Security manager not initialized"});
+    }
+}
+
+RCT_EXPORT_METHOD(updateSecurityConfig:(NSDictionary *)securityConfig
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (self.securityManager) {
+        SecurityConfig *config = [self parseSecurityConfig:securityConfig];
+        [self.securityManager updateConfig:config];
+        NSLog(@"[CacheManager] 🔒 Security configuration updated");
+        resolve(@(YES));
+    } else {
+        reject(@"SECURITY_ERROR", @"Security manager not initialized", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(clearSecurityData:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (self.securityManager) {
+        [self.securityManager clearSecurityData];
+        NSLog(@"[CacheManager] 🧹 Security data cleared");
+        resolve(@(YES));
+    } else {
+        reject(@"SECURITY_ERROR", @"Security manager not initialized", nil);
+    }
 }
 
 @end

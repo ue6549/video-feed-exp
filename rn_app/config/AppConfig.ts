@@ -79,7 +79,23 @@ export interface AppConfigType {
       prefetch: boolean;
       video: boolean;
       metrics: boolean;
+      security: boolean;
     };
+  };
+  proxySecurity: {
+    enabled: boolean;
+    allowedDomains: string[];
+    allowedExtensions: string[];
+    maxRequestsPerMinute: number;
+    tokenRotationInterval: number;
+    enforceHTTPS: boolean;
+    maxURLLength: number;
+    logSecurityEvents: boolean;
+    rateLimitConfig: {
+      capacity: number;
+      refillRate: number;
+    };
+    deploymentPhase: 'monitoring' | 'soft' | 'full';
   };
 }
 
@@ -156,7 +172,26 @@ export class AppConfig {
         prefetch: true,
         video: true,
         metrics: false,
+        security: true,
       },
+    },
+    proxySecurity: {
+      enabled: true,
+      allowedDomains: [
+        '2gud-live-cdn.akamaized.net',
+        'cdn.example.com'
+      ],
+      allowedExtensions: ['.m3u8', '.ts', '.m4s', '.mp4'],
+      maxRequestsPerMinute: 600,
+      tokenRotationInterval: 300, // 5 minutes
+      enforceHTTPS: true,
+      maxURLLength: 2048,
+      logSecurityEvents: true,
+      rateLimitConfig: {
+        capacity: 100,
+        refillRate: 10
+      },
+      deploymentPhase: 'monitoring' as const
     },
   };
 
@@ -316,7 +351,26 @@ export class AppConfig {
           prefetch: true,
           video: true,
           metrics: false,
+          security: true,
         },
+      },
+      proxySecurity: {
+        enabled: true,
+        allowedDomains: [
+          '2gud-live-cdn.akamaized.net',
+          'cdn.example.com'
+        ],
+        allowedExtensions: ['.m3u8', '.ts', '.m4s', '.mp4'],
+        maxRequestsPerMinute: 600,
+        tokenRotationInterval: 300,
+        enforceHTTPS: true,
+        maxURLLength: 2048,
+        logSecurityEvents: true,
+        rateLimitConfig: {
+          capacity: 100,
+          refillRate: 10
+        },
+        deploymentPhase: 'monitoring' as const
       },
     };
 

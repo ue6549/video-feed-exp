@@ -38,12 +38,17 @@ const App = () => {
           AppConfig.config.playerPool.avplayerPrefetchTimeoutSeconds,
         );
 
+        // Setup security configuration
+        await CacheManager.setupSecurity(AppConfig.config.proxySecurity);
+
         console.log('[App] ✅ Native config initialized:', {
           maxPlayers: AppConfig.config.playerPool.maxPlayers,
           bufferSeconds:
             AppConfig.config.playerPool.avplayerPrefetchBufferSeconds,
           timeoutSeconds:
             AppConfig.config.playerPool.avplayerPrefetchTimeoutSeconds,
+          securityEnabled: AppConfig.config.proxySecurity.enabled,
+          allowedDomains: AppConfig.config.proxySecurity.allowedDomains.length,
         });
       } catch (error) {
         console.error('[App] ❌ Failed to initialize native config:', error);
