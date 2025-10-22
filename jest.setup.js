@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // Extend Jest with React Native Testing Library matchers
 import '@testing-library/react-native/extend-expect';
 
@@ -20,6 +21,10 @@ jest.mock('./rn_app/services/CacheManager', () => ({
   ),
   getTotalCacheSize: jest.fn(() => Promise.resolve(0)),
   clearCache: jest.fn(() => Promise.resolve()),
+  setupSecurity: jest.fn(() => Promise.resolve()),
+  getSecurityStats: jest.fn(() => Promise.resolve({enabled: true})),
+  updateSecurityConfig: jest.fn(() => Promise.resolve()),
+  clearSecurityData: jest.fn(() => Promise.resolve()),
 }));
 
 // Mock FastImage

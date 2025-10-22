@@ -100,12 +100,10 @@ function transformArrayToFeed(originalArray: any[]): IFeedItem[] {
           .toString(16)
           .padStart(6, '0')}`,
         id: `carousel-${i}`,
-        data: originalArray
-          .slice(i, i + 6)
-          .map(item => ({
-            videoSource: item.video_source,
-            thumbail: item.thumbail,
-          })),
+        data: originalArray.slice(i, i + 6).map(item => ({
+          videoSource: item.video_source,
+          thumbail: item.thumbail,
+        })),
       };
       newArray.push(feedItem);
       i += 6; // Move index forward by 6 for the next iteration
@@ -373,8 +371,16 @@ function VideoFeed(): JSX.Element {
           const widgetIndex = feedItem.widgetIndex ?? 0;
           const videoId = generateVideoId(widgetIndex, videoIndex);
 
-                    return (
-                        <View style={{ width, height: CAROUSEL_HEIGHT - 20, margin: 10, backgroundColor: '#000', borderRadius: 8, overflow: 'hidden' }}>
+          return (
+            <View
+              style={{
+                width,
+                height: CAROUSEL_HEIGHT - 20,
+                margin: 10,
+                backgroundColor: '#000',
+                borderRadius: 8,
+                overflow: 'hidden',
+              }}>
               <VideoCard
                 item={{
                   id: videoId,

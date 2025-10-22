@@ -398,6 +398,58 @@ class CacheManagerService {
       logger.error('prefetch', `Failed to cancel prefetches: ${error}`);
     }
   }
+
+  /**
+   * Setup security configuration
+   */
+  async setupSecurity(securityConfig: any): Promise<void> {
+    try {
+      await NativeCacheManager.setupSecurity(securityConfig);
+      logger.info('security', 'Security configuration applied');
+    } catch (error) {
+      logger.error('security', `Failed to setup security: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get security statistics
+   */
+  async getSecurityStats(): Promise<any> {
+    try {
+      const stats = await NativeCacheManager.getSecurityStats();
+      return stats;
+    } catch (error) {
+      logger.error('security', `Failed to get security stats: ${error}`);
+      return {error: 'Security manager not initialized'};
+    }
+  }
+
+  /**
+   * Update security configuration
+   */
+  async updateSecurityConfig(securityConfig: any): Promise<void> {
+    try {
+      await NativeCacheManager.updateSecurityConfig(securityConfig);
+      logger.info('security', 'Security configuration updated');
+    } catch (error) {
+      logger.error('security', `Failed to update security config: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Clear security data
+   */
+  async clearSecurityData(): Promise<void> {
+    try {
+      await NativeCacheManager.clearSecurityData();
+      logger.info('security', 'Security data cleared');
+    } catch (error) {
+      logger.error('security', `Failed to clear security data: ${error}`);
+      throw error;
+    }
+  }
 }
 
 export default new CacheManagerService();

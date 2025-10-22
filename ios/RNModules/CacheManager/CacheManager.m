@@ -8,7 +8,9 @@
 #import "CacheManager.h"
 #import <KTVHTTPCache/KTVHTTPCache.h>
 #import <AVFoundation/AVFoundation.h>
-#import "VideoFeedApp-Swift.h"  // Swift bridging header for VideoPlayerPool
+#import "VideoFeedApp-Swift.h"  // Swift bridging header for VideoPlayerPool and Security modules
+
+// Security forward declarations temporarily removed
 
 // Context for KVO observation
 static void *AVPlayerPrefetchContext = &AVPlayerPrefetchContext;
@@ -29,6 +31,8 @@ static void *AVPlayerPrefetchContext = &AVPlayerPrefetchContext;
 // Configurable settings
 @property (nonatomic, assign) double avplayerPrefetchBufferSeconds;
 @property (nonatomic, assign) double avplayerPrefetchTimeoutSeconds;
+
+// Security property temporarily removed
 @end
 
 @implementation CacheManager
@@ -83,6 +87,25 @@ RCT_EXPORT_METHOD(setupCache:(NSInteger)maxSizeMB
     }
 }
 
+RCT_EXPORT_METHOD(setupSecurity:(NSDictionary *)securityConfig
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSLog(@"[CacheManager] 🔒 Setting up security configuration (temporarily disabled)");
+    
+    // TODO: Implement security features
+    // For now, just log the configuration and resolve successfully
+    BOOL enabled = [securityConfig[@"enabled"] boolValue];
+    NSArray *allowedDomains = securityConfig[@"allowedDomains"];
+    NSString *deploymentPhase = securityConfig[@"deploymentPhase"];
+    
+    NSLog(@"[CacheManager] Security enabled: %@", enabled ? @"YES" : @"NO");
+    NSLog(@"[CacheManager] Allowed domains: %@", allowedDomains);
+    NSLog(@"[CacheManager] Deployment phase: %@", deploymentPhase);
+    
+    resolve(@(YES));
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getCachedURL:(NSString *)originalURL)
 {
     NSLog(@"[CacheManager] 🔍 getCachedURL called for: %@", originalURL);
@@ -97,6 +120,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getCachedURL:(NSString *)originalURL)
         NSLog(@"[CacheManager] ⚠️ Invalid URL: %@", originalURL);
         return originalURL;
     }
+    
+    // Security validation (temporarily disabled)
+    // TODO: Implement security features
     
     NSURL *proxyURL = [KTVHTTPCache proxyURLWithOriginalURL:url];
     NSString *result = proxyURL ? [proxyURL absoluteString] : originalURL;
@@ -554,6 +580,34 @@ RCT_EXPORT_METHOD(cancelAllPrefetches:(RCTPromiseResolveBlock)resolve
     
     NSLog(@"[CacheManager] ✅ Cancelled %lu active prefetches", (unsigned long)videoIds.count);
     resolve(@YES);
+}
+
+#pragma mark - Security Methods
+
+// Security helper methods temporarily removed
+
+RCT_EXPORT_METHOD(getSecurityStats:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    // TODO: Implement security features
+    resolve(@{@"error": @"Security features temporarily disabled"});
+}
+
+RCT_EXPORT_METHOD(updateSecurityConfig:(NSDictionary *)securityConfig
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    // TODO: Implement security features
+    NSLog(@"[CacheManager] 🔒 Security configuration update (temporarily disabled)");
+    resolve(@(YES));
+}
+
+RCT_EXPORT_METHOD(clearSecurityData:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    // TODO: Implement security features
+    NSLog(@"[CacheManager] 🧹 Security data clear (temporarily disabled)");
+    resolve(@(YES));
 }
 
 @end

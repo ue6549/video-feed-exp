@@ -35,7 +35,9 @@ export abstract class PrefetchController {
     videos: PrefetchVideo[],
     basePriority: number,
   ): void {
-    if (videos.length === 0) {return;}
+    if (videos.length === 0) {
+      return;
+    }
 
     const finalPriority = this.parentPriority + basePriority;
 

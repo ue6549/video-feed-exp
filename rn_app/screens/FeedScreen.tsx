@@ -54,7 +54,9 @@ const createLayoutProvider = (data: IFeedItem[]) => {
     index => data[index]?.widgetType || 'short',
     (type, dim, index) => {
       const item = data[index];
-      if (!item) {return;}
+      if (!item) {
+        return;
+      }
 
       if (item.widgetType === 'carousel') {
         dim.width = Math.min(
@@ -143,7 +145,9 @@ const FeedScreen: React.FC = () => {
   };
 
   const loadMoreData = async () => {
-    if (isLoadingMore || !hasMorePages) {return;}
+    if (isLoadingMore || !hasMorePages) {
+      return;
+    }
 
     setIsLoadingMore(true);
     try {
@@ -377,10 +381,12 @@ const FeedScreen: React.FC = () => {
   };
 
   const getVisibleCards = (screenWidth: number): number => {
-    if (screenWidth < 768)
-      {return AppConfig.config.widgets.carousel.cardsVisible.small;}
-    if (screenWidth < 1024)
-      {return AppConfig.config.widgets.carousel.cardsVisible.medium;}
+    if (screenWidth < 768) {
+      return AppConfig.config.widgets.carousel.cardsVisible.small;
+    }
+    if (screenWidth < 1024) {
+      return AppConfig.config.widgets.carousel.cardsVisible.medium;
+    }
     return AppConfig.config.widgets.carousel.cardsVisible.large;
   };
 

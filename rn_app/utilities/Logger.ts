@@ -1,7 +1,13 @@
 import {AppConfig} from '../config/AppConfig';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
-type LogModule = 'visibility' | 'playback' | 'prefetch' | 'video' | 'metrics';
+type LogModule =
+  | 'visibility'
+  | 'playback'
+  | 'prefetch'
+  | 'video'
+  | 'metrics'
+  | 'security';
 
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   debug: 0,
