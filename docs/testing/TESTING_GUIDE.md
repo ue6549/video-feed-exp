@@ -46,11 +46,35 @@ npx react-native run-ios --simulator="iPhone 16"
 - Video loads and starts playing automatically when 50% visible
 - Smooth transition from thumbnail to video
 - No flickering or janks
+- **Audio is muted by default** (new bug fix)
 
 **Pass Criteria:**
 - Video plays within 3 seconds of becoming visible
-- Audio plays (if not muted)
+- **Audio is muted by default** (no unexpected audio)
 - No error messages
+
+---
+
+### Test 1.5: Bug Fixes Verification
+**Objective:** Verify recent bug fixes for audio muting, black cards, and performance
+
+**Steps:**
+1. Launch app and scroll through feed
+2. Let videos play to completion
+3. Trigger video errors (disable network temporarily)
+4. Scroll rapidly during video transitions
+
+**Expected:**
+- **Audio Muting Fix:** All videos start muted by default
+- **Black Cards Fix:** Videos show thumbnail after completion/error (not black)
+- **Performance Fix:** Smooth scrolling with no frame drops during transitions
+- **Pool Optimization:** No main thread blocking during rapid scrolling
+
+**Pass Criteria:**
+- No unexpected audio playback
+- No black blank cards after video end/error
+- Smooth 60fps scrolling during video transitions
+- No UI freezes during rapid scrolling
 
 ---
 

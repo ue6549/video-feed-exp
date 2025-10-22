@@ -31,7 +31,11 @@ class VideoPlayerView: UIView {
   
   @objc var muted: Bool = true {
     didSet {
-      player?.isMuted = muted
+      // Always ensure player is muted by default, only unmute if explicitly set to false
+      player?.isMuted = true  // Default to muted for safety
+      if !muted {
+        player?.isMuted = false  // Only unmute if explicitly requested
+      }
     }
   }
   
@@ -139,6 +143,9 @@ class VideoPlayerView: UIView {
     // Create player item with PROXIED URL
     playerItem = AVPlayerItem(url: url)
     player?.replaceCurrentItem(with: playerItem)
+    
+    // Ensure player is muted by default (safety measure)
+    player?.isMuted = true
     
     // Add observers
     addPlayerObservers()

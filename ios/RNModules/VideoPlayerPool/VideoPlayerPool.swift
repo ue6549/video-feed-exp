@@ -111,11 +111,13 @@ class VideoPlayerPool: NSObject {
         player = createNewPlayer()
       }
       
-      // Reset player state
+      // Add to active set synchronously (this is safe since we're on the queue)
+      activePlayers.insert(player)
+      
+      // Reset player state synchronously to avoid race conditions
       player.pause()
       player.replaceCurrentItem(with: nil)
       
-      activePlayers.insert(player)
       return player
     }
   }
@@ -124,12 +126,14 @@ class VideoPlayerPool: NSObject {
     return queue.sync(flags: .barrier) {
       // Check if we have available player
       if let availablePlayer = availablePlayers.popLast() {
-        // Reset player state
+        // Add to active set synchronously (this is safe since we're on the queue)
+        activePlayers.insert(availablePlayer)
+        NSLog("[VideoPlayerPool] ✅ Acquired player from pool (active: %d)", activePlayers.count)
+        
+        // Reset player state synchronously to avoid race conditions
         availablePlayer.pause()
         availablePlayer.replaceCurrentItem(with: nil)
         
-        activePlayers.insert(availablePlayer)
-        NSLog("[VideoPlayerPool] ✅ Acquired player from pool (active: %d)", activePlayers.count)
         return availablePlayer
       }
       
@@ -150,12 +154,12 @@ class VideoPlayerPool: NSObject {
   
   private func releasePlayerInternal(_ player: AVPlayer) {
     queue.async(flags: .barrier) {
-      // Clean up player
+      // Remove from active set first
+      self.activePlayers.remove(player)
+      
+      // Clean up player synchronously (safe since we're on the queue)
       player.pause()
       player.replaceCurrentItem(with: nil)
-      
-      // Remove from active set
-      self.activePlayers.remove(player)
       
       // Return to available pool if not at capacity
       if self.availablePlayers.count < self.maxPlayers {
@@ -174,22 +178,24 @@ class VideoPlayerPool: NSObject {
         layer = createNewLayer()
       }
       
-      // Reset layer state
+      // Add to active set synchronously (this is safe since we're on the queue)
+      activeLayers.insert(layer)
+      
+      // Reset layer state synchronously to avoid race conditions
       layer.player = nil
       
-      activeLayers.insert(layer)
       return layer
     }
   }
   
   private func releaseLayerInternal(_ layer: AVPlayerLayer) {
     queue.async(flags: .barrier) {
-      // Clean up layer
+      // Remove from active set first
+      self.activeLayers.remove(layer)
+      
+      // Clean up layer synchronously (safe since we're on the queue)
       layer.player = nil
       layer.removeFromSuperlayer()
-      
-      // Remove from active set
-      self.activeLayers.remove(layer)
       
       // Return to available pool if not at capacity
       if self.availableLayers.count < self.maxLayers {

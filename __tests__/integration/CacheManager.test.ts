@@ -55,12 +55,14 @@ describe('CacheManager Integration', () => {
       deploymentPhase: 'monitoring',
     };
 
-    await expect(CacheManager.setupSecurity(securityConfig)).resolves.not.toThrow();
+    await expect(
+      CacheManager.setupSecurity(securityConfig),
+    ).resolves.not.toThrow();
   });
 
   it('should get security statistics', async () => {
     const stats = await CacheManager.getSecurityStats();
-    
+
     expect(stats).toBeDefined();
     expect(typeof stats).toBe('object');
   });
@@ -82,7 +84,9 @@ describe('CacheManager Integration', () => {
       deploymentPhase: 'soft',
     };
 
-    await expect(CacheManager.updateSecurityConfig(newConfig)).resolves.not.toThrow();
+    await expect(
+      CacheManager.updateSecurityConfig(newConfig),
+    ).resolves.not.toThrow();
   });
 
   it('should clear security data', async () => {
@@ -107,6 +111,8 @@ describe('CacheManager Integration', () => {
     };
 
     // Should handle invalid config gracefully
-    await expect(CacheManager.setupSecurity(invalidConfig)).resolves.not.toThrow();
+    await expect(
+      CacheManager.setupSecurity(invalidConfig),
+    ).resolves.not.toThrow();
   });
 });

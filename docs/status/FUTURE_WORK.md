@@ -4,7 +4,46 @@
 
 ## High Priority (Next Session)
 
-### 1. AppConfig Testing & Verification
+### 1. Playback Rules Enforcement Issues
+**Priority**: High (core functionality broken)
+**Status**: Not implemented
+
+**Problem**:
+- Playback rules are not being honored consistently
+- Multiple videos can play simultaneously (carousel + short video)
+- Only one widget should be active at a time
+- Other widgets must pause when a new one becomes active
+
+**Expected Behavior**:
+- Only one video should play at a time across all widgets
+- When a new video starts, all others should pause
+- Carousel and short video widgets should respect this rule
+
+**Investigation Needed**:
+- Check PlaybackManager logic for widget-level coordination
+- Verify visibility state transitions between different widget types
+- Ensure proper pause/play coordination across widgets
+
+### 2. Video End State Handling
+**Priority**: High (visual bug)
+**Status**: Not implemented
+
+**Problem**:
+- Videos show black blank cards when they finish playing completely
+- Should show thumbnail instead of black screen
+- Affects user experience and visual consistency
+
+**Expected Behavior**:
+- When video ends, should return to thumbnail state
+- No black blank cards should be visible
+- Smooth transition from video back to thumbnail
+
+**Investigation Needed**:
+- Check VideoCard onEnd handler
+- Verify thumbnail opacity reset logic
+- Ensure proper state cleanup on video completion
+
+### 3. AppConfig Testing & Verification
 **Priority**: High (ensure settings work correctly)
 **Status**: Not implemented
 
