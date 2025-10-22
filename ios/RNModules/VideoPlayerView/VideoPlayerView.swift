@@ -94,8 +94,8 @@ class VideoPlayerView: UIView {
       if let proxiedURL = KTVHTTPCache.proxyURL(withOriginalURL: originalURL) {
         let proxyEnd = CFAbsoluteTimeGetCurrent()
         finalURL = proxiedURL
-        NSLog("[VideoPlayerView] ✅ Proxied URL: %@ (took %.0fms)", 
-              proxiedURL.absoluteString, (proxyEnd - proxyStart) * 1000)
+        // NSLog("[VideoPlayerView] ✅ Proxied URL: %@ (took %.0fms)", 
+        //       proxiedURL.absoluteString, (proxyEnd - proxyStart) * 1000)
         
         // Check cache status
         if let cachedURL = KTVHTTPCache.cacheCompleteFileURL(with: originalURL) {
@@ -116,8 +116,8 @@ class VideoPlayerView: UIView {
       return
     }
     
-    let setupEnd = CFAbsoluteTimeGetCurrent()
-    NSLog("[VideoPlayerView] ⏱️ setupPlayer() completed in %.0fms", (setupEnd - setupStart) * 1000)
+    // let setupEnd = CFAbsoluteTimeGetCurrent()
+    // NSLog("[VideoPlayerView] ⏱️ setupPlayer() completed in %.0fms", (setupEnd - setupStart) * 1000)
     
     setupPlayerWithURL(finalURL)
   }

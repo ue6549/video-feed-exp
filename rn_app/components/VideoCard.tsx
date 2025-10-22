@@ -306,20 +306,20 @@ const VideoCard: React.FC<VideoCardProps> = ({
         newState === MediaCardVisibility.released;
 
       if (shouldHavePlayer && !isPlayerAttached) {
-        const attachStart = performance.now();
+        // const attachStart = performance.now();
         logger.info(
           'video',
           `[${item.id}] 🔌 Attaching player BEFORE state emission`,
         );
         beginAttempt();
         setIsPlayerAttached(true);
-        const attachEnd = performance.now();
-        logger.info(
-          'video',
-          `[${item.id}] ⏱️ Player attachment took ${(
-            attachEnd - attachStart
-          ).toFixed(2)}ms`,
-        );
+        // const attachEnd = performance.now();
+        // logger.info(
+        //   'video',
+        //   `[${item.id}] ⏱️ Player attachment took ${(
+        //     attachEnd - attachStart
+        //   ).toFixed(2)}ms`,
+        // );
         setPendingVisibilityState(newState); // Queue the state change for useLayoutEffect
         return; // Exit early
       } else if (shouldNotHavePlayer && isPlayerAttached) {

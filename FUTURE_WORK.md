@@ -1,5 +1,7 @@
 # VideoFeedApp - Future Work & Backlog
 
+**Note**: Completed items have been moved to `docs/changelog/CHANGELOG.md`
+
 ## High Priority (Next Session)
 
 ### 1. AppConfig Testing & Verification
