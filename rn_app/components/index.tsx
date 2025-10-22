@@ -1,3 +1,3 @@
-import { VisibilityTrackingView } from "./native_components/VisibilityTrackingView";
+import {VisibilityTrackingView} from './native_components/VisibilityTrackingView';
 
-export { VisibilityTrackingView };
+export {VisibilityTrackingView};

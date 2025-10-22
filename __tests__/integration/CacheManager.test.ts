@@ -37,4 +37,3 @@ describe('CacheManager Integration', () => {
     expect(CacheManager.getCacheStatus).toHaveBeenCalledWith(testUrl);
   });
 });
-

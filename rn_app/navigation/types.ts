@@ -20,4 +20,3 @@ export const SCREEN_NAMES = {
   FEED: 'FeedScreen',
   SETTINGS: 'Settings',
 } as const;
-

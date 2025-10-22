@@ -53,7 +53,8 @@ export interface VideoState {
 
 // Prefetch related types
 export interface PrefetchRequest {
-  videoUrl: string;
+  videoId: string; // Clean ID for logging (vid-X-Y)
+  videoUrl: string; // Actual URL to prefetch
   videoType: 'VOD' | 'LIVE';
   priority: number;
   segmentCount: number;
@@ -143,4 +144,3 @@ export interface VideoError {
   timestamp: number;
   context?: any;
 }
-

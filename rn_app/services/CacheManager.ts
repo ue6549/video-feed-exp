@@ -1,9 +1,9 @@
-import { NativeModules } from 'react-native';
-import { AppConfig } from '../config/AppConfig';
-import { SegmentInfo } from '../types';
-import { logger } from '../utilities/Logger';
+import {NativeModules} from 'react-native';
+import {AppConfig} from '../config/AppConfig';
+import {SegmentInfo} from '../types';
+import {logger} from '../utilities/Logger';
 
-const { CacheManager: NativeCacheManager } = NativeModules;
+const {CacheManager: NativeCacheManager} = NativeModules;
 
 export interface CacheStats {
   totalLength: number;
@@ -102,10 +102,13 @@ class CacheManagerService {
    */
   async updateManifestTemplate(
     templateId: string,
-    templateContent: string
+    templateContent: string,
   ): Promise<void> {
     try {
-      await NativeCacheManager.updateManifestTemplate(templateId, templateContent);
+      await NativeCacheManager.updateManifestTemplate(
+        templateId,
+        templateContent,
+      );
     } catch (error) {
       console.error('CacheManager: Failed to update manifest template:', error);
       throw error;
@@ -130,7 +133,7 @@ class CacheManagerService {
   async generateOfflineManifest(
     videoURL: string,
     cachedSegments: SegmentInfo[],
-    templateId?: string
+    templateId?: string,
   ): Promise<string> {
     try {
       const segments = cachedSegments.map(segment => ({
@@ -142,10 +145,13 @@ class CacheManagerService {
       return await NativeCacheManager.generateOfflineManifest(
         videoURL,
         segments,
-        templateId || AppConfig.config.cache.manifestTemplateId
+        templateId || AppConfig.config.cache.manifestTemplateId,
       );
     } catch (error) {
-      console.error('CacheManager: Failed to generate offline manifest:', error);
+      console.error(
+        'CacheManager: Failed to generate offline manifest:',
+        error,
+      );
       throw error;
     }
   }
@@ -188,7 +194,10 @@ class CacheManagerService {
     try {
       return await NativeCacheManager.isVideoFullyCached(videoURL);
     } catch (error) {
-      console.error('CacheManager: Failed to check if video is fully cached:', error);
+      console.error(
+        'CacheManager: Failed to check if video is fully cached:',
+        error,
+      );
       return false;
     }
   }
@@ -199,9 +208,11 @@ class CacheManagerService {
   async getCacheUtilization(): Promise<number> {
     const stats = await this.getCacheStats();
     const maxSizeMB = AppConfig.config.cache.maxSizeMB;
-    
-    if (maxSizeMB === 0) return 0;
-    
+
+    if (maxSizeMB === 0) {
+      return 0;
+    }
+
     return Math.min((stats.totalSizeMB / maxSizeMB) * 100, 100);
   }
 
@@ -219,7 +230,7 @@ class CacheManagerService {
   async logCacheStats(): Promise<void> {
     const stats = await this.getCacheStats();
     const utilization = await this.getCacheUtilization();
-    
+
     console.log('CacheManager Stats:', {
       ...stats,
       utilization: `${utilization.toFixed(1)}%`,
@@ -243,11 +254,16 @@ class CacheManagerService {
   async getCacheStatus(url: string): Promise<CacheStatusResult> {
     try {
       const status = await NativeCacheManager.getCacheStatus(url);
-      logger.debug('prefetch', `Cache status for ${url}: ${status.isCached ? 'HIT' : 'MISS'} (${status.cachedBytes} bytes)`);
+      logger.debug(
+        'prefetch',
+        `Cache status for ${url}: ${status.isCached ? 'HIT' : 'MISS'} (${
+          status.cachedBytes
+        } bytes)`,
+      );
       return status;
     } catch (error) {
       logger.error('prefetch', `Failed to get cache status: ${error}`);
-      return { isCached: false, cachedBytes: 0 };
+      return {isCached: false, cachedBytes: 0};
     }
   }
 
@@ -275,7 +291,113 @@ class CacheManagerService {
       throw error;
     }
   }
+  /**
+   * Prefetch video through KTVHTTPCache
+   * @param videoId Clean video ID for tracking
+   * @param videoUrl Video manifest URL
+   * @param segmentCount Number of segments to prefetch (hint, KTV may cache more)
+   */
+  async prefetchVideo(
+    videoId: string,
+    videoUrl: string,
+    segmentCount: number,
+  ): Promise<boolean> {
+    try {
+      logger.debug(
+        'prefetch',
+        `Prefetch request: ${videoId} (${segmentCount} segments)`,
+      );
+      const result = await NativeCacheManager.prefetchVideo(
+        videoId,
+        videoUrl,
+        segmentCount,
+      );
+      return result;
+    } catch (error) {
+      logger.error('prefetch', `Prefetch failed for ${videoId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel ongoing prefetch
+   */
+  async cancelPrefetch(videoId: string): Promise<boolean> {
+    try {
+      const result = await NativeCacheManager.cancelPrefetch(videoId);
+      logger.debug('prefetch', `Cancelled prefetch: ${videoId}`);
+      return result;
+    } catch (error) {
+      logger.error(
+        'prefetch',
+        `Failed to cancel prefetch ${videoId}: ${error}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get prefetch statistics for a specific video
+   */
+  async getPrefetchStats(
+    videoId: string,
+  ): Promise<{segmentCount: number; totalBytes: number}> {
+    try {
+      const stats = await NativeCacheManager.getPrefetchStats(videoId);
+      return stats;
+    } catch (error) {
+      logger.error(
+        'prefetch',
+        `Failed to get prefetch stats for ${videoId}: ${error}`,
+      );
+      return {segmentCount: 0, totalBytes: 0};
+    }
+  }
+
+  /**
+   * Get prefetch statistics for all videos
+   */
+  async getAllPrefetchStats(): Promise<
+    Record<string, {segmentCount: number; totalBytes: number}>
+  > {
+    try {
+      const stats = await NativeCacheManager.getAllPrefetchStats();
+      return stats;
+    } catch (error) {
+      logger.error('prefetch', `Failed to get all prefetch stats: ${error}`);
+      return {};
+    }
+  }
+
+  /**
+   * Update prefetch configuration
+   */
+  async setPrefetchConfig(
+    bufferSeconds: number,
+    timeoutSeconds: number,
+  ): Promise<void> {
+    try {
+      await NativeCacheManager.setPrefetchConfig(bufferSeconds, timeoutSeconds);
+      logger.info(
+        'prefetch',
+        `Config updated: buffer=${bufferSeconds}s, timeout=${timeoutSeconds}s`,
+      );
+    } catch (error) {
+      logger.error('prefetch', `Failed to update prefetch config: ${error}`);
+    }
+  }
+
+  /**
+   * Cancel all active prefetches (e.g., on network loss)
+   */
+  async cancelAllPrefetches(): Promise<void> {
+    try {
+      await NativeCacheManager.cancelAllPrefetches();
+      logger.info('prefetch', 'Cancelled all active prefetches');
+    } catch (error) {
+      logger.error('prefetch', `Failed to cancel prefetches: ${error}`);
+    }
+  }
 }
 
 export default new CacheManagerService();
-

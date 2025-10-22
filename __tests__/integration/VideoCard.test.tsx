@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import {render, waitFor} from '@testing-library/react-native';
 import VideoCard from '../../rn_app/components/VideoCard';
-import { MediaCardVisibility } from '../../rn_app/platback_manager/MediaCardVisibility';
+import {MediaCardVisibility} from '../../rn_app/platback_manager/MediaCardVisibility';
 
 const mockItem = {
   id: 'test-video-1',
@@ -28,7 +28,7 @@ describe('VideoCard Integration', () => {
         item={mockItem}
         handleVisibilityChange={mockHandleVisibilityChange}
         geekMode={false}
-      />
+      />,
     );
 
     // Should render successfully
@@ -43,7 +43,7 @@ describe('VideoCard Integration', () => {
           item={mockItem}
           handleVisibilityChange={mockHandleVisibilityChange}
           geekMode={false}
-        />
+        />,
       );
     }).not.toThrow();
   });
@@ -54,7 +54,7 @@ describe('VideoCard Integration', () => {
         item={mockItem}
         handleVisibilityChange={mockHandleVisibilityChange}
         geekMode={false}
-      />
+      />,
     );
 
     // VideoCard registers itself with PlaybackManager on mount
@@ -63,4 +63,3 @@ describe('VideoCard Integration', () => {
     expect(mockHandleVisibilityChange).toHaveBeenCalledTimes(0); // Native visibility not triggered in test
   });
 });
-

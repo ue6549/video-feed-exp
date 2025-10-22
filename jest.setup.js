@@ -7,15 +7,17 @@ jest.mock('./rn_app/components/VideoPlayerView', () => {
   return {
     __esModule: true,
     default: React.forwardRef((props, ref) => {
-      const { View } = require('react-native');
-      return React.createElement(View, { testID: 'VideoPlayerView', ...props });
+      const {View} = require('react-native');
+      return React.createElement(View, {testID: 'VideoPlayerView', ...props});
     }),
   };
 });
 
 jest.mock('./rn_app/services/CacheManager', () => ({
   setupCache: jest.fn(() => Promise.resolve()),
-  getCacheStatus: jest.fn(() => Promise.resolve({ isCached: false, cachedBytes: 0 })),
+  getCacheStatus: jest.fn(() =>
+    Promise.resolve({isCached: false, cachedBytes: 0}),
+  ),
   getTotalCacheSize: jest.fn(() => Promise.resolve(0)),
   clearCache: jest.fn(() => Promise.resolve()),
 }));
@@ -23,22 +25,24 @@ jest.mock('./rn_app/services/CacheManager', () => ({
 // Mock FastImage
 jest.mock('@d11/react-native-fast-image', () => {
   const React = require('react');
-  const { Image } = require('react-native');
-  
-  const FastImageComponent = React.forwardRef((props, ref) => React.createElement(Image, props));
-  
+  const {Image} = require('react-native');
+
+  const FastImageComponent = React.forwardRef((props, ref) =>
+    React.createElement(Image, props),
+  );
+
   FastImageComponent.priority = {
     low: 'low',
     normal: 'normal',
     high: 'high',
   };
-  
+
   FastImageComponent.cacheControl = {
     immutable: 'immutable',
     web: 'web',
     cacheOnly: 'cacheOnly',
   };
-  
+
   return {
     __esModule: true,
     default: FastImageComponent,
@@ -95,9 +99,11 @@ jest.mock('react-native-fs', () => ({
 // Mock RecyclerListView
 jest.mock('recyclerlistview', () => {
   const React = require('react');
-  const { View } = require('react-native');
+  const {View} = require('react-native');
   return {
-    RecyclerListView: React.forwardRef((props, ref) => React.createElement(View, { testID: 'RecyclerListView' })),
+    RecyclerListView: React.forwardRef((props, ref) =>
+      React.createElement(View, {testID: 'RecyclerListView'}),
+    ),
     DataProvider: class DataProvider {
       constructor(rowHasChanged) {
         this.rowHasChanged = rowHasChanged;
@@ -117,7 +123,7 @@ jest.mock('recyclerlistview', () => {
 
 // Mock AppState
 jest.mock('react-native/Libraries/AppState/AppState', () => ({
-  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  addEventListener: jest.fn(() => ({remove: jest.fn()})),
   removeEventListener: jest.fn(),
   currentState: 'active',
 }));
@@ -128,4 +134,3 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
-

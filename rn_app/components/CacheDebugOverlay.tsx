@@ -1,40 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import CacheManager from '../services/CacheManager';
-import { AppConfig } from '../config/AppConfig';
+import {AppConfig} from '../config/AppConfig';
 
 interface CacheDebugOverlayProps {
   currentVideoUrl?: string;
 }
 
-export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVideoUrl }) => {
+export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({
+  currentVideoUrl,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [cacheSize, setCacheSize] = useState(0);
   const [proxyStatus, setProxyStatus] = useState('Unknown');
   const [currentVideoStatus, setCurrentVideoStatus] = useState<string>('N/A');
+  const [prefetchStats, setPrefetchStats] = useState<
+    Record<string, {segmentCount: number; totalBytes: number}>
+  >({});
 
   useEffect(() => {
     const updateStats = async () => {
       try {
         const size = await CacheManager.getTotalCacheSize();
         setCacheSize(size);
-        
+
         const status = CacheManager.getInitializationStatus();
         setProxyStatus(status ? 'Running ✅' : 'Stopped ❌');
-        
+
         if (currentVideoUrl) {
-          const videoStatus = await CacheManager.getCacheStatus(currentVideoUrl);
+          const videoStatus = await CacheManager.getCacheStatus(
+            currentVideoUrl,
+          );
           setCurrentVideoStatus(
-            videoStatus.isCached 
-              ? `HIT (${(videoStatus.cachedBytes / 1024 / 1024).toFixed(2)} MB)` 
-              : 'MISS'
+            videoStatus.isCached
+              ? `HIT (${(videoStatus.cachedBytes / 1024 / 1024).toFixed(2)} MB)`
+              : 'MISS',
           );
         }
+
+        // Get prefetch statistics
+        const allStats = await CacheManager.getAllPrefetchStats();
+        setPrefetchStats(allStats);
       } catch (error) {
         console.error('Cache debug overlay error:', error);
       }
     };
-    
+
     updateStats();
     const interval = setInterval(updateStats, 2000); // Update every 2 seconds
     return () => clearInterval(interval);
@@ -47,14 +58,13 @@ export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVid
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        onPress={() => setIsExpanded(!isExpanded)} 
+      <TouchableOpacity
+        onPress={() => setIsExpanded(!isExpanded)}
         style={styles.header}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <Text style={styles.headerText}>📦 Cache {isExpanded ? '▼' : '▶'}</Text>
       </TouchableOpacity>
-      
+
       {isExpanded && (
         <View style={styles.content}>
           <Text style={styles.stat}>Proxy: {proxyStatus}</Text>
@@ -66,19 +76,35 @@ export const CacheDebugOverlay: React.FC<CacheDebugOverlayProps> = ({ currentVid
               Current: {currentVideoStatus}
             </Text>
           )}
-          <TouchableOpacity 
+
+          {Object.keys(prefetchStats).length > 0 && (
+            <View style={styles.prefetchSection}>
+              <Text style={styles.sectionTitle}>Prefetched:</Text>
+              {Object.entries(prefetchStats).map(([videoId, stats]) => (
+                <Text
+                  key={videoId}
+                  style={styles.prefetchStat}
+                  numberOfLines={1}>
+                  {videoId}: {stats.segmentCount} segs (
+                  {(stats.totalBytes / 1024 / 1024).toFixed(1)} MB)
+                </Text>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
             onPress={async () => {
               try {
                 await CacheManager.clearAllCache();
                 setCacheSize(0);
                 setCurrentVideoStatus('N/A');
+                setPrefetchStats({});
               } catch (error) {
                 console.error('Failed to clear cache:', error);
               }
             }}
             style={styles.clearButton}
-            activeOpacity={0.8}
-          >
+            activeOpacity={0.8}>
             <Text style={styles.clearButtonText}>Clear Cache</Text>
           </TouchableOpacity>
         </View>
@@ -98,7 +124,7 @@ const styles = StyleSheet.create({
     minWidth: 180,
     maxWidth: 250,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 5,
@@ -123,6 +149,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontFamily: 'Menlo',
   },
+  prefetchSection: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#444',
+  },
+  sectionTitle: {
+    color: '#aaa',
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  prefetchStat: {
+    color: '#0f0',
+    fontSize: 10,
+    marginBottom: 2,
+    fontFamily: 'Menlo',
+  },
   clearButton: {
     marginTop: 8,
     backgroundColor: '#ff4444',
@@ -138,4 +182,3 @@ const styles = StyleSheet.create({
 });
 
 export default CacheDebugOverlay;
-

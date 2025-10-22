@@ -51,6 +51,7 @@ class VideoPlayerView: UIView {
   private var playerItem: AVPlayerItem?
   private var timeObserver: Any?
   private var isPlayerReady = false
+  private var loadTimeout: Timer?
   
   // MARK: - Initialization
   override init(frame: CGRect) {
@@ -72,6 +73,7 @@ class VideoPlayerView: UIView {
   
   // MARK: - Player Setup
   private func setupPlayer() {
+    let setupStart = CFAbsoluteTimeGetCurrent()
     NSLog("[VideoPlayerView] 🚀 setupPlayer() called - VERIFY THIS LOG APPEARS")
     
     guard let urlString = source as String?,
@@ -88,9 +90,19 @@ class VideoPlayerView: UIView {
     
     var finalURL = originalURL
     if KTVHTTPCache.proxyIsRunning() {
+      let proxyStart = CFAbsoluteTimeGetCurrent()
       if let proxiedURL = KTVHTTPCache.proxyURL(withOriginalURL: originalURL) {
+        let proxyEnd = CFAbsoluteTimeGetCurrent()
         finalURL = proxiedURL
-        NSLog("[VideoPlayerView] ✅ Proxied URL: %@", proxiedURL.absoluteString)
+        // NSLog("[VideoPlayerView] ✅ Proxied URL: %@ (took %.0fms)", 
+        //       proxiedURL.absoluteString, (proxyEnd - proxyStart) * 1000)
+        
+        // Check cache status
+        if let cachedURL = KTVHTTPCache.cacheCompleteFileURL(with: originalURL) {
+          NSLog("[CACHE_DEBUG] 💾 Cache HIT: %@", cachedURL.absoluteString)
+        } else {
+          NSLog("[CACHE_DEBUG] 📡 Cache MISS: Will stream from network")
+        }
       } else {
         NSLog("[VideoPlayerView] ❌ Failed to create proxy URL for video: %@", displayId)
         // CRITICAL: For testing phase, fail if proxy can't rewrite
@@ -103,6 +115,9 @@ class VideoPlayerView: UIView {
       onError?(["error": "KTV Proxy not running"])
       return
     }
+    
+    // let setupEnd = CFAbsoluteTimeGetCurrent()
+    // NSLog("[VideoPlayerView] ⏱️ setupPlayer() completed in %.0fms", (setupEnd - setupStart) * 1000)
     
     setupPlayerWithURL(finalURL)
   }
@@ -130,6 +145,31 @@ class VideoPlayerView: UIView {
     
     // Notify load start
     onLoad?(["videoId": videoId as Any])
+    
+    // Add 15s timeout for loading (playback context - be patient)
+    loadTimeout = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false) { [weak self] _ in
+      if self?.playerItem?.status != .readyToPlay {
+        self?.handleLoadTimeout()
+      }
+    }
+  }
+  
+  private func handleLoadTimeout() {
+    NSLog("[VideoPlayerView] ⏱️ Load timeout (15s) - cancelling stuck load")
+    
+    // Cancel timeout
+    loadTimeout?.invalidate()
+    loadTimeout = nil
+    
+    // Emit error
+    onError?([
+      "videoId": videoId as Any,
+      "error": "Load timeout after 15s",
+      "recoverable": true
+    ])
+    
+    // Clean up player to free resources
+    player?.replaceCurrentItem(with: nil)
   }
   
   // MARK: - Observers
@@ -192,6 +232,10 @@ class VideoPlayerView: UIView {
     
     switch playerItem.status {
     case .readyToPlay:
+      // Cancel load timeout (player ready successfully)
+      loadTimeout?.invalidate()
+      loadTimeout = nil
+      
       isPlayerReady = true
       onLoad?([
         "videoId": videoId as Any,
@@ -207,6 +251,10 @@ class VideoPlayerView: UIView {
         "videoId": videoId as Any
       ])
     case .failed:
+      // Cancel load timeout
+      loadTimeout?.invalidate()
+      loadTimeout = nil
+      
       onError?([
         "videoId": videoId as Any,
         "error": playerItem.error?.localizedDescription ?? "Unknown error"
@@ -252,6 +300,10 @@ class VideoPlayerView: UIView {
   
   // MARK: - Cleanup
   deinit {
+    // Cancel load timeout
+    loadTimeout?.invalidate()
+    loadTimeout = nil
+    
     removePlayerObservers()
     
     // Return player and layer to pool

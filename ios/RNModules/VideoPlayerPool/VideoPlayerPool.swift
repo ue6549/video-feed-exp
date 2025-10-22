@@ -15,7 +15,7 @@ class VideoPlayerPool: NSObject {
   static let shared = VideoPlayerPool()
   
   // MARK: - Pool Configuration
-  private let maxPlayers = 5
+  private var maxPlayers = 3  // Configurable, default 3
   private let maxLayers = 8
   
   // MARK: - Pools
@@ -64,6 +64,12 @@ class VideoPlayerPool: NSObject {
     return shared.acquirePlayerInternal()
   }
   
+  /// Try to acquire a player without exceeding pool limit
+  /// Returns nil if all players are busy
+  @objc static func tryAcquirePlayer() -> AVPlayer? {
+    return shared.tryAcquirePlayerInternal()
+  }
+  
   @objc static func releasePlayer(_ player: AVPlayer) {
     shared.releasePlayerInternal(player)
   }
@@ -84,6 +90,16 @@ class VideoPlayerPool: NSObject {
     shared.clearPoolInternal()
   }
   
+  @objc static func setMaxPlayersWithMaxPlayers(_ maxPlayers: Int,
+                                                 resolve: @escaping RCTPromiseResolveBlock,
+                                                 reject: @escaping RCTPromiseRejectBlock) {
+    shared.queue.async(flags: .barrier) {
+      shared.maxPlayers = maxPlayers
+      NSLog("[VideoPlayerPool] 🔧 Max players updated: %d", maxPlayers)
+      resolve(true)
+    }
+  }
+  
   // MARK: - Internal Methods
   private func acquirePlayerInternal() -> AVPlayer {
     return queue.sync(flags: .barrier) {
@@ -101,6 +117,34 @@ class VideoPlayerPool: NSObject {
       
       activePlayers.insert(player)
       return player
+    }
+  }
+  
+  private func tryAcquirePlayerInternal() -> AVPlayer? {
+    return queue.sync(flags: .barrier) {
+      // Check if we have available player
+      if let availablePlayer = availablePlayers.popLast() {
+        // Reset player state
+        availablePlayer.pause()
+        availablePlayer.replaceCurrentItem(with: nil)
+        
+        activePlayers.insert(availablePlayer)
+        NSLog("[VideoPlayerPool] ✅ Acquired player from pool (active: %d)", activePlayers.count)
+        return availablePlayer
+      }
+      
+      // Check if we can create a new player (under max limit)
+      let totalPlayers = availablePlayers.count + activePlayers.count
+      if totalPlayers < maxPlayers {
+        let newPlayer = createNewPlayer()
+        activePlayers.insert(newPlayer)
+        NSLog("[VideoPlayerPool] ➕ Created new player (active: %d/%d)", activePlayers.count, maxPlayers)
+        return newPlayer
+      }
+      
+      // Pool exhausted
+      NSLog("[VideoPlayerPool] ⚠️ Pool exhausted (active: %d/%d)", activePlayers.count, maxPlayers)
+      return nil
     }
   }
   

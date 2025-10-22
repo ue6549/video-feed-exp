@@ -250,6 +250,91 @@ class VideoPlayerView: UIView {
 
 ## Caching & Prefetching
 
+### PrefetchController.ts (Base Class)
+Abstract base class for reusable, nestable prefetch coordination.
+
+**Location:** `rn_app/services/PrefetchController.ts`
+
+**Purpose:** Provides reusable architecture for prefetching in any scrollable video collection
+
+**API:**
+```typescript
+export interface PrefetchVideo {
+  id: string;           // Clean video ID (vid-X-Y)
+  url: string;          // Actual video URL for KTVHTTPCache
+  type: 'VOD' | 'LIVE'; // Video type
+}
+
+export abstract class PrefetchController {
+  constructor(name: string, parentPriority: number = 0);
+  
+  protected prefetchVideos(videos: PrefetchVideo[], basePriority: number): void;
+  protected logPrefetch(message: string): void;
+}
+```
+
+**Features:**
+- Priority context propagation (parent → child)
+- Extensible for different scroll contexts
+- Logging with controller name prefix
+
+### FeedPrefetchController.ts
+Handles vertical scroll prefetching in the main feed.
+
+**Location:** `rn_app/services/FeedPrefetchController.ts`
+
+**Extends:** `PrefetchController`
+
+**API:**
+```typescript
+class FeedPrefetchController extends PrefetchController {
+  handleVisibleIndicesChanged(visibleIndices: number[], feedData: IFeedItem[]): void;
+  onInitialLoad(feedData: IFeedItem[]): void;
+  onPageLoad(allFeedData: IFeedItem[], newPageStartIndex: number): void;
+  getStats(): { lastPrefetchedIndex: number };
+  reset(): void;
+}
+```
+
+**Behavior:**
+- Prefetches next N widgets (configurable via `visibility.prefetchRange`)
+- Priority based on distance (closer = higher)
+- Carousel widgets: First 2 videos at high priority, rest at low priority
+- Short videos: Single video at distance-based priority
+- Merch widgets: Skipped (no video)
+
+**Usage:**
+```typescript
+// In FeedScreen.tsx
+const prefetchController = useRef(new FeedPrefetchController());
+
+// On initial load
+prefetchController.current.onInitialLoad(feedData);
+
+// On scroll
+<RecyclerListView
+  onVisibleIndicesChanged={(all, now, notNow) => {
+    prefetchController.current.handleVisibleIndicesChanged(now, feedData);
+  }}
+/>
+
+// On pagination
+prefetchController.current.onPageLoad(updatedData, newPageStartIndex);
+```
+
+**Prefetch Strategy:**
+```
+Widget distance from visible:
+  1 widget away → priority 90
+  2 widgets away → priority 80
+  3 widgets away → priority 70
+  ...
+
+Carousel handling:
+  First 2 videos → High priority (distance-based)
+  Remaining videos → Low priority (10)
+```
+
 ### CacheManager.ts
 React Native service for video caching operations.
 
@@ -271,6 +356,36 @@ class CacheManagerService {
     await NativeCacheManager.clearCache();
   }
 
+  async prefetchVideo(
+    videoId: string,
+    videoUrl: string,
+    segmentCount: number
+  ): Promise<boolean> {
+    return await NativeCacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
+  }
+
+  async cancelPrefetch(videoId: string): Promise<boolean> {
+    return await NativeCacheManager.cancelPrefetch(videoId);
+  }
+
+  async setPrefetchConfig(bufferSeconds: number, timeoutSeconds: number): Promise<void> {
+    try {
+      await NativeCacheManager.setPrefetchConfig(bufferSeconds, timeoutSeconds);
+      logger.info('prefetch', `Config updated: buffer=${bufferSeconds}s, timeout=${timeoutSeconds}s`);
+    } catch (error) {
+      logger.error('prefetch', `Failed to update prefetch config: ${error}`);
+    }
+  }
+
+  async cancelAllPrefetches(): Promise<void> {
+    try {
+      await NativeCacheManager.cancelAllPrefetches();
+      logger.info('prefetch', 'Cancelled all active prefetches');
+    } catch (error) {
+      logger.error('prefetch', `Failed to cancel prefetches: ${error}`);
+    }
+  }
+
   async generateOfflineManifest(
     videoURL: string,
     cachedSegments: SegmentInfo[],
@@ -285,37 +400,100 @@ class CacheManagerService {
 }
 ```
 
-### CacheManager.swift (Native Implementation)
-Native iOS cache manager using KTVHTTPCache.
+### CacheManager.m (Native Implementation)
+Native iOS cache manager using KTVHTTPCache (Objective-C).
 
-```swift
-@objc(CacheManager)
-class CacheManager: NSObject {
-  @objc static func setupCache(_ maxSizeMB: Int) {
-    let configuration = KTVHTTPCacheConfiguration()
-    configuration.maxCacheLength = UInt(maxSizeMB) * 1024 * 1024
-    KTVHTTPCache.shared.setup(with: configuration)
-  }
-  
-  @objc static func getCachedURL(_ originalURL: String) -> String {
-    guard let url = URL(string: originalURL) else { return originalURL }
-    let cachedURL = KTVHTTPCache.shared.cacheURL(with: url)
-    return cachedURL?.absoluteString ?? originalURL
-  }
-  
-  @objc static func generateOfflineManifest(
-    _ videoURL: String,
-    _ cachedSegments: [[String: Any]],
-    _ templateId: String
-  ) -> String {
-    // Generate HLS manifest from template
-    return renderManifest(template: template, segments: cachedSegments)
-  }
+```objc
+@interface CacheManager ()
+@property (nonatomic, strong) NSMutableDictionary<NSString *, KTVHCDataLoader *> *prefetchLoaders;
+@end
+
+@implementation CacheManager
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.prefetchLoaders = [NSMutableDictionary dictionary];
+    }
+    return self;
 }
+
+RCT_EXPORT_METHOD(setupCache:(NSInteger)maxSizeMB
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    long long maxBytes = (long long)maxSizeMB * 1024 * 1024;
+    [KTVHTTPCache cacheSetMaxCacheLength:maxBytes];
+    
+    NSError *error = nil;
+    BOOL started = [KTVHTTPCache proxyStart:&error];
+    
+    if (started) {
+        resolve(@(YES));
+    } else {
+        reject(@"START_ERROR", @"Failed to start proxy server", error);
+    }
+}
+
+RCT_EXPORT_METHOD(getCachedURL:(NSString *)originalURL
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *url = [NSURL URLWithString:originalURL];
+    NSURL *cachedURL = [KTVHTTPCache proxyURLWithOriginalURL:url];
+    resolve(cachedURL ? cachedURL.absoluteString : originalURL);
+}
+
+RCT_EXPORT_METHOD(prefetchVideo:(NSString *)videoId
+                  videoUrl:(NSString *)videoUrl
+                  segmentCount:(NSInteger)segmentCount
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *manifestURL = [NSURL URLWithString:videoUrl];
+    if (!manifestURL) {
+        reject(@"invalid_url", @"Invalid video URL", nil);
+        return;
+    }
+    
+    // Use KTV's cache loader to prefetch through proxy
+    KTVHCDataRequest *req = [[KTVHCDataRequest alloc] initWithURL:manifestURL headers:nil];
+    KTVHCDataLoader *loader = [KTVHTTPCache cacheLoaderWithRequest:req];
+    
+    if (loader) {
+        // Keep strong reference (prevents dealloc during async download)
+        [self.prefetchLoaders setObject:loader forKey:videoId];
+        [loader prepare];  // Triggers prefetch through KTV proxy
+        resolve(@YES);
+    } else {
+        reject(@"prefetch_failed", @"KTV cache loader creation failed", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(cancelPrefetch:(NSString *)videoId
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    KTVHCDataLoader *loader = [self.prefetchLoaders objectForKey:videoId];
+    if (loader) {
+        [loader close];
+        [self.prefetchLoaders removeObjectForKey:videoId];
+    }
+    resolve(@YES);
+}
+
+@end
 ```
 
+**Key Features:**
+- KTVHTTPCache proxy setup and configuration
+- URL rewriting for cached playback
+- Native prefetch using KTV's cache loader API
+- Prefetch cancellation support
+- Strong reference management for async loaders
+- Cache statistics and clearing
+
 ### PrefetchManager.ts
-Intelligent video segment prefetching (VOD only).
+Intelligent video prefetching using native KTVHTTPCache (VOD only).
 
 ```typescript
 class PrefetchManager {
@@ -324,7 +502,8 @@ class PrefetchManager {
   private statusMap = new Map<string, PrefetchStatus>();
 
   async prefetchVideo(
-    videoUrl: string,
+    videoId: string,        // Clean ID (e.g., vid-3-2)
+    videoUrl: string,       // Video manifest URL
     videoType: 'VOD' | 'LIVE',
     priority: number = 0
   ): Promise<void> {
@@ -335,35 +514,47 @@ class PrefetchManager {
     if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) return;
 
     // Add to queue and start processing
-    this.queue.push({ videoUrl, videoType, priority, segmentCount: 2 });
+    this.queue.push({ videoId, videoUrl, videoType, priority, segmentCount: 2 });
     this.processQueue();
   }
 
   private async startDownload(request: PrefetchRequest): Promise<void> {
-    // 1. Fetch and parse manifest
-    const manifest = await this.fetchManifest(request.videoUrl);
+    const { videoId, videoUrl, videoType, segmentCount } = request;
     
-    // 2. Detect if actually VOD from manifest
-    if (this.isLiveManifest(manifest)) {
-      console.warn('Manifest indicates LIVE, skipping prefetch');
+    // VOD-only check
+    if (videoType === 'LIVE' && AppConfig.config.prefetch.vodOnly) {
+      logger.warn('prefetch', `⚠️ LIVE video ${videoId}, skipping (VOD-only mode)`);
       return;
     }
 
-    // 3. Extract segments
-    const segments = this.parseSegments(manifest).slice(0, request.segmentCount);
+    // Use native CacheManager to prefetch through KTV proxy
+    await CacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
     
-    // 4. Download segments
-    await this.downloadSegments(request.videoUrl, segments);
+    // Mark as completed (KTV handles download internally)
+    this.statusMap.set(videoId, {
+      videoId,
+      state: 'completed',
+      progress: 100,
+      segmentsDownloaded: segmentCount,
+      totalSegments: segmentCount,
+    });
   }
 }
 ```
 
 **Key Features:**
-- VOD-only prefetching
-- Live content detection from manifest
+- **Native prefetch through KTVHTTPCache** - Uses KTV's cache loader API
+- VOD-only prefetching (configurable)
 - Priority-based queue management
-- Status tracking and cancellation
-- Concurrent download limits
+- Status tracking and cancellation support
+- Concurrent download limits (default: 3)
+- Clean video IDs for logging
+
+**Architecture:**
+- PrefetchManager queues requests and manages concurrency
+- CacheManager bridges to native KTVHTTPCache
+- KTVHTTPCache downloads and caches segments automatically
+- No manual manifest parsing or segment downloading in JS
 
 ---
 
@@ -465,6 +656,8 @@ interface VideoCardProps extends ViewProps {
 - Manual play button for low-end devices
 - Integration with PlaybackManager
 - Debug HUD overlay (geekMode)
+- **Player attachment at 10% visibility** (earlier than before)
+- **Timing logs** for performance debugging
 
 **Video ID Format:**
 Video IDs use a structured format for clean logs:
@@ -624,50 +817,55 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
 ## Native Modules
 
 ### VideoPlayerPool.swift
-AVPlayer and AVPlayerLayer pooling for performance.
+AVPlayer and AVPlayerLayer pooling for performance with hard limits.
 
 ```swift
 class VideoPlayerPool {
-  private static let maxPlayers = 5
-  private static let maxLayers = 8
+  private static let maxPlayers = 3  // Hard limit (was 5)
   private static var availablePlayers: [AVPlayer] = []
-  private static var availableLayers: [AVPlayerLayer] = []
-  private static var usedPlayers: Set<AVPlayer> = []
-  private static var usedLayers: Set<AVPlayerLayer> = []
+  private static var activePlayers: Set<AVPlayer> = []
+  private static let queue = DispatchQueue(label: "VideoPlayerPool", attributes: .concurrent)
 
-  static func acquirePlayer() -> AVPlayer {
-    if let player = availablePlayers.popLast() {
-      usedPlayers.insert(player)
-      return player
+  // Try to acquire player, returns nil if pool exhausted
+  static func tryAcquirePlayer() -> AVPlayer? {
+    return queue.sync(flags: .barrier) {
+      if let availablePlayer = availablePlayers.popLast() {
+        availablePlayer.pause()
+        availablePlayer.replaceCurrentItem(with: nil)
+        activePlayers.insert(availablePlayer)
+        NSLog("[VideoPlayerPool] ✅ Acquired player from pool (active: %d)", activePlayers.count)
+        return availablePlayer
+      }
+      
+      let totalPlayers = availablePlayers.count + activePlayers.count
+      if totalPlayers < maxPlayers {
+        let newPlayer = createNewPlayer()
+        activePlayers.insert(newPlayer)
+        NSLog("[VideoPlayerPool] ➕ Created new player (active: %d/%d)", activePlayers.count, maxPlayers)
+        return newPlayer
+      }
+      
+      NSLog("[VideoPlayerPool] ⚠️ Pool exhausted (active: %d/%d)", activePlayers.count, maxPlayers)
+      return nil
     }
-    
-    let player = AVPlayer()
-    usedPlayers.insert(player)
-    return player
   }
 
   static func releasePlayer(_ player: AVPlayer) {
-    usedPlayers.remove(player)
-    player.pause()
-    player.replaceCurrentItem(with: nil)
-    availablePlayers.append(player)
-  }
-
-  static func acquireLayer() -> AVPlayerLayer {
-    if let layer = availableLayers.popLast() {
-      usedLayers.insert(layer)
-      return layer
+    queue.async(flags: .barrier) {
+      activePlayers.remove(player)
+      player.pause()
+      player.replaceCurrentItem(with: nil)
+      availablePlayers.append(player)
+      NSLog("[VideoPlayerPool] ✅ Player released (active: %d/%d)", activePlayers.count, maxPlayers)
     }
-    
-    let layer = AVPlayerLayer()
-    usedLayers.insert(layer)
-    return layer
   }
 
-  static func releaseLayer(_ layer: AVPlayerLayer) {
-    usedLayers.remove(layer)
-    layer.player = nil
-    availableLayers.append(layer)
+  // Update max players at runtime
+  static func setMaxPlayers(_ newMax: Int) {
+    queue.async(flags: .barrier) {
+      maxPlayers = newMax
+      NSLog("[VideoPlayerPool] 🔧 Max players updated: %d", maxPlayers)
+    }
   }
 }
 ```

@@ -1,4 +1,4 @@
-import { AppConfig } from '../config/AppConfig';
+import {AppConfig} from '../config/AppConfig';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
 type LogModule = 'visibility' | 'playback' | 'prefetch' | 'video' | 'metrics';
@@ -14,13 +14,17 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 class Logger {
   private shouldLog(level: LogLevel, module: LogModule): boolean {
     const config = AppConfig.config.logging;
-    
+
     // Check if logging is globally enabled
-    if (!config.enabled) return false;
-    
+    if (!config.enabled) {
+      return false;
+    }
+
     // Check if this module is enabled
-    if (!config.modules[module]) return false;
-    
+    if (!config.modules[module]) {
+      return false;
+    }
+
     // Check if log level allows this message
     return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[config.level];
   }
@@ -51,4 +55,3 @@ class Logger {
 }
 
 export const logger = new Logger();
-

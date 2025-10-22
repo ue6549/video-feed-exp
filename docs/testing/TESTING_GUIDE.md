@@ -179,21 +179,72 @@ npx react-native run-ios --simulator="iPhone 16"
 **Objective:** Verify video segments are cached
 
 **Steps:**
-1. Play a video completely
+1. Play a video completely (let it play for 10+ seconds)
 2. Enable airplane mode or disable network
 3. Scroll back to the same video
 4. Try to play it again
 
 **Expected:**
-- First playback downloads and caches segments
-- Second playback loads from cache (instant startup)
+- **Videos played online:** Full segments cached, play offline ✅
+- **Videos only prefetched:** Master playlist cached, segments require online for first play ⚠️
 - Cache size increases (check CacheManager.getCacheSize())
-- Cached videos playable offline
+- **Important:** Only videos that were actually played (not just prefetched) will play offline
 
 **Pass Criteria:**
-- Cached video plays without network
+- Previously played videos play without network
+- Prefetched-only videos show loader offline (expected behavior)
 - Faster startup on cached content
 - Cache persists across app restarts
+
+**Cache Inspection:**
+```bash
+# Run cache inspection script
+./inspect_ktv_cache.sh
+
+# Look for .m4s segment files with real sizes
+# Should see something like:
+# 17K segment1.m4s
+# 144K segment2.m4s
+```
+
+---
+
+### Test 7.5: AVPlayer Prefetch Testing
+**Objective:** Verify AVPlayer-based prefetch works correctly
+
+**Steps:**
+1. Launch app with network
+2. Scroll slowly through feed (watch for prefetch logs)
+3. Monitor Xcode console with filter: `[CacheManager]` and `[VideoPlayerPool]`
+
+**Expected Logs:**
+```
+[CacheManager] 🎯 Prefetch: vid-0-2 (2 segments)
+[VideoPlayerPool] ✅ Acquired player from pool (active: 1)
+[CacheManager] 🎬 Using AVPlayer prefetch for vid-0-2
+[CacheManager] ⏱️ Started buffering for vid-0-2 (target: 2.0s, timeout: 5.0s)
+[CacheManager] 📊 vid-0-2 loaded 0.5s
+[CacheManager] 📊 vid-0-2 loaded 1.2s
+[CacheManager] 📊 vid-0-2 loaded 2.1s
+[CacheManager] ✅ Buffer target reached for vid-0-2
+[CacheManager] 🛑 Stopping AVPlayer prefetch for vid-0-2 (reason: buffer_full)
+[CacheManager] ✅ Player released for vid-0-2
+```
+
+**Pool Exhaustion Test:**
+1. Scroll quickly to trigger many prefetch requests
+2. Watch for pool exhaustion logs:
+```
+[VideoPlayerPool] ⚠️ Pool exhausted (active: 3/3)
+[CacheManager] 📋 No player available, manifest-only for vid-0-5
+```
+
+**Pass Criteria:**
+- AVPlayer prefetch works when players available
+- Pool respects 3-player hard limit
+- Manifest fallback when pool exhausted
+- Players released after buffering completes
+- No timeouts on normal network
 
 ---
 

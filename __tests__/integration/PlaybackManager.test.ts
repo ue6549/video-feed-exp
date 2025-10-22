@@ -1,6 +1,9 @@
-import { handleVisibilityChange, clearAllPlayback } from '../../rn_app/platback_manager/PlaybackManager';
-import { MediaCardVisibility } from '../../rn_app/platback_manager/MediaCardVisibility';
-import { playbackEvents } from '../../rn_app/platback_manager/PlaybackManager';
+import {
+  handleVisibilityChange,
+  clearAllPlayback,
+} from '../../rn_app/platback_manager/PlaybackManager';
+import {MediaCardVisibility} from '../../rn_app/platback_manager/MediaCardVisibility';
+import {playbackEvents} from '../../rn_app/platback_manager/PlaybackManager';
 
 describe('PlaybackManager Integration', () => {
   beforeEach(() => {
@@ -23,7 +26,7 @@ describe('PlaybackManager Integration', () => {
       'video-1',
       'short',
       MediaCardVisibility.isActive,
-      'VOD'
+      'VOD',
     );
 
     expect(playListener).toHaveBeenCalledWith('video-1');
@@ -34,10 +37,20 @@ describe('PlaybackManager Integration', () => {
     playbackEvents.on('pause', pauseListener);
 
     // First activate the video
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.isActive, 'VOD');
-    
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.isActive,
+      'VOD',
+    );
+
     // Then move it to willResignActive
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.willResignActive, 'VOD');
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.willResignActive,
+      'VOD',
+    );
 
     expect(pauseListener).toHaveBeenCalledWith('video-1');
   });
@@ -49,11 +62,21 @@ describe('PlaybackManager Integration', () => {
     playbackEvents.on('pause', pauseListener);
 
     // Activate first video
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.isActive, 'VOD');
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.isActive,
+      'VOD',
+    );
     expect(playListener).toHaveBeenCalledWith('video-1');
-    
+
     // Move to willResignActive
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.willResignActive, 'VOD');
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.willResignActive,
+      'VOD',
+    );
     expect(pauseListener).toHaveBeenCalledWith('video-1');
   });
 
@@ -61,7 +84,12 @@ describe('PlaybackManager Integration', () => {
     const playListener = jest.fn();
     playbackEvents.on('play', playListener);
 
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.prefetch, 'VOD');
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.prefetch,
+      'VOD',
+    );
 
     // Should not play in prefetch state
     expect(playListener).not.toHaveBeenCalled();
@@ -71,8 +99,18 @@ describe('PlaybackManager Integration', () => {
     const playListener = jest.fn();
     playbackEvents.on('play', playListener);
 
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.prefetch, 'VOD');
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.prepareToBeActive, 'VOD');
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.prefetch,
+      'VOD',
+    );
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.prepareToBeActive,
+      'VOD',
+    );
 
     // Should not play yet in prepareToBeActive state
     expect(playListener).not.toHaveBeenCalled();
@@ -80,12 +118,21 @@ describe('PlaybackManager Integration', () => {
 
   it('should handle released state without errors', () => {
     // Activate video first
-    handleVisibilityChange('video-1', 'short', MediaCardVisibility.isActive, 'VOD');
-    
+    handleVisibilityChange(
+      'video-1',
+      'short',
+      MediaCardVisibility.isActive,
+      'VOD',
+    );
+
     // Then release it - should not throw
     expect(() => {
-      handleVisibilityChange('video-1', 'short', MediaCardVisibility.released, 'VOD');
+      handleVisibilityChange(
+        'video-1',
+        'short',
+        MediaCardVisibility.released,
+        'VOD',
+      );
     }).not.toThrow();
   });
 });
-
