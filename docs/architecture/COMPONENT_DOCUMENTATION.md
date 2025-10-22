@@ -710,16 +710,23 @@ Video IDs use a structured format for clean logs:
 
 **Lifecycle:**
 1. **Mount** - Shows thumbnail only
-2. **25% visible** - Mount VideoPlayerView (paused)
+2. **25% visible** - Mount VideoPlayerView (paused, always muted by default)
 3. **50% visible** - Trigger play via PlaybackManager
 4. **< 90% visible** - Pause video
 5. **< 20% visible** - Unmount VideoPlayerView
 6. **Unmount** - Clean up, report notActive
+7. **Video End/Error** - Reset thumbnail opacity to show thumbnail again
 
 **Metrics Tracked:**
 - `attemptStart` - New play attempt begins
 - `video_load_started` - Video load initiated  
 - `video_loaded` - Video ready to play
+
+**Recent Bug Fixes (v1.1):**
+- **Audio Muting:** Native component now enforces muted state by default, preventing unexpected audio
+- **Black Cards Fix:** Thumbnail opacity resets to 1 on video end/error, preventing black blank cards
+- **Performance Optimization:** VideoPlayerView always renders but uses opacity for visibility control, eliminating expensive mount/unmount operations
+- **Pool Optimization:** VideoPlayerPool operations are now asynchronous to prevent main thread blocking
 - `video_play` - Play command issued
 - `video_pause` - Pause command issued
 - `video_buffer_start` / `video_buffer_end` - Buffering events

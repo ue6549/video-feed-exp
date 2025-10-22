@@ -354,6 +354,13 @@ const VideoCard: React.FC<VideoCardProps> = ({
     metrics.error('video_error', item.id, playIdRef.current, error);
     console.error('Video playback error', error);
     setLoaderState('error');
+
+    // Reset thumbnail opacity to show thumbnail again on error
+    Animated.timing(thumbnailOpacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleRetry = () => {
@@ -412,6 +419,13 @@ const VideoCard: React.FC<VideoCardProps> = ({
     setIsPlayerPlaying(false);
     setIsPlayerAttached(false);
     setLoaderState('stopped');
+
+    // Reset thumbnail opacity to show thumbnail again
+    Animated.timing(thumbnailOpacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
 
   const onPlaybackRateChange = (e: OnPlaybackRateChangeData) => {
@@ -481,81 +495,85 @@ const VideoCard: React.FC<VideoCardProps> = ({
         />
       </Animated.View>
 
-      {/* Video player overlays thumbnail when mounted */}
-      {isPlayerAttached && (
-        <VideoPlayerView
-          source={item.videoSource.url}
-          videoId={item.id}
-          paused={!isPlayerPlaying}
-          muted={true}
-          style={[styles.media, StyleSheet.absoluteFill]}
-          onLoad={event => {
-            // Track load start time on first onLoad (emitted when player setup starts)
-            if (!loadStartTimeRef.current) {
-              loadStartTimeRef.current = Date.now();
-              logger.info(
-                'video',
-                `[${item.id}] 📥 Load started: ${item.videoSource.url}`,
-              );
-              metrics.mark('video_load_started', item.id, playIdRef.current, {
-                videoSource: item.videoSource.url,
-              });
-              setLoaderState('loading');
-            }
-            // Also track when fully loaded (duration available)
-            if (event.nativeEvent.duration) {
-              logger.info(
-                'video',
-                `[${item.id}] Loaded successfully (duration: ${event.nativeEvent.duration}s)`,
-              );
-              metrics.mark(
-                'video_loaded',
-                item.id,
-                playIdRef.current,
-                event.nativeEvent,
-              );
-              setLoaderState('loaded');
-            }
-          }}
-          onProgress={event => {
+      {/* Video player overlays thumbnail when mounted - always render but control visibility */}
+      <VideoPlayerView
+        source={item.videoSource.url}
+        videoId={item.id}
+        paused={!isPlayerPlaying || !isPlayerAttached}
+        muted={true}
+        style={[
+          styles.media,
+          StyleSheet.absoluteFill,
+          {opacity: isPlayerAttached ? 1 : 0}, // Use opacity instead of conditional rendering
+        ]}
+        onLoad={event => {
+          // Track load start time on first onLoad (emitted when player setup starts)
+          if (!loadStartTimeRef.current) {
+            loadStartTimeRef.current = Date.now();
+            logger.info(
+              'video',
+              `[${item.id}] 📥 Load started: ${item.videoSource.url}`,
+            );
+            metrics.mark('video_load_started', item.id, playIdRef.current, {
+              videoSource: item.videoSource.url,
+            });
+            setLoaderState('loading');
+            // Reset video ready state when starting new load
+            setIsVideoReadyForDisplay(false);
+          }
+          // Also track when fully loaded (duration available)
+          if (event.nativeEvent.duration) {
+            logger.info(
+              'video',
+              `[${item.id}] Loaded successfully (duration: ${event.nativeEvent.duration}s)`,
+            );
             metrics.mark(
-              'video_progress',
+              'video_loaded',
               item.id,
               playIdRef.current,
               event.nativeEvent,
             );
-          }}
-          onEnd={event => {
-            metrics.mark(
-              'video_end',
-              item.id,
-              playIdRef.current,
-              event.nativeEvent,
-            );
-            setLoaderState('stopped');
-          }}
-          onError={event => {
-            metrics.error(
-              'video_error',
-              item.id,
-              playIdRef.current,
-              event.nativeEvent.error,
-            );
-            setLoaderState('error');
-          }}
-          onBuffer={event => {
-            if (event.nativeEvent.isBuffering) {
-              metrics.mark('buffer_start', item.id, playIdRef.current);
-            } else {
-              metrics.mark('buffer_end', item.id, playIdRef.current);
-            }
-          }}
-          onReadyForDisplay={onReadyForDisplay}
-        />
-      )}
+            setLoaderState('loaded');
+          }
+        }}
+        onProgress={event => {
+          metrics.mark(
+            'video_progress',
+            item.id,
+            playIdRef.current,
+            event.nativeEvent,
+          );
+        }}
+        onEnd={event => {
+          metrics.mark(
+            'video_end',
+            item.id,
+            playIdRef.current,
+            event.nativeEvent,
+          );
+          setLoaderState('stopped');
+        }}
+        onError={event => {
+          metrics.error(
+            'video_error',
+            item.id,
+            playIdRef.current,
+            event.nativeEvent.error,
+          );
+          setLoaderState('error');
+        }}
+        onBuffer={event => {
+          if (event.nativeEvent.isBuffering) {
+            metrics.mark('buffer_start', item.id, playIdRef.current);
+          } else {
+            metrics.mark('buffer_end', item.id, playIdRef.current);
+          }
+        }}
+        onReadyForDisplay={onReadyForDisplay}
+      />
 
-      {/* Loading indicator when player attached but not ready, or when buffering */}
-      {isPlayerAttached && (!isVideoReadyForDisplay || isBuffering) && (
+      {/* Loading indicator when video is visible but not ready, or when buffering */}
+      {isPlayerAttached && (!isVideoReadyForDisplay || isBuffering) && !isPlayerPlaying && (
         <View style={styles.loaderContainer}>
           <ActivityIndicator animating={true} size={'large'} color="#fff" />
         </View>

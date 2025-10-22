@@ -6,7 +6,7 @@ jest.mock('../../rn_app/services/CacheManager', () => ({
   getSecurityStats: jest.fn(() => Promise.resolve({enabled: true})),
   updateSecurityConfig: jest.fn(() => Promise.resolve()),
   clearSecurityData: jest.fn(() => Promise.resolve()),
-  getCachedURL: jest.fn((url) => Promise.resolve(url)),
+  getCachedURL: jest.fn(url => Promise.resolve(url)),
 }));
 
 describe('ProxySecurityManager Integration', () => {
@@ -100,7 +100,9 @@ describe('ProxySecurityManager Integration', () => {
         },
       };
 
-      (CacheManager.getSecurityStats as jest.Mock).mockResolvedValueOnce(mockStats);
+      (CacheManager.getSecurityStats as jest.Mock).mockResolvedValueOnce(
+        mockStats,
+      );
 
       const stats = await CacheManager.getSecurityStats();
 
@@ -162,7 +164,9 @@ describe('ProxySecurityManager Integration', () => {
       };
 
       const error = new Error('Configuration update failed');
-      (CacheManager.updateSecurityConfig as jest.Mock).mockRejectedValueOnce(error);
+      (CacheManager.updateSecurityConfig as jest.Mock).mockRejectedValueOnce(
+        error,
+      );
 
       await expect(
         CacheManager.updateSecurityConfig(newConfig),
@@ -179,7 +183,9 @@ describe('ProxySecurityManager Integration', () => {
 
     it('should handle clear security data errors', async () => {
       const error = new Error('Clear data failed');
-      (CacheManager.clearSecurityData as jest.Mock).mockRejectedValueOnce(error);
+      (CacheManager.clearSecurityData as jest.Mock).mockRejectedValueOnce(
+        error,
+      );
 
       await expect(CacheManager.clearSecurityData()).rejects.toThrow(
         'Clear data failed',
@@ -259,7 +265,7 @@ describe('Security Configuration Validation', () => {
 
   it('should validate deployment phases', () => {
     const validPhases = ['monitoring', 'soft', 'full'];
-    
+
     validPhases.forEach(phase => {
       expect(['monitoring', 'soft', 'full']).toContain(phase);
     });

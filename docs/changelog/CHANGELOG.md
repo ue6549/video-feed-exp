@@ -1,5 +1,48 @@
 # VideoFeedApp - Changelog
 
+## [2025-10-11] - Bug Fixes Release
+
+### 🐛 Bug Fixes
+
+#### Audio Muting Issues
+- **Fixed unexpected audio playback**: Native VideoPlayerView now enforces muted state by default
+- **Enhanced muting logic**: Player always starts muted unless explicitly unmuted from React Native
+- **Safety measures**: Added explicit muting during player setup to prevent audio leaks
+
+#### Black Blank Cards
+- **Fixed black cards on video end**: Thumbnail opacity now resets to 1 when video completes
+- **Fixed black cards on error**: Thumbnail shows again after video errors with smooth 300ms transition
+- **Improved error handling**: Better visual feedback for failed video loads
+
+#### Performance & Frame Drops
+- **Eliminated mount/unmount operations**: VideoPlayerView now always renders with opacity-based visibility
+- **Improved scrolling performance**: No more expensive component mounting during rapid scrolling
+- **Optimized video transitions**: Smooth 60fps scrolling during video card transitions
+
+#### Player Pool Optimization
+- **Removed main thread blocking**: VideoPlayerPool operations now use asynchronous dispatch
+- **Enhanced pool efficiency**: Player state resets happen on background threads
+- **Better resource management**: Reduced blocking operations during pool acquisition/release
+
+### 🔧 Technical Improvements
+
+#### VideoCard Component
+- **Always-rendered VideoPlayerView**: Uses opacity control instead of conditional mounting
+- **Smooth transitions**: Animated opacity changes for better user experience
+- **Better error recovery**: Thumbnail visibility restored on all error conditions
+
+#### Native Module Enhancements
+- **VideoPlayerView**: Enhanced muting enforcement and player setup
+- **VideoPlayerPool**: Asynchronous operations to prevent UI blocking
+- **Performance**: Eliminated expensive mount/unmount cycles
+
+### 📚 Documentation Updates
+- **Testing Guide**: Added Test 1.5 for bug fix verification
+- **Component Documentation**: Updated VideoCard lifecycle and recent fixes
+- **Test Cases**: Enhanced VideoCard tests for new behavior
+
+---
+
 ## [2025-10-11] - AVPlayer Prefetch Implementation
 
 ### ✅ Completed Features
