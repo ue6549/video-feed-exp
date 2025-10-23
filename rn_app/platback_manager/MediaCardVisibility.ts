@@ -1,3 +1,19 @@
+/**
+ * MediaCardVisibility States:
+ * 
+ * Visibility-based states that control when video players are mounted and unmounted.
+ * Note: These states control video player lifecycle, but actual playback is controlled
+ * by PlaybackManager based on widget priority and play rules.
+ * 
+ * - prefetch: Video is approaching viewport, start prefetching content
+ * - prepareToBeActive: Video player attached and ready to play (mounted but paused)
+ * - isActive: Video meets visibility criteria for playing (50% for shorts, 90% for carousel)
+ *   NOTE: isActive means "eligible to play" based on visibility, but actual playback 
+ *   is controlled by PlaybackManager based on widget priority and play rules.
+ * - willResignActive: Video losing visibility, should pause and prepare to unmount
+ * - notActive: Video off screen, unmount video player
+ * - released: Complete cleanup, cancel prefetch operations
+ */
 export enum MediaCardVisibility {
   prefetch = 'prefetch',
   prepareToBeActive = 'prepareToBeActive',

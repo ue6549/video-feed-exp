@@ -41,6 +41,49 @@ class VideoPlayerView: UIView {
   
   @objc var videoId: NSString?
   
+  @objc var seekTo: NSNumber? {
+    didSet {
+      if let seekTime = seekTo {
+        let time = CMTime(seconds: seekTime.doubleValue, preferredTimescale: 600)
+        NSLog("[VideoPlayerView] 🔍 Seeking to %.2f seconds for video: %@", seekTime.doubleValue, videoId as String? ?? "unknown")
+        
+        // Use completion handler to ensure seek completes before continuing
+        player?.seek(to: time, completionHandler: { [weak self] finished in
+          if finished {
+            NSLog("[VideoPlayerView] ✅ Seek completed for video: %@", self?.videoId as String? ?? "unknown")
+            // Ensure video is playing after seek completes
+            if let player = self?.player, player.rate == 0 {
+              NSLog("[VideoPlayerView] ▶️ Auto-playing after seek for video: %@", self?.videoId as String? ?? "unknown")
+              player.play()
+            }
+          } else {
+            NSLog("[VideoPlayerView] ❌ Seek interrupted for video: %@", self?.videoId as String? ?? "unknown")
+          }
+        })
+      }
+    }
+  }
+  
+  // MARK: - UIManager Commands
+  @objc func seekTo(_ time: NSNumber) {
+    let seekTime = CMTime(seconds: time.doubleValue, preferredTimescale: 600)
+    NSLog("[VideoPlayerView] 🔍 UIManager command: Seeking to %.2f seconds for video: %@", time.doubleValue, videoId as String? ?? "unknown")
+    
+    // Use completion handler to ensure seek completes before continuing
+    player?.seek(to: seekTime, completionHandler: { [weak self] finished in
+      if finished {
+        NSLog("[VideoPlayerView] ✅ UIManager seek completed for video: %@", self?.videoId as String? ?? "unknown")
+        // Ensure video is playing after seek completes
+        if let player = self?.player, player.rate == 0 {
+          NSLog("[VideoPlayerView] ▶️ Auto-playing after UIManager seek for video: %@", self?.videoId as String? ?? "unknown")
+          player.play()
+        }
+      } else {
+        NSLog("[VideoPlayerView] ❌ UIManager seek interrupted for video: %@", self?.videoId as String? ?? "unknown")
+      }
+    })
+  }
+  
   // MARK: - Events
   @objc var onLoad: RCTDirectEventBlock?
   @objc var onProgress: RCTDirectEventBlock?
