@@ -1,5 +1,52 @@
 # VideoFeedApp - Changelog
 
+## [2025-10-11] - Preview Duration & Widget Priority System
+
+### ✨ New Features
+
+#### Preview Duration Support
+- **Widget-level preview durations**: Shorts (15s), Carousel (5s), Merch (0s), Default (10s)
+- **Progress-based enforcement**: Uses video progress callbacks instead of timers
+- **Manual play override**: User manual play ignores preview duration and plays to completion
+- **Configurable durations**: Preview durations can be customized via AppConfig
+
+#### Widget Priority System
+- **Priority hierarchy**: Shorts (3) > Carousels (2) > Merch (1) > Default (0)
+- **Single widget enforcement**: Only one widget type can play at a time
+- **Queue management**: Lower priority widgets wait in priority-ordered queue
+- **Interrupt handling**: Higher priority widgets can interrupt lower priority ones
+
+#### Video Seeking & Reset
+- **Smart video reset**: Videos seek to beginning when they become inactive (go out of viewport)
+- **Better UX**: Videos don't reset on every play - only when they go out of view
+- **Native module commands**: Implemented proper seeking via UIManager commands
+- **Async seeking**: Proper completion handling for video seeking operations
+
+### 🔧 Technical Improvements
+
+#### PlaybackManager Enhancements
+- **Widget priority tracking**: Tracks currently playing widget type
+- **Queue system**: Priority-ordered queue for waiting videos
+- **Progress observation**: Replaced timer-based preview with video progress callbacks
+- **State management**: Proper handling of manual play overrides
+
+#### Native Module Communication
+- **UIManager commands**: Proper native module communication for video seeking
+- **Ref support**: Added forwardRef support to VideoPlayerView component
+- **Async operations**: Proper completion handling for native operations
+
+#### Configuration
+- **Widget preview durations**: Added to AppConfig with sensible defaults
+- **Sequencing enabled**: Enabled playback sequencing and rotation
+- **Configurable parameters**: All preview durations can be customized
+
+### 📚 Documentation Updates
+- **Playback rules**: Documented widget priority system and single widget enforcement
+- **Preview duration**: Documented progress-based preview duration enforcement
+- **Manual play**: Documented manual play override behavior
+
+---
+
 ## [2025-10-11] - Bug Fixes Release
 
 ### 🐛 Bug Fixes
