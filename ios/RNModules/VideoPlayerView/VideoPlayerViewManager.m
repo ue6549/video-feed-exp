@@ -30,6 +30,17 @@ RCT_EXPORT_VIEW_PROPERTY(onError, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onBuffer, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onReadyForDisplay, RCTDirectEventBlock)
 
+// Export the seekTo command for UIManager
+RCT_EXPORT_METHOD(seekTo:(nonnull NSNumber *)reactTag
+                  time:(nonnull NSNumber *)time) {
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    VideoPlayerView *view = (VideoPlayerView *)viewRegistry[reactTag];
+    if ([view isKindOfClass:[VideoPlayerView class]]) {
+      [view seekTo:time];
+    }
+  }];
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {forwardRef} from 'react';
 import {requireNativeComponent, ViewProps} from 'react-native';
 
 // Event types
@@ -42,6 +42,7 @@ interface VideoPlayerViewProps extends ViewProps {
   paused?: boolean;
   muted?: boolean;
   videoId: string;
+  seekTo?: number;
   onLoad?: (event: {nativeEvent: VideoLoadEvent}) => void;
   onProgress?: (event: {nativeEvent: VideoProgressEvent}) => void;
   onEnd?: (event: {nativeEvent: VideoEndEvent}) => void;
@@ -54,8 +55,8 @@ interface VideoPlayerViewProps extends ViewProps {
 const NativeVideoPlayerView =
   requireNativeComponent<VideoPlayerViewProps>('VideoPlayerView');
 
-const VideoPlayerView: React.FC<VideoPlayerViewProps> = props => {
-  return <NativeVideoPlayerView {...props} />;
-};
+const VideoPlayerView = forwardRef<any, VideoPlayerViewProps>((props, ref) => {
+  return <NativeVideoPlayerView {...props} ref={ref} />;
+});
 
 export default VideoPlayerView;

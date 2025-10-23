@@ -43,7 +43,27 @@
 - Verify thumbnail opacity reset logic
 - Ensure proper state cleanup on video completion
 
-### 3. AppConfig Testing & Verification
+### 3. Visibility Threshold Optimization
+**Priority**: Medium (UX improvement)
+**Status**: Not implemented
+
+**Problem**:
+- Visibility thresholds may not be optimized for smooth transitions
+- There might be gaps between when outgoing videos stop and incoming videos start
+- Different widget types have very different thresholds (shorts: 50%, carousels: 90%)
+
+**Current Thresholds**:
+- Shorts: 50% visibility threshold for `isActive`
+- Carousels: 90% visibility threshold for `isActive` (much higher!)
+- This creates inconsistent transition behavior
+
+**Investigation Needed**:
+- Analyze transition timing gaps between different widget types
+- Consider implementing overlap zones (e.g., outgoing pauses at 60%, incoming starts at 40%)
+- Test optimal thresholds for smooth transitions
+- Consider scroll direction (moving up vs down) in threshold calculations
+
+### 4. AppConfig Testing & Verification
 **Priority**: High (ensure settings work correctly)
 **Status**: Not implemented
 

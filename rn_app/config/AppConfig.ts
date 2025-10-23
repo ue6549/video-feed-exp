@@ -61,6 +61,12 @@ export interface AppConfigType {
     previewDuration: number;
     sequencingEnabled: boolean;
     rotateToSoftPlay: boolean;
+    widgetPreviewDurations: {
+      short: number;
+      carousel: number;
+      merch: number;
+      default: number;
+    };
   };
   performance: {
     isLowEndDevice: boolean;
@@ -151,9 +157,15 @@ export class AppConfig {
       avplayerPrefetchTimeoutSeconds: 5, // Safety timeout for prefetch (fail fast)
     },
     playback: {
-      previewDuration: 0, // Disabled - needs proper lifecycle implementation
-      sequencingEnabled: false, // Disabled - needs proper implementation
-      rotateToSoftPlay: false, // Disabled - needs proper implementation
+      previewDuration: 10, // General fallback duration
+      sequencingEnabled: true, // Enable playback sequencing
+      rotateToSoftPlay: true, // Enable rotation to soft play
+      widgetPreviewDurations: {
+        short: 15, // 15 seconds for short videos
+        carousel: 5, // 5 seconds for carousel videos
+        merch: 0, // No preview for merch (image only)
+        default: 10, // 10 seconds default fallback
+      },
     },
     performance: {
       isLowEndDevice: false,
@@ -327,9 +339,15 @@ export class AppConfig {
         avplayerPrefetchTimeoutSeconds: 5,
       },
       playback: {
-        previewDuration: 30,
+        previewDuration: 10,
         sequencingEnabled: true,
         rotateToSoftPlay: true,
+        widgetPreviewDurations: {
+          short: 15,
+          carousel: 5,
+          merch: 0,
+          default: 10,
+        },
       },
       performance: {
         isLowEndDevice: false,

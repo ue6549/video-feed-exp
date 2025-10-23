@@ -9,6 +9,14 @@ export const playbackEvents = new EventEmitter();
 export type PlaybackEvent = 'play' | 'pause' | 'prefetch' | 'sequence';
 export type PlayItemType = WidgetType;
 
+// Widget priority system - higher number = higher priority
+const WIDGET_PRIORITY = {
+  short: 3,
+  carousel: 2,
+  merch: 1,
+  default: 0,
+} as const;
+
 // type PlayItemType = 'short' | 'ad' | 'carousel' | 'merch';
 // type MediaCardVisibility = 'prepareToActive' | 'Active' | 'willResignActive' | 'notActive';
 
@@ -19,8 +27,10 @@ interface VideoState {
   visibilityState: MediaCardVisibility;
   isPlaying: boolean;
   isPrefetched: boolean;
+  manualPlayOverride?: boolean; // NEW: Ignore preview duration if user manually played
   previewStartTime?: number;
-  previewTimer?: NodeJS.Timeout;
+  previewTimer?: NodeJS.Timeout; // DEPRECATED: Will be removed with progress-based approach
+  shouldSeekToBeginning?: boolean; // NEW: Flag to seek to beginning on next play
 }
 
 interface SoftPlayVideo {
@@ -33,11 +43,19 @@ const videoMap: Map<string, VideoState> = new Map();
 const previewTimers = new Map<string, NodeJS.Timeout>();
 const softPlayQueue: SoftPlayVideo[] = [];
 
+// Track currently playing widget type for single widget enforcement
+let currentlyPlayingWidgetType: WidgetType | null = null;
+const playQueue: VideoState[] = [];
+
 function playVideo(videoId: string, videoState: VideoState): void {
   logger.info('playback', `▶️ PLAY: ${videoId}`);
   videoState.isPlaying = true;
+  currentlyPlayingWidgetType = videoState.category;
   playbackEvents.emit('play', videoId);
   logger.info('playback', `📢 Play event emitted for: ${videoId}`);
+
+  // Remove from queue if it was queued
+  removeFromPlayQueue(videoId);
 
   // Start preview timer for VOD content if sequencing is enabled
   if (
@@ -52,6 +70,17 @@ function playVideo(videoId: string, videoState: VideoState): void {
 function pauseVideo(videoId: string, videoState: VideoState): void {
   logger.info('playback', `⏸️ PAUSE: ${videoId}`);
   videoState.isPlaying = false;
+  
+  // Check if this was the last video of this widget type playing
+  const remainingVideosOfSameType = Array.from(videoMap.values()).filter(
+    v => v.category === videoState.category && v.isPlaying
+  );
+  
+  if (remainingVideosOfSameType.length === 0) {
+    // No more videos of this widget type playing
+    currentlyPlayingWidgetType = null;
+  }
+  
   playbackEvents.emit('pause', videoId);
   logger.info('playback', `📢 Pause event emitted for: ${videoId}`);
 
@@ -122,6 +151,9 @@ function handlePrepareToBeActive(
 function handleActive(videoId: string, videoState: VideoState): void {
   logger.info('playback', `${videoId} → isActive (type: ${videoState.type})`);
 
+  // Reset preview state as fallback to ensure video can replay
+  resetPreviewState(videoId);
+
   const isLowEndDevice = AppConfig.config.performance.isLowEndDevice;
   logger.info('playback', `  isLowEndDevice: ${isLowEndDevice}`);
 
@@ -160,23 +192,16 @@ function handleNormalDeviceActive(
   videoId: string,
   videoState: VideoState,
 ): void {
-  // Check if we can play this video based on category limits
-  const canPlay = canPlayVideo(videoState.category);
-  logger.info('playback', `  canPlayVideo(${videoState.category}): ${canPlay}`);
+  // Check if we can play this video based on priority rules
+  const canPlay = canStartPlaying(videoId, videoState);
+  logger.info('playback', `  canStartPlaying(${videoId}, ${videoState.category}): ${canPlay}`);
 
   if (canPlay) {
     logger.info('playback', `  ✅ Calling playVideo(${videoId})`);
     playVideo(videoId, videoState);
   } else {
-    logger.warn('playback', '  ⚠️ Cannot play - trying to make room');
-    // Try to make room by pausing lower priority videos
-    if (tryToMakeRoom(videoState.category)) {
-      logger.info('playback', `  ✅ Made room - calling playVideo(${videoId})`);
-      playVideo(videoId, videoState);
-    } else {
-      logger.warn('playback', '  ❌ No room - adding to soft play queue');
-      addToSoftPlayQueue(videoId, videoState.category);
-    }
+    logger.info('playback', `  ⏳ Adding to play queue: ${videoId}`);
+    addToPlayQueue(videoId, videoState);
   }
 }
 
@@ -187,8 +212,9 @@ function handleWillResignActive(videoId: string, videoState: VideoState): void {
     pauseVideo(videoId, videoState);
   }
 
-  // Try to activate waiting videos
-  tryToActivateWaiting();
+  // Remove from play queue and try to play next
+  removeFromPlayQueue(videoId);
+  playNextInQueue();
 }
 
 function handleNotActive(videoId: string, videoState: VideoState): void {
@@ -198,8 +224,14 @@ function handleNotActive(videoId: string, videoState: VideoState): void {
     pauseVideo(videoId, videoState);
   }
 
+  // Reset preview state to allow replay when video cycles back
+  resetPreviewState(videoId);
+
   // Clear preview timer
   clearPreviewTimer(videoId);
+
+  // Remove from play queue
+  removeFromPlayQueue(videoId);
 
   // Remove from active videos
   videoMap.delete(videoId);
@@ -217,8 +249,14 @@ function handleReleased(videoId: string, videoState: VideoState): void {
 
   // Prefetch cleanup removed - will be handled by FeedScreen in future
 
+  // Reset preview state to allow replay when video cycles back
+  resetPreviewState(videoId);
+
   // Clear preview timer if active
   clearPreviewTimer(videoId);
+
+  // Remove from play queue
+  removeFromPlayQueue(videoId);
 
   // Remove from soft play queue
   removeFromSoftPlayQueue(videoId);
@@ -466,6 +504,183 @@ export function getPlaybackStats(): {
   };
 }
 
+/**
+ * Check if a video can start playing based on widget priority rules
+ */
+function canStartPlaying(videoId: string, videoState: VideoState): boolean {
+  if (!currentlyPlayingWidgetType) return true;
+  
+  // If same widget type, allow playing (multiple videos within same widget can play)
+  if (videoState.category === currentlyPlayingWidgetType) {
+    return true;
+  }
+  
+  // Different widget type - check if we have any videos currently playing
+  const currentlyPlayingVideos = Array.from(videoMap.values()).filter(v => v.isPlaying);
+  if (currentlyPlayingVideos.length === 0) {
+    return true;
+  }
+  
+  const requestPriority = WIDGET_PRIORITY[videoState.category];
+  const currentPriority = WIDGET_PRIORITY[currentlyPlayingWidgetType];
+  
+  if (requestPriority > currentPriority) {
+    // Higher priority widget can take over - pause ALL currently playing videos
+    logger.info('playback', `🔄 Higher priority widget ${videoState.category} (${requestPriority}) taking over from ${currentlyPlayingWidgetType} (${currentPriority})`);
+    
+    // Pause ALL currently playing videos (not just same widget type)
+    for (const [id, state] of videoMap) {
+      if (state.isPlaying) {
+        pauseVideo(id, state);
+      }
+    }
+    
+    return true;
+  }
+  
+  // Lower/same priority must wait
+  logger.info('playback', `⏳ Widget ${videoState.category} (${requestPriority}) must wait for ${currentlyPlayingWidgetType} (${currentPriority}) to finish`);
+  return false;
+}
+
+/**
+ * Get the currently playing video state (internal)
+ */
+function getCurrentlyPlayingVideoInternal(): VideoState | null {
+  if (!currentlyPlayingWidgetType) return null;
+  
+  // Find any playing video of the currently active widget type
+  for (const videoState of videoMap.values()) {
+    if (videoState.category === currentlyPlayingWidgetType && videoState.isPlaying) {
+      return videoState;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Add a video to the play queue if it can't play immediately
+ */
+function addToPlayQueue(videoId: string, videoState: VideoState): void {
+  // Remove if already in queue
+  const existingIndex = playQueue.findIndex(v => v.id === videoId);
+  if (existingIndex !== -1) {
+    playQueue.splice(existingIndex, 1);
+  }
+  
+  // Add to queue and sort by priority
+  playQueue.push(videoState);
+  playQueue.sort((a, b) => WIDGET_PRIORITY[b.category] - WIDGET_PRIORITY[a.category]);
+  
+  logger.info('playback', `📋 Added ${videoId} (${videoState.category}) to play queue. Queue length: ${playQueue.length}`);
+}
+
+/**
+ * Remove a video from the play queue
+ */
+function removeFromPlayQueue(videoId: string): void {
+  const index = playQueue.findIndex(v => v.id === videoId);
+  if (index !== -1) {
+    playQueue.splice(index, 1);
+    logger.info('playback', `📋 Removed ${videoId} from play queue. Queue length: ${playQueue.length}`);
+  }
+}
+
+/**
+ * Play the next video in the queue
+ */
+function playNextInQueue(): void {
+  if (playQueue.length === 0) return;
+  
+  // Find the highest priority eligible video
+  for (let i = 0; i < playQueue.length; i++) {
+    const videoState = playQueue[i];
+    const currentVideo = videoMap.get(videoState.id);
+    
+    if (!currentVideo) {
+      playQueue.splice(i, 1);
+      i--; // Adjust index after removal
+      continue;
+    }
+    
+    // Check if video is still eligible to play (exclude willResignActive as it's going out of view)
+    if (currentVideo.visibilityState === MediaCardVisibility.prepareToBeActive ||
+        currentVideo.visibilityState === MediaCardVisibility.isActive) {
+      
+      // Remove from queue and start playing
+      playQueue.splice(i, 1);
+      playVideo(currentVideo.id, currentVideo);
+      logger.info('playback', `▶️ Playing next in queue: ${currentVideo.id} (${currentVideo.category})`);
+      return;
+    }
+  }
+  
+  logger.info('playback', `📋 No eligible videos in queue to play next`);
+}
+
+/**
+ * Handle video progress to check preview duration
+ */
+export function handleVideoProgress(videoId: string, currentTime: number, duration: number): void {
+  const videoState = videoMap.get(videoId);
+  if (!videoState || !videoState.isPlaying) return;
+  
+  // Check if manual play override is set
+  if (videoState.manualPlayOverride) return;
+  
+  const previewDuration = AppConfig.config.playback.widgetPreviewDurations[videoState.category] 
+    || AppConfig.config.playback.previewDuration;
+  
+  if (previewDuration > 0 && currentTime >= previewDuration) {
+    // Preview duration reached
+    logger.info('playback', `⏱️ Preview duration (${previewDuration}s) reached for ${videoId}`);
+    
+    // Reset video position to 0 so it plays from beginning when user taps
+    logger.info('playback', `🔍 Resetting video position to 0 for ${videoId}`);
+    videoState.shouldSeekToBeginning = true;
+    
+    pauseVideo(videoId, videoState);
+    playNextInQueue();
+  }
+}
+
+/**
+ * Set manual play override for a video (ignores preview duration)
+ */
+export function setManualPlayOverride(videoId: string, override: boolean): void {
+  const videoState = videoMap.get(videoId);
+  if (videoState) {
+    videoState.manualPlayOverride = override;
+    logger.info('playback', `🎮 Manual play override ${override ? 'enabled' : 'disabled'} for ${videoId}`);
+  }
+}
+
+/**
+ * Check if video should seek to beginning and clear the flag
+ */
+export function shouldSeekToBeginning(videoId: string): boolean {
+  const videoState = videoMap.get(videoId);
+  if (videoState && videoState.shouldSeekToBeginning) {
+    videoState.shouldSeekToBeginning = false; // Clear the flag
+    logger.info('playback', `🔍 Video ${videoId} should seek to beginning`);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Reset preview duration state for a video (allows replay after visibility cycle)
+ */
+function resetPreviewState(videoId: string): void {
+  const videoState = videoMap.get(videoId);
+  if (videoState) {
+    videoState.manualPlayOverride = false;
+    videoState.previewStartTime = undefined;
+    logger.info('playback', `🔄 Reset preview state for ${videoId}`);
+  }
+}
+
 export function clearAllPlayback(): void {
   // Pause all playing videos
   for (const [videoId, videoState] of videoMap) {
@@ -483,4 +698,60 @@ export function clearAllPlayback(): void {
   videoMap.clear();
   previewTimers.clear();
   softPlayQueue.length = 0;
+  playQueue.length = 0;
+  currentlyPlayingWidgetType = null;
+}
+
+// ===== PLAYBACK STATUS APIs =====
+
+/**
+ * Get the currently playing widget type
+ */
+export function getCurrentlyPlayingWidgetType(): WidgetType | null {
+  return currentlyPlayingWidgetType;
+}
+
+/**
+ * Check if a specific video is playing
+ */
+export function isVideoPlaying(videoId: string): boolean {
+  const videoState = videoMap.get(videoId);
+  return videoState ? videoState.isPlaying : false;
+}
+
+/**
+ * Get all currently playing videos (should be 0 or 1 with new system)
+ */
+export function getPlayingWidgets(): VideoState[] {
+  const playingVideos: VideoState[] = [];
+  for (const videoState of videoMap.values()) {
+    if (videoState.isPlaying) {
+      playingVideos.push(videoState);
+    }
+  }
+  return playingVideos;
+}
+
+/**
+ * Get all videos in the play queue
+ */
+export function getQueuedVideos(): VideoState[] {
+  return [...playQueue];
+}
+
+/**
+ * Get playback status summary
+ */
+export function getPlaybackStatus(): {
+  currentlyPlayingWidgetType: WidgetType | null;
+  playingVideos: VideoState[];
+  queuedVideos: VideoState[];
+  queueLength: number;
+} {
+  return {
+    currentlyPlayingWidgetType: getCurrentlyPlayingWidgetType(),
+    playingVideos: getPlayingWidgets(),
+    queuedVideos: getQueuedVideos(),
+    queueLength: playQueue.length,
+  };
 }

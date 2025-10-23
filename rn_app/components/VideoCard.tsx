@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useLayoutEffect} from 'react';
+import React, {useState, useEffect, useRef, useLayoutEffect, useCallback} from 'react';
 import {
   View,
   Image,
@@ -9,6 +9,8 @@ import {
   Text,
   TouchableOpacity,
   Animated,
+  UIManager,
+  findNodeHandle,
 } from 'react-native';
 import {
   VisibilityTrackingView,
@@ -19,6 +21,8 @@ import FastImage from '@d11/react-native-fast-image';
 import {
   playbackEvents,
   handleVisibilityChange,
+  handleVideoProgress,
+  setManualPlayOverride,
 } from '../platback_manager/PlaybackManager';
 import {
   MediaCardVisibility,
@@ -151,13 +155,19 @@ const VideoCard: React.FC<VideoCardProps> = ({
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [isVideoReadyForDisplay, setIsVideoReadyForDisplay] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  // Note: Seeking is now handled via UIManager commands
 
   // Load time tracking for cache verification
   const loadStartTimeRef = useRef<number | null>(null);
+  
+  // Ref for VideoPlayerView to dispatch native commands
+  const videoPlayerRef = useRef<any>(null);
 
   // Pending visibility state for proper React synchronization
   const [pendingVisibilityState, setPendingVisibilityState] =
     useState<MediaCardVisibility | null>(null);
+
+  // Note: Seeking is now handled via UIManager commands, no need for prop-based seeking
 
   // Animated opacity for smooth crossfade
   const thumbnailOpacity = useRef(new Animated.Value(1)).current;
@@ -175,6 +185,24 @@ const VideoCard: React.FC<VideoCardProps> = ({
   const THRESHOLDS = visibilityConfig || DEFAULT_VISIBILITY_THRESHOLDS;
 
   const now = () => Date.now();
+  
+  // Function to seek video using UIManager commands
+  const seekVideoToBeginning = useCallback(() => {
+    if (videoPlayerRef.current) {
+      const nodeHandle = findNodeHandle(videoPlayerRef.current);
+      if (nodeHandle) {
+        logger.info('video', `[${item.id}] 🔍 Dispatching seek command to native video player`);
+        // Call the native module method directly
+        const VideoPlayerViewModule = require('react-native').NativeModules.VideoPlayerView;
+        if (VideoPlayerViewModule && VideoPlayerViewModule.seekTo) {
+          VideoPlayerViewModule.seekTo(nodeHandle, 0);
+        } else {
+          // Fallback to UIManager command
+          UIManager.dispatchViewManagerCommand(nodeHandle, 'seekTo', [0]);
+        }
+      }
+    }
+  }, [item.id]);
 
   useEffect(() => {
     const playListener = (videoId: string) => {
@@ -184,6 +212,9 @@ const VideoCard: React.FC<VideoCardProps> = ({
         metrics.mark('video_play', item.id, playIdRef.current);
         setIsPlayerPlaying(true);
         setShowPlayButton(false);
+        
+        // Note: Seeking to beginning is now handled when video becomes inactive
+        
         logger.info(
           'video',
           `[${
@@ -197,6 +228,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
         logger.info('video', `[${item.id}] ⏸️ PAUSE event received`);
         metrics.mark('video_pause', item.id, playIdRef.current);
         setIsPlayerPlaying(false);
+        
         logger.info(
           'video',
           `[${
@@ -331,7 +363,13 @@ const VideoCard: React.FC<VideoCardProps> = ({
         setIsVideoReadyForDisplay(false);
         thumbnailOpacity.setValue(1);
         loadStartTimeRef.current = null; // Reset for next play attempt
+        
+        // Seek to beginning when video becomes inactive (goes out of viewport)
+        logger.info('video', `[${item.id}] 🔍 Seeking to beginning - video became inactive`);
+        seekVideoToBeginning();
       }
+
+      // Note: Seeking to beginning is now handled when video becomes inactive
 
       // Emit state change to PlaybackManager (player state is now correct)
       handleVisibilityChange(
@@ -375,6 +413,12 @@ const VideoCard: React.FC<VideoCardProps> = ({
       beginAttempt();
       setIsPlayerAttached(true);
     }
+    
+    // Set manual play override to ignore preview duration
+    setManualPlayOverride(item.id, true);
+    
+    // Note: Seeking to beginning is now handled when video becomes inactive
+    
     playbackEvents.emit('play', item.id);
     setShowPlayButton(false);
   };
@@ -419,6 +463,9 @@ const VideoCard: React.FC<VideoCardProps> = ({
     setIsPlayerPlaying(false);
     setIsPlayerAttached(false);
     setLoaderState('stopped');
+
+    // Reset manual play override when video ends
+    setManualPlayOverride(item.id, false);
 
     // Reset thumbnail opacity to show thumbnail again
     Animated.timing(thumbnailOpacity, {
@@ -497,6 +544,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
       {/* Video player overlays thumbnail when mounted - always render but control visibility */}
       <VideoPlayerView
+        ref={videoPlayerRef}
         source={item.videoSource.url}
         videoId={item.id}
         paused={!isPlayerPlaying || !isPlayerAttached}
@@ -543,16 +591,25 @@ const VideoCard: React.FC<VideoCardProps> = ({
             playIdRef.current,
             event.nativeEvent,
           );
+          
+          // Handle preview duration via progress observation
+          handleVideoProgress(item.id, event.nativeEvent.currentTime, event.nativeEvent.playableDuration);
         }}
-        onEnd={event => {
-          metrics.mark(
-            'video_end',
-            item.id,
-            playIdRef.current,
-            event.nativeEvent,
-          );
-          setLoaderState('stopped');
-        }}
+      onEnd={event => {
+        metrics.mark(
+          'video_end',
+          item.id,
+          playIdRef.current,
+          event.nativeEvent,
+        );
+        setLoaderState('stopped');
+        
+        // Reset manual play override when video ends
+        setManualPlayOverride(item.id, false);
+        
+        // Ensure video will seek to beginning on next play
+        logger.info('video', `[${item.id}] 🎬 Video ended, will seek to beginning on next play`);
+      }}
         onError={event => {
           metrics.error(
             'video_error',
