@@ -1,6 +1,6 @@
 #import "AVAssetPrefetchManagerBridge.h"
 
-@implementation AVAssetPrefetchManagerBridge
+@implementation AVAssetPrefetchManagerBridge : NSObject
 
 + (BOOL)requiresMainQueueSetup {
   return YES;
