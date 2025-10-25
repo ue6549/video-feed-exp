@@ -3,7 +3,8 @@ import {AppConfig} from '../config/AppConfig';
 import {SegmentInfo} from '../types';
 import {logger} from '../utilities/Logger';
 
-const {CacheManager: NativeCacheManager} = NativeModules;
+const {CacheManager: NativeCacheManager, AVAssetPrefetchManager} =
+  NativeModules;
 
 export interface CacheStats {
   totalLength: number;
@@ -292,12 +293,41 @@ class CacheManagerService {
     }
   }
   /**
-   * Prefetch video through KTVHTTPCache
+   * Prefetch video using AVAssetDownloadTask (new implementation)
    * @param videoId Clean video ID for tracking
-   * @param videoUrl Video manifest URL
-   * @param segmentCount Number of segments to prefetch (hint, KTV may cache more)
+   * @param proxyURL KTV proxy URL for the video
+   * @param durationSeconds Duration to prefetch before canceling (default: 2s)
    */
   async prefetchVideo(
+    videoId: string,
+    proxyURL: string,
+    durationSeconds?: number,
+  ): Promise<void> {
+    if (!AVAssetPrefetchManager) {
+      logger.warn('prefetch', 'AVAssetPrefetchManager not available');
+      return;
+    }
+
+    const duration =
+      durationSeconds ?? AppConfig.config.prefetch.prefetchDurationSeconds ?? 2;
+
+    try {
+      logger.info(
+        'prefetch',
+        `Prefetch request: ${videoId} (duration: ${duration}s)`,
+      );
+      AVAssetPrefetchManager.prefetchVideo(videoId, proxyURL, duration);
+    } catch (error) {
+      logger.error('prefetch', `Prefetch failed for ${videoId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy prefetch method using KTVHTTPCache (kept for backward compatibility)
+   * @deprecated Use prefetchVideo() with AVAssetDownloadTask instead
+   */
+  async prefetchVideoLegacy(
     videoId: string,
     videoUrl: string,
     segmentCount: number,
@@ -305,7 +335,7 @@ class CacheManagerService {
     try {
       logger.debug(
         'prefetch',
-        `Prefetch request: ${videoId} (${segmentCount} segments)`,
+        `Legacy prefetch request: ${videoId} (${segmentCount} segments)`,
       );
       const result = await NativeCacheManager.prefetchVideo(
         videoId,
@@ -314,25 +344,45 @@ class CacheManagerService {
       );
       return result;
     } catch (error) {
-      logger.error('prefetch', `Prefetch failed for ${videoId}: ${error}`);
+      logger.error('prefetch', `Legacy prefetch failed for ${videoId}: ${error}`);
       throw error;
     }
   }
 
   /**
-   * Cancel ongoing prefetch
+   * Cancel ongoing prefetch (AVAssetDownloadTask)
    */
-  async cancelPrefetch(videoId: string): Promise<boolean> {
+  cancelPrefetch(videoId: string): void {
+    if (!AVAssetPrefetchManager) {
+      logger.warn('prefetch', 'AVAssetPrefetchManager not available');
+      return;
+    }
+
     try {
-      const result = await NativeCacheManager.cancelPrefetch(videoId);
+      AVAssetPrefetchManager.cancelPrefetch(videoId);
       logger.debug('prefetch', `Cancelled prefetch: ${videoId}`);
-      return result;
     } catch (error) {
       logger.error(
         'prefetch',
         `Failed to cancel prefetch ${videoId}: ${error}`,
       );
-      throw error;
+    }
+  }
+
+  /**
+   * Cancel all ongoing prefetches (AVAssetDownloadTask)
+   */
+  cancelAllPrefetch(): void {
+    if (!AVAssetPrefetchManager) {
+      logger.warn('prefetch', 'AVAssetPrefetchManager not available');
+      return;
+    }
+
+    try {
+      AVAssetPrefetchManager.cancelAll();
+      logger.info('prefetch', 'Cancelled all prefetches');
+    } catch (error) {
+      logger.error('prefetch', `Failed to cancel all prefetches: ${error}`);
     }
   }
 

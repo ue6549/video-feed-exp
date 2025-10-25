@@ -7,5 +7,6 @@
 #import "ViewabilityTransitioningConfig.h"
 #import "VideoPlayerViewManager.h"
 #import "VideoPlayerPoolBridge.h"
+#import "AVAssetPrefetchManagerBridge.h"
 #import <KTVHTTPCache/KTVHTTPCache.h>
 
