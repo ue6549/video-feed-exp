@@ -283,6 +283,103 @@ Android would need separate implementation.
 
 ---
 
+### 10. Concurrent Request Deduplication (Prefetch + Playback Overlap)
+**Status**: Known limitation (AVAssetDownloadTask migration)  
+**Priority**: Low (Edge case, CDN cache mitigates)  
+**Affects**: Videos that are prefetching when user scrolls them into viewport
+
+**Symptoms:**
+- Video prefetch starts (AVAssetDownloadTask downloading segment-001.ts)
+- User scrolls quickly, video enters viewport
+- AVPlayer starts playback, requests same segment-001.ts
+- **Result**: Two simultaneous CDN requests for same segment
+
+**Root Cause:**
+
+KTVHTTPCache is a **caching proxy**, not a **request coalescing proxy**:
+- ✅ **Cache hits**: Segment already on disk → serves from cache (no CDN request)
+- ❌ **Cache misses**: Segment not yet downloaded → forwards BOTH requests to CDN
+- ❌ **No in-flight tracking**: Doesn't track "currently downloading" segments to coalesce requests
+
+**Scenario Timeline:**
+```
+T0: AVAssetDownloadTask → segment-001.ts → KTV → CDN (Request #1 starts)
+T1: User scrolls (200ms later)
+T2: AVPlayer → segment-001.ts → KTV → CDN (Request #2 starts)
+T3: Both requests complete (~500ms later)
+
+Result: 80% of segment downloaded twice from CDN
+```
+
+**Impact:**
+- Wasted bandwidth (duplicate data transfer)
+- Increased CDN costs
+- Potential network congestion on slow connections
+- **Mitigation**: CDN cache helps (second request may hit CDN cache)
+
+**When This Occurs:**
+- User scrolls fast during active prefetch
+- Prefetch hasn't completed before video enters viewport
+- **Frequency**: Edge case (~5-10% of prefetch scenarios)
+
+**Why Not Fixed Yet:**
+- Low priority (CDN cache mitigates latency impact)
+- Acceptable for POC/MVP phase
+- Would require complex infrastructure changes
+
+**Future Solutions:**
+
+**Option 1: Smart Cancellation** (Simple, recommended for Phase 2)
+```typescript
+// Cancel prefetch when video enters "prepareToBeActive" (25% visible)
+onVisibilityChange(state) {
+  if (state === 'prepareToBeActive') {
+    CacheManager.cancelPrefetch(videoId);
+    setTimeout(() => setIsPlayerAttached(true), 50);
+  }
+}
+```
+- ✅ Simple implementation
+- ✅ No duplicate requests
+- ⚠️ 50ms delay, loses last 200-300ms of prefetch
+
+**Option 2: Request Coalescing Wrapper** (Complex, Phase 3)
+```swift
+class KTVRequestCoordinator {
+  private var inflightRequests: [String: [CompletionHandler]] = [:]
+  
+  func fetchSegment(url: String, completion: @escaping (Data?) -> Void) {
+    if inflightRequests[url] != nil {
+      inflightRequests[url]?.append(completion)  // Wait for in-flight
+      return
+    }
+    
+    inflightRequests[url] = [completion]
+    KTVHTTPCache.fetch(url) { data in
+      self.inflightRequests[url]?.forEach { $0(data) }  // Notify all
+      self.inflightRequests.removeValue(forKey: url)
+    }
+  }
+}
+```
+- ✅ Perfect deduplication
+- ✅ Transparent to clients
+- ❌ Complex KTV integration
+- ❌ Memory overhead
+
+**Option 3: Fork KTV** (Most complex, long-term)
+- Modify KTVHTTPCache source to track in-flight requests
+- ✅ Native solution
+- ❌ Maintenance burden, lose upstream updates
+
+**Current Status:** Accepted limitation, monitored via metrics
+
+**See Also:**
+- [PREFETCH_IMPLEMENTATION_FUTURE.md](../architecture/PREFETCH_IMPLEMENTATION_FUTURE.md#concurrent-request-handling-known-limitation) - Detailed analysis
+- [PREFETCH_REQUIREMENTS_DESIGN.md](../architecture/PREFETCH_REQUIREMENTS_DESIGN.md) - Design decisions
+
+---
+
 ## Summary
 
 **Critical (Fix Now):**

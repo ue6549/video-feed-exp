@@ -2,6 +2,15 @@
 
 ## Code Quality Standards
 
+### Before Starting Any Work
+1. **Create feature branch FIRST** - ALWAYS create a `cursor-<feature-name>` branch before making any changes
+   ```bash
+   git checkout cursor-main
+   git pull origin cursor-main
+   git checkout -b cursor-<feature-name>
+   ```
+   Example: `cursor-avasset-prefetch`, `cursor-fix-audio-bug`, `cursor-docs-architecture`
+
 ### Before Every Change
 1. **Read existing code** - Understand patterns before modifying
 2. **Check documentation** - Review COMPONENT_DOCUMENTATION.md and ARCHITECTURE.md

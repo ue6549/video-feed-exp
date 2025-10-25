@@ -42,20 +42,55 @@
 
 ## Design Decisions and Rationale
 
-### AVPlayer-Based Prefetch vs HTTP Prefetch
+### AVPlayer vs AVAssetDownloadTask for Prefetch
 
-**Decision**: Use AVPlayer-based prefetch (AVURLAsset loadValuesAsynchronously)
+When implementing video prefetching, we evaluated two primary approaches:
 
-**Rationale**:
-- **Native Integration**: Direct integration with iOS AVPlayer
-- **Intelligent Caching**: Automatic cache management
-- **Network Awareness**: iOS handles network conditions automatically
-- **Simplicity**: No need to manually manage HTTP requests
+| Aspect | AVPlayer | AVAssetDownloadTask |
+|--------|----------|---------------------|
+| **Resource Usage** | Heavy (rendering pipeline, audio session, time observers) | Light (download only, no playback overhead) |
+| **Progress Tracking** | Byte-based (via KVO on loadedTimeRanges) | Time-based (CMTimeRange in delegate) |
+| **Integration** | Tight with playback (same API surface) | Separate from playback (dedicated download API) |
+| **Cancellation** | Complex teardown (remove observers, deallocate player) | Clean cancel (task.cancel(), simple cleanup) |
+| **Use Case** | Streaming prefetch (player-driven loading) | Download prefetch (explicit download control) |
+| **Memory Footprint** | ~5-8MB per instance (full player stack) | ~2-3MB per task (download manager only) |
+| **Background Support** | Limited (requires audio session) | Native (URLSession background mode) |
+| **Cache Integration** | Automatic with KTVHTTPCache proxy | Requires KTV proxy OR local .movpkg storage |
 
-**Alternative Considered**: Manual HLS segment prefetch
-- More control but more complexity
-- Requires manual manifest parsing
-- Not as network-adaptive
+**Current Implementation**: AVPlayer-based prefetch (dummy instances)
+
+**Selected for Migration**: AVAssetDownloadTask + KTVHTTPCache
+
+**Rationale for Migration**:
+1. **30-40% lighter resource usage** - No rendering pipeline overhead
+2. **Better progress tracking** - Time-based cancellation more precise than byte-based
+3. **Cleaner cancellation** - Simple task.cancel() vs complex player teardown
+4. **Native background support** - URLSession handles backgrounding automatically
+5. **Maintains KTV benefits** - Keep existing cache infrastructure
+6. **No playback changes** - VideoPlayerView continues using KTV proxy URLs
+
+See [PREFETCH_IMPLEMENTATION_FUTURE.md](PREFETCH_IMPLEMENTATION_FUTURE.md) for detailed approach evaluation.
+
+### AVPlayer-Based Prefetch (Legacy)
+
+**Implementation**: Dummy AVPlayer instances
+
+**How It Works**:
+- Create AVPlayer with video URL (via KTV proxy)
+- AVPlayer automatically begins loading asset
+- Monitor loading progress via KVO
+- Cancel/release player after threshold
+- KTVHTTPCache caches segments during loading
+
+**Pros**:
+- ✅ Works well with current architecture
+- ✅ Tight integration with playback
+- ✅ Proven, stable approach
+
+**Cons**:
+- ❌ Heavy resource usage
+- ❌ Complex teardown
+- ❌ Byte-based progress (less precise)
 
 ### Widget-Based vs Video-Based Prefetch
 

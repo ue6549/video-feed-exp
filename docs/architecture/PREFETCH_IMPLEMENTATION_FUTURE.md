@@ -334,6 +334,245 @@ val cache = SimpleCache(
 - Custom prefetch logic
 - Better optimization
 
+## Prefetch Approach Evaluation
+
+### Current Approach (AVPlayer-based Prefetch)
+
+**Implementation**: Dummy AVPlayer instances used for prefetching
+
+**How It Works**:
+- Create AVPlayer instance with video URL (via KTV proxy)
+- AVPlayer automatically begins loading asset
+- Monitor loading progress
+- Cancel/release player after threshold reached
+- KTVHTTPCache caches segments during AVPlayer loading
+
+**Pros**:
+- ✅ Works well with current architecture
+- ✅ Tight integration with playback (same API)
+- ✅ KTVHTTPCache handles all caching transparently
+- ✅ Proven, stable approach
+
+**Cons**:
+- ❌ Heavy resource usage (~30-40% heavier than download task)
+- ❌ Full AVPlayer pipeline overhead (rendering, audio session, time observers)
+- ❌ Complex teardown on cancellation
+- ❌ Byte-based progress (less precise than time-based)
+
+### Evaluated Approaches
+
+#### Approach #1: KTV + AVAssetDownloadTask (SELECTED)
+
+**Implementation**: Replace AVPlayer with AVAssetDownloadTask, keep KTVHTTPCache
+
+**Architecture**:
+```
+AVAssetDownloadTask → KTVHTTPCache Proxy → CDN
+                           ↓
+                    Segment Cache (disk)
+                           ↓
+AVPlayer (playback) ← KTV Proxy URL
+```
+
+**Pros**:
+- ✅ 30-40% lighter than AVPlayer (no rendering pipeline)
+- ✅ Time-based progress tracking (more precise)
+- ✅ Clean cancellation (no player teardown)
+- ✅ Background download support
+- ✅ Maintains KTVHTTPCache benefits
+- ✅ No changes to playback flow
+
+**Cons**:
+- ⚠️ Two caching layers (KTV + .movpkg)
+- ⚠️ Need to cleanup orphaned .movpkg files
+- ⚠️ Concurrent request deduplication issue (see below)
+
+**Decision**: SELECTED for implementation
+
+#### Approach #2: AVAssetDownloadTask Only (No KTV)
+
+**Implementation**: Remove KTVHTTPCache, use only download tasks + local .movpkg playback
+
+**Architecture**:
+```
+AVAssetDownloadTask → CDN → .movpkg (local storage)
+                                ↓
+AVPlayer (playback) ← file:// URL
+```
+
+**Pros**:
+- ✅ Eliminates proxy server overhead
+- ✅ Simpler architecture (one cache layer)
+- ✅ Native iOS caching
+- ✅ Partial .movpkg plays online (AVPlayer auto-continues)
+
+**Cons**:
+- ❌ **CRITICAL**: Partial .movpkg won't play offline (manifest incomplete flag)
+- ❌ Lose 2s offline playback capability
+- ❌ Major refactor required (VideoPlayerView, CacheManager, all proxy logic)
+- ❌ **DRM ISSUE**: FairPlay keys in .movpkg may fail on partial downloads
+- ❌ Complex storage management
+
+**Decision**: REJECTED - Loses offline capability, DRM risks, major refactor
+
+#### Approach #3: Download Task + Custom Manifest Manipulation
+
+**Implementation**: Partial downloads + generate fake "complete" manifests for prefetched clips
+
+**Architecture**:
+```
+AVAssetDownloadTask → Partial .movpkg
+         ↓
+Custom Manifest Generator → "Complete" 2s manifest
+         ↓
+AVPlayer ← Modified manifest
+```
+
+**Pros**:
+- ✅ Could enable offline playback of prefetched segments
+- ✅ No proxy server needed
+
+**Cons**:
+- ❌ **VERY COMPLEX**: HLS manifest manipulation is fragile
+- ❌ **DRM BLOCKER**: FairPlay manifests are signed - cannot forge
+- ❌ Parse/rewrite m3u8, update byte ranges, segment URLs
+- ❌ Breaks on manifest format changes
+- ❌ Apple may reject app for manifest manipulation
+- ❌ High maintenance burden
+
+**Decision**: REJECTED - Too complex, DRM issues, fragile implementation
+
+### Selected Approach: Implementation Details
+
+**Approach #1 (KTV + AVAssetDownloadTask)** was selected for the following reasons:
+
+1. **Performance Gain**: Lighter resource usage without sacrificing functionality
+2. **Minimal Changes**: Maintains existing architecture and playback flow
+3. **Better Progress Tracking**: Time-based cancellation more precise
+4. **Clean Implementation**: No DRM issues, no manifest manipulation
+5. **Incremental Improvement**: Can migrate to Approach #2 later if needed
+
+## Concurrent Request Handling (Known Limitation)
+
+### Problem: In-Flight Request Deduplication
+
+**Issue**: KTVHTTPCache does not deduplicate concurrent in-flight requests for the same segment.
+
+**Scenario**:
+```
+Time T0: AVAssetDownloadTask requests segment-001.ts
+         → KTV forwards to CDN (Request #1 in progress)
+
+Time T1: User scrolls, AVPlayer requests segment-001.ts
+         → KTV forwards to CDN (Request #2 - DUPLICATE!)
+
+Result: Two simultaneous CDN requests for the same segment
+```
+
+**Impact**:
+- Wasted bandwidth (duplicate data transfer)
+- Increased CDN costs
+- Potential network congestion
+- Higher latency on slow connections
+
+**Why This Happens**:
+
+KTVHTTPCache is a **caching proxy**, not a **request coalescing proxy**:
+- ✅ **Cache hits**: Segment on disk → serves from cache (no CDN request)
+- ❌ **Cache misses**: Segment not downloaded → forwards to CDN immediately
+- ❌ **No in-flight tracking**: Doesn't track "currently downloading" segments
+
+### Mitigation Strategies
+
+**Current Mitigation**:
+- CDN cache helps reduce latency impact
+- Edge case scenario (requires fast scroll during prefetch)
+- Acceptable for POC/MVP phase
+
+**Future Solutions**:
+
+#### Solution 1: Smart Cancellation (Simple)
+
+Cancel prefetch when video enters "prepareToBeActive" state (25% visible):
+
+```typescript
+onVisibilityChange(state) {
+  if (state === 'prepareToBeActive') {
+    // Cancel prefetch before player starts
+    CacheManager.cancelPrefetch(videoId);
+    
+    // Small delay to ensure cancellation completes
+    setTimeout(() => {
+      setIsPlayerAttached(true);
+    }, 50);
+  }
+}
+```
+
+**Pros**:
+- ✅ Simple implementation
+- ✅ No duplicate requests
+- ✅ Still get prefetch benefit
+
+**Cons**:
+- ⚠️ 50ms delay before playback
+- ⚠️ Loses last 200-300ms of prefetch on fast scroll
+
+#### Solution 2: Request Coalescing Wrapper (Complex)
+
+Build deduplication layer over KTV:
+
+```swift
+class KTVRequestCoordinator {
+  private var inflightRequests: [String: [CompletionHandler]] = [:]
+  
+  func fetchSegment(url: String, completion: @escaping (Data?) -> Void) {
+    // If already fetching, add to waitlist
+    if inflightRequests[url] != nil {
+      inflightRequests[url]?.append(completion)
+      return
+    }
+    
+    // Start new fetch
+    inflightRequests[url] = [completion]
+    KTVHTTPCache.fetch(url) { data in
+      // Notify all waiters
+      self.inflightRequests[url]?.forEach { $0(data) }
+      self.inflightRequests.removeValue(forKey: url)
+    }
+  }
+}
+```
+
+**Pros**:
+- ✅ Perfect deduplication
+- ✅ Transparent to clients
+- ✅ Reusable for all video operations
+
+**Cons**:
+- ❌ Complex integration with KTV internals
+- ❌ Memory overhead for buffering
+- ❌ Error handling complexity
+
+#### Solution 3: Fork KTV for In-Flight Tracking (Most Complex)
+
+Modify KTVHTTPCache source to track in-flight requests:
+
+**Pros**:
+- ✅ Native solution
+- ✅ Best performance
+
+**Cons**:
+- ❌ Maintenance burden
+- ❌ Lose upstream updates
+- ❌ High implementation cost
+
+### Recommendation
+
+**Phase 1 (Current)**: Accept limitation, rely on CDN cache
+**Phase 2 (Future)**: Implement Smart Cancellation if metrics show significant duplicate requests
+**Phase 3 (Long-term)**: Consider Request Coalescing Wrapper if needed
+
 ## Scope for Improvements
 
 ### Nested Prefetch Controllers (HIGH PRIORITY)
