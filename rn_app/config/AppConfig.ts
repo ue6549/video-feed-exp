@@ -142,7 +142,7 @@ export class AppConfig {
       maxConcurrent: 3,
       priorities: ['short', 'carousel', 'merch'],
       strategy: 'auto', // Try AVPlayer first, fallback to manifest
-      prefetchDurationSeconds: 2, // Duration to prefetch before canceling (AVAssetDownloadTask)
+      prefetchDurationSeconds: 10, // Duration to prefetch before canceling (AVAssetDownloadTask)
       carousel: {
         initialVideos: 2, // Prefetch first 2 videos when carousel appears
         horizontalLookahead: 2, // Future: prefetch 2 ahead during horizontal scroll

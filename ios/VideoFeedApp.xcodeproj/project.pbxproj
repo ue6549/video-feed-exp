@@ -21,6 +21,9 @@
 		9DBCF6522E98430B008B8DAC /* VideoPlayerPoolBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DBCF64A2E98430B008B8DAC /* VideoPlayerPoolBridge.m */; };
 		9DBCF6532E98430B008B8DAC /* VideoPlayerPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBCF6492E98430B008B8DAC /* VideoPlayerPool.swift */; };
 		9DDB2F912E9A367F00D5E7F1 /* CacheManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DDB2F902E9A367F00D5E7F1 /* CacheManager.m */; };
+		9DDB2FAC2EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DDB2FA92EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.m */; };
+		9DDB2FAD2EACF64600D5E7F1 /* AVAssetPrefetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DDB2FA72EACF64600D5E7F1 /* AVAssetPrefetchManager.swift */; };
+		9DDB2FAE2EACF64600D5E7F1 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 9DDB2FAA2EACF64600D5E7F1 /* README.md */; };
 		A5DFDEF2CF70F54030F3AA3C /* libPods-VideoFeedApp-VideoFeedAppTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A74AF08594D617D88497F790 /* libPods-VideoFeedApp-VideoFeedAppTests.a */; };
 		E52B789C783AF0D15CC6B93F /* libPods-VideoFeedApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 31BEE2E30E2573B878CBEA4D /* libPods-VideoFeedApp.a */; };
 /* End PBXBuildFile section */
@@ -66,6 +69,10 @@
 		9DBCF6562E984739008B8DAC /* VideoPlayerPoolBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoPlayerPoolBridge.h; sourceTree = "<group>"; };
 		9DDB2F8F2E9A367F00D5E7F1 /* CacheManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CacheManager.h; sourceTree = "<group>"; };
 		9DDB2F902E9A367F00D5E7F1 /* CacheManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CacheManager.m; sourceTree = "<group>"; };
+		9DDB2FA72EACF64600D5E7F1 /* AVAssetPrefetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVAssetPrefetchManager.swift; sourceTree = "<group>"; };
+		9DDB2FA82EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AVAssetPrefetchManagerBridge.h; sourceTree = "<group>"; };
+		9DDB2FA92EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AVAssetPrefetchManagerBridge.m; sourceTree = "<group>"; };
+		9DDB2FAA2EACF64600D5E7F1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A74AF08594D617D88497F790 /* libPods-VideoFeedApp-VideoFeedAppTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-VideoFeedApp-VideoFeedAppTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD017D551D1B28017D3B8E27 /* Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig"; path = "Target Support Files/Pods-VideoFeedApp-VideoFeedAppTests/Pods-VideoFeedApp-VideoFeedAppTests.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -166,6 +173,7 @@
 		9DB43BB02E86AA8900E4B75E /* RNModules */ = {
 			isa = PBXGroup;
 			children = (
+				9DDB2FAB2EACF64600D5E7F1 /* AVAssetPrefetchManager */,
 				9DBCF6482E98430B008B8DAC /* CacheManager */,
 				9DBCF64B2E98430B008B8DAC /* VideoPlayerPool */,
 				9DBCF64F2E98430B008B8DAC /* VideoPlayerView */,
@@ -216,6 +224,17 @@
 				9DBCF64E2E98430B008B8DAC /* VideoPlayerViewManager.m */,
 			);
 			path = VideoPlayerView;
+			sourceTree = "<group>";
+		};
+		9DDB2FAB2EACF64600D5E7F1 /* AVAssetPrefetchManager */ = {
+			isa = PBXGroup;
+			children = (
+				9DDB2FA72EACF64600D5E7F1 /* AVAssetPrefetchManager.swift */,
+				9DDB2FA82EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.h */,
+				9DDB2FA92EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.m */,
+				9DDB2FAA2EACF64600D5E7F1 /* README.md */,
+			);
+			path = AVAssetPrefetchManager;
 			sourceTree = "<group>";
 		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
@@ -324,6 +343,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DDB2FAE2EACF64600D5E7F1 /* README.md in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
@@ -521,6 +541,8 @@
 				9DBCF6532E98430B008B8DAC /* VideoPlayerPool.swift in Sources */,
 				9DB43BC22E871D9900E4B75E /* VisibilityTrackingView.swift in Sources */,
 				9DAED76D2E881DC90037E3D8 /* RCTConvert_ViewabilityTransitioningConfig.m in Sources */,
+				9DDB2FAC2EACF64600D5E7F1 /* AVAssetPrefetchManagerBridge.m in Sources */,
+				9DDB2FAD2EACF64600D5E7F1 /* AVAssetPrefetchManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

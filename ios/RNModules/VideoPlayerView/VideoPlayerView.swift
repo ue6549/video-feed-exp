@@ -14,17 +14,39 @@ class VideoPlayerView: UIView {
   // MARK: - JS Props
   @objc var source: NSString? {
     didSet {
-      setupPlayer()
+      // Only setup if this is a new URL (avoid unnecessary re-setup)
+      let newURL = source as String?
+      if newURL != lastSourceURL {
+        lastSourceURL = newURL
+        cleanupCurrentPlayer()
+        setupPlayer()
+      } else {
+        NSLog("[VideoPlayerView] ⏭️ Skipping setup - same URL as before")
+      }
     }
   }
   
+  private var lastSourceURL: String?
+  
   @objc var paused: Bool = true {
     didSet {
+      let displayId = videoId as String? ?? "unknown"
       if paused {
+        NSLog("[VideoPlayerView] ⏸️ PAUSE called for: %@", displayId)
         player?.pause()
       } else {
-        NSLog("[VideoPlayerView] ▶️ Calling player.play() for video: %@", videoId as String? ?? "unknown")
+        NSLog("[VideoPlayerView] ▶️ PLAY called for: %@", displayId)
+        if player == nil {
+          NSLog("[VideoPlayerView] ❌ CRITICAL: Player is nil when trying to play!")
+        }
         player?.play()
+        // Check if player actually started playing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+          if let player = self?.player {
+            let displayId = self?.videoId as String? ?? "unknown"
+            NSLog("[VideoPlayerView] 📊 Play rate after 0.1s: %.2f for %@", player.rate, displayId)
+          }
+        }
       }
     }
   }
@@ -170,9 +192,25 @@ class VideoPlayerView: UIView {
   }
   
   private func setupPlayerWithURL(_ url: URL) {
+    let displayId = videoId as String? ?? "unknown"
+    NSLog("[VideoPlayerView] 🎬 setupPlayerWithURL: %@", displayId)
+    NSLog("[VideoPlayerView] 🔗 Final URL: %@", url.absoluteString)
+    
+    // TESTING: Create new player instead of reusing from pool
     // Acquire player and layer from pool
-    player = VideoPlayerPool.acquirePlayer()
-    playerLayer = VideoPlayerPool.acquireLayer()
+    // player = VideoPlayerPool.acquirePlayer()
+    // playerLayer = VideoPlayerPool.acquireLayer()
+    
+    // CREATE NEW PLAYER FOR TESTING
+    player = AVPlayer()
+    playerLayer = AVPlayerLayer()
+    
+    if player == nil {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Player is nil after creating new!")
+    }
+    if playerLayer == nil {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Player layer is nil after creating new!")
+    }
     
     // Configure player layer
     if let layer = playerLayer {
@@ -184,8 +222,22 @@ class VideoPlayerView: UIView {
     }
     
     // Create player item with PROXIED URL
+    NSLog("[VideoPlayerView] 📦 Creating AVPlayerItem with URL: %@", url.absoluteString)
     playerItem = AVPlayerItem(url: url)
-    player?.replaceCurrentItem(with: playerItem)
+    
+    if let item = playerItem {
+      NSLog("[VideoPlayerView] ✅ AVPlayerItem created successfully for %@", displayId)
+      NSLog("[VideoPlayerView] 📊 Initial player item status: %d (0=unknown, 1=ready, 2=failed)", item.status.rawValue)
+    } else {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Failed to create AVPlayerItem for %@", displayId)
+    }
+    
+    if let p = player {
+      p.replaceCurrentItem(with: playerItem)
+      NSLog("[VideoPlayerView] 📝 AVPlayerItem attached to player for %@", displayId)
+    } else {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Cannot attach player item - player is nil for %@", displayId)
+    }
     
     // Ensure player is muted by default (safety measure)
     player?.isMuted = true
@@ -199,6 +251,7 @@ class VideoPlayerView: UIView {
     // Add 15s timeout for loading (playback context - be patient)
     loadTimeout = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false) { [weak self] _ in
       if self?.playerItem?.status != .readyToPlay {
+        NSLog("[VideoPlayerView] ⏱️ Load timeout reached for %@", self?.videoId as String? ?? "unknown")
         self?.handleLoadTimeout()
       }
     }
@@ -224,10 +277,24 @@ class VideoPlayerView: UIView {
   
   // MARK: - Observers
   private func addPlayerObservers() {
-    guard let player = player, let playerItem = playerItem else { return }
+    let displayId = videoId as String? ?? "unknown"
+    
+    guard let player = player else {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Cannot add observers - player is nil for %@", displayId)
+      return
+    }
+    
+    guard let playerItem = playerItem else {
+      NSLog("[VideoPlayerView] ❌ CRITICAL: Cannot add observers - playerItem is nil for %@", displayId)
+      return
+    }
+    
+    NSLog("[VideoPlayerView] 📎 Adding observers for %@", displayId)
     
     // Player item status observer
     playerItem.addObserver(self, forKeyPath: "status", options: [.new], context: nil)
+    NSLog("[VideoPlayerView] ✅ Added status observer for %@", displayId)
+    
     playerItem.addObserver(self, forKeyPath: "playbackBufferEmpty", options: [.new], context: nil)
     playerItem.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: [.new], context: nil)
     
@@ -244,6 +311,8 @@ class VideoPlayerView: UIView {
       name: .AVPlayerItemDidPlayToEndTime,
       object: playerItem
     )
+    
+    NSLog("[VideoPlayerView] ✅ All observers added for %@", displayId)
   }
   
   private func removePlayerObservers() {
@@ -263,25 +332,42 @@ class VideoPlayerView: UIView {
   
   // MARK: - KVO
   override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-    guard let keyPath = keyPath else { return }
+    guard let keyPath = keyPath else { 
+      NSLog("[VideoPlayerView] ⚠️ observeValue called with nil keyPath")
+      return 
+    }
+    
+    let displayId = videoId as String? ?? "unknown"
+    NSLog("[VideoPlayerView] 🔔 KVO triggered for %@ - keyPath: %@", displayId, keyPath)
     
     switch keyPath {
     case "status":
+      NSLog("[VideoPlayerView] 🎯 Status change detected for %@ - calling handlePlayerItemStatus", displayId)
       handlePlayerItemStatus()
     case "playbackBufferEmpty":
+      NSLog("[VideoPlayerView] 🎯 Buffer empty detected for %@", displayId)
       handleBufferState(isBuffering: true)
     case "playbackLikelyToKeepUp":
+      NSLog("[VideoPlayerView] 🎯 Buffer likely to keep up for %@", displayId)
       handleBufferState(isBuffering: false)
     default:
+      NSLog("[VideoPlayerView] ⚠️ Unknown keyPath: %@ for %@", keyPath, displayId)
       super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
     }
   }
   
   private func handlePlayerItemStatus() {
-    guard let playerItem = playerItem else { return }
+    guard let playerItem = playerItem else {
+      NSLog("[VideoPlayerView] ⚠️ handlePlayerItemStatus called but playerItem is nil")
+      return
+    }
+    
+    let displayId = videoId as String? ?? "unknown"
+    NSLog("[VideoPlayerView] 📊 Player item status changed for %@: %d", displayId, playerItem.status.rawValue)
     
     switch playerItem.status {
     case .readyToPlay:
+      NSLog("[VideoPlayerView] ✅ PLAYER READY: %@", displayId)
       // Cancel load timeout (player ready successfully)
       loadTimeout?.invalidate()
       loadTimeout = nil
@@ -301,6 +387,17 @@ class VideoPlayerView: UIView {
         "videoId": videoId as Any
       ])
     case .failed:
+      let errorMsg = playerItem.error?.localizedDescription ?? "Unknown"
+      let errorCode = (playerItem.error as NSError?)?.code ?? -1
+      let errorDomain = (playerItem.error as NSError?)?.domain ?? "Unknown"
+      NSLog("[VideoPlayerView] ❌ PLAYER FAILED: %@", displayId)
+      NSLog("[VideoPlayerView] ❌ Error Message: %@", errorMsg)
+      NSLog("[VideoPlayerView] ❌ Error Code: %d", errorCode)
+      NSLog("[VideoPlayerView] ❌ Error Domain: %@", errorDomain)
+      if let error = playerItem.error as NSError? {
+        NSLog("[VideoPlayerView] ❌ Full Error: %@", error)
+      }
+      
       // Cancel load timeout
       loadTimeout?.invalidate()
       loadTimeout = nil
@@ -310,8 +407,10 @@ class VideoPlayerView: UIView {
         "error": playerItem.error?.localizedDescription ?? "Unknown error"
       ])
     case .unknown:
+      NSLog("[VideoPlayerView] ⏳ PLAYER UNKNOWN STATE: %@", displayId)
       break
     @unknown default:
+      NSLog("[VideoPlayerView] ❓ PLAYER UNKNOWN STATE (raw: %d): %@", playerItem.status.rawValue, displayId)
       break
     }
   }
@@ -349,6 +448,33 @@ class VideoPlayerView: UIView {
   }
   
   // MARK: - Cleanup
+  private func cleanupCurrentPlayer() {
+    // Remove observers
+    removePlayerObservers()
+    
+    // Cancel load timeout
+    loadTimeout?.invalidate()
+    loadTimeout = nil
+    
+    // TESTING: Don't return to pool, just release
+    // Release to pool
+    // if let p = player {
+    //   VideoPlayerPool.releasePlayer(p)
+    //   self.player = nil
+    // }
+    // if let l = playerLayer {
+    //   VideoPlayerPool.releaseLayer(l)
+    //   self.playerLayer = nil
+    // }
+    
+    // Just release for testing
+    self.player = nil
+    self.playerLayer = nil
+    
+    playerItem = nil
+    isPlayerReady = false
+  }
+  
   deinit {
     // Cancel load timeout
     loadTimeout?.invalidate()
@@ -356,12 +482,13 @@ class VideoPlayerView: UIView {
     
     removePlayerObservers()
     
+    // TESTING: Don't return to pool
     // Return player and layer to pool
-    if let player = player {
-      VideoPlayerPool.releasePlayer(player)
-    }
-    if let layer = playerLayer {
-      VideoPlayerPool.releaseLayer(layer)
-    }
+    // if let player = player {
+    //   VideoPlayerPool.releasePlayer(player)
+    // }
+    // if let layer = playerLayer {
+    //   VideoPlayerPool.releaseLayer(layer)
+    // }
   }
 }

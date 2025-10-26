@@ -1,5 +1,62 @@
 # VideoFeedApp - Changelog
 
+## [2025-10-12] - AVAssetDownloadTask Prefetch Experiment (ABANDONED)
+
+### ⚠️ Status: INCOMPLETE - Abandoned Due to Fundamental Issues
+
+#### Experiment Summary
+Attempted to replace AVPlayer-based prefetch with AVAssetDownloadTask for more efficient HLS downloads. The goal was to use AVAssetDownloadTask to download through KTVHTTPCache proxy, allowing KTV to cache segments while discarding .movpkg files.
+
+#### Implementation Completed
+- ✅ **AVAssetPrefetchManager**: Native Swift module with AVAssetDownloadTask integration
+- ✅ **React Native Bridge**: Complete bridging with cancellation support
+- ✅ **KTV Integration**: Downloads use KTV proxy URLs correctly
+- ✅ **Cache Verification**: KTV caching works (manifest files cached successfully)
+- ✅ **Prefetch Control**: 10-second prefetch duration with cancellation logic
+
+#### Issues Encountered
+
+##### Offline Playback Failure
+- ❌ **Cache Misses**: Videos 2-5 show "Cache MISS" despite being prefetched
+- ❌ **Status Never Changes**: AVPlayerItem remains in `.unknown` state (status 0)
+- ❌ **Timeouts**: All prefetched videos timeout after 15 seconds
+- ❌ **No KVO Triggers**: Status change KVO never fires for offline playback
+
+##### Root Causes Identified
+1. **Partial Cache Incompleteness**: Only manifests cached, not enough segments for viable timeline
+2. **KTV Proxy Issues**: KTV may not serve partial cached content properly in offline mode
+3. **AVPlayerItem Loading Failure**: Items created but never transition to `.readyToPlay` state
+4. **Observer Cleanup**: Potential issues with KVO observers during player recycling
+
+##### Testing Results
+- **With Cancellation**: Videos prefetch but timeout offline (10s prefetch too short)
+- **Without Cancellation**: Same issue persists (66MB cache, still timeout)
+- **Without Player Pool**: Same issue (recycling not the cause)
+- **Cache HIT vs MISS**: Logs show mixed results - manifests cached but playback fails
+
+#### Why This Approach Was Abandoned
+The fundamental issue appears to be that AVAssetDownloadTask + KTVHTTPCache doesn't work well for partial downloads in offline scenarios. KTV may cache content but AVPlayer can't load from partial cache effectively. The interaction between:
+- AVAssetDownloadTask download cancellation
+- KTV partial cache state
+- AVPlayer offline loading
+...has inherent incompatibilities.
+
+#### Files Changed (Not Merged)
+- `ios/RNModules/AVAssetPrefetchManager/` - New native module
+- `ios/RNModules/VideoPlayerView/VideoPlayerView.swift` - Added extensive logging, disabled player pool for testing
+- `rn_app/services/CacheManager.ts` - Added prefetchVideo() method
+- `rn_app/services/PrefetchManager.ts` - Updated to use AVAssetDownloadTask
+- `rn_app/config/AppConfig.ts` - Increased prefetch duration to 10s
+- Documentation updated with approach evaluation
+
+#### Lessons Learned
+1. AVAssetDownloadTask is designed for full downloads, not partial prefetch
+2. KTV partial cache may not be sufficient for AVPlayer offline playback
+3. Player status observation is critical - if KVO doesn't fire, playback is impossible
+4. Manifest-only cache is not enough - need sufficient segments for viable timeline
+
+#### Branch: `cursor-avasset-prefetch` (NOT MERGED TO MAIN)
+
 ## [2025-10-11] - Preview Duration & Widget Priority System
 
 ### ✨ New Features

@@ -8,6 +8,8 @@ class AVAssetPrefetchManager: NSObject, AVAssetDownloadDelegate {
   private var activeTasks: [String: AVAssetDownloadTask] = [:]
   private var prefetchDuration: TimeInterval = 2.0 // Configurable
   
+  @objc static let shared = AVAssetPrefetchManager()
+  
   override init() {
     super.init()
     setupDownloadSession()
@@ -27,7 +29,7 @@ class AVAssetPrefetchManager: NSObject, AVAssetDownloadDelegate {
     )
   }
   
-  @objc func prefetchVideo(
+  @objc func prefetchVideoWithVideoId(
     _ videoId: String,
     proxyURL: String,
     durationSeconds: NSNumber
@@ -62,7 +64,7 @@ class AVAssetPrefetchManager: NSObject, AVAssetDownloadDelegate {
     NSLog("[AVAssetPrefetch] Started: \(videoId) (duration: \(prefetchDuration)s)")
   }
   
-  @objc func cancelPrefetch(_ videoId: String) {
+  @objc func cancelPrefetchWithVideoId(_ videoId: String) {
     guard let task = activeTasks[videoId] else {
       NSLog("[AVAssetPrefetch] No active task to cancel: \(videoId)")
       return
@@ -100,12 +102,13 @@ class AVAssetPrefetchManager: NSObject, AVAssetDownloadDelegate {
       totalDownloaded += CMTimeGetSeconds(range.duration)
     }
     
+    // COMMENTED OUT FOR TESTING - Let downloads complete fully
     // Cancel if threshold reached
-    if totalDownloaded >= prefetchDuration {
-      NSLog("[AVAssetPrefetch] Threshold reached (\(String(format: "%.2f", totalDownloaded))s): \(videoId)")
-      assetDownloadTask.cancel()
-      cleanup(videoId: videoId)
-    }
+    // if totalDownloaded >= prefetchDuration {
+    //   NSLog("[AVAssetPrefetch] Threshold reached (\(String(format: "%.2f", totalDownloaded))s): \(videoId)")
+    //   assetDownloadTask.cancel()
+    //   cleanup(videoId: videoId)
+    // }
   }
   
   func urlSession(

@@ -250,8 +250,13 @@ class PrefetchManager {
         return;
       }
 
-      // Use native CacheManager to prefetch through KTV proxy
-      await CacheManager.prefetchVideo(videoId, videoUrl, segmentCount);
+      // Get proxy URL for the video
+      const proxyURL = await CacheManager.getCachedURL(videoUrl);
+      
+      // Use AVAssetPrefetchManager to prefetch through KTV proxy
+      // This downloads segments through KTVHTTPCache, which caches to disk
+      // Cancel after 10s, KTV cache persists for offline playback
+      await CacheManager.prefetchVideo(videoId, proxyURL);
 
       // Mark as completed (KTV handles download internally)
       this.statusMap.set(videoId, {
